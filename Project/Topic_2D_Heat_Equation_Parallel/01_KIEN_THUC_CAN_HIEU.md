@@ -38,24 +38,29 @@ Noi dung can hieu (giai thich chi tiet):
 - So sanh voi nghiem tieu chuan: bai toan voi dieu kien bien don gian co the co nghiem on dinh (steady-state).
 - Kiem tra hoi tu: khi tang n (luoi tinh hon), ket qua on dinh hon.
 
-7. Ly do co the song song hoa
+7. Hieu thuat toan tuan tu
+- Tuan tu: vong lap theo thoi gian, moi buoc tinh toan toan bo lưới.
+- Mỗi điểm (i,j) phụ thuộc 4 hàng xóm ở thời điểm k.
+- Tinh xong u_new cho toan bo, roi swap u_old/u_new.
+
+8. Ly do co the song song hoa
 - Cap nhat u^{k+1}_{i,j} chi can 4 diem lang gieng (i+1,i-1,j+1,j-1).
 - Do do co the chia mien theo hang (y) hay cot (x).
 - Chi can trao doi bien (ghost rows/cols) voi process ke ben.
 
-8. MPI can biet
+9. MPI can biet
 - MPI_Init, MPI_Comm_rank, MPI_Comm_size.
 - MPI_Sendrecv hoac MPI_Isend/Irecv de trao doi bien.
 - MPI_Barrier de dong bo.
 - Do thoi gian bang MPI_Wtime.
 
-9. Do hieu nang
+10. Do hieu nang
 - Time1: thoi gian chay 1 process.
 - TimeP: thoi gian chay P process.
 - Speedup = Time1 / TimeP.
 - Efficiency = Speedup / P.
 
-10. Dinh dang du lieu
+11. Dinh dang du lieu
 - Mang 2D (n+2 x n+2) gom bien + noi bo.
 - U_old va U_new, swap moi buoc thoi gian.
 - Chi cap nhat diem noi bo (1..n).
