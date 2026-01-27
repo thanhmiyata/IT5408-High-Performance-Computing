@@ -1,18 +1,18 @@
-Chu de de xuat: 2D Heat Equation - Parallel Numerical Solution
+Chủ đề đề xuất: 2D Heat Equation - Giải Thuật Số Song Song
 
-Ly do chon:
-- Mo hinh chuan, de hieu, cong thuc sai phan don gian (5 diem).
-- De song song hoa bang MPI theo chia mien 1D (chia theo hang hoac cot).
-- De kiem chung ket qua (co the so voi nghiem on dinh hoac kiem tra tinh doi xung).
+Lý do chọn:
+- Mô hình chuẩn, dễ hiểu, công thức sai phân đơn giản.
+- Dễ song song hóa bằng MPI theo chia miền 1D (chia theo hàng hoặc cột).
+- Dễ kiểm chứng kết quả (có thể so với nghiệm ổn định hoặc kiểm tra tính đối xứng).
 
-Muc tieu project:
-- Xay dung mo hinh toan cho phuong trinh nhiet 2D.
-- Thiet ke thuat toan FDM (explicit) va dieu kien on dinh.
-- Song song hoa bang MPI, trao doi bien (ghost rows).
-- Danh gia toc do: thoi gian, speedup, hieu nang.
+Mục tiêu dự án:
+- Xây dựng mô hình toán cho phương trình nhiệt 2D.
+- Thiết kế thuật toán FDM (explicit) và điều kiện ổn định.
+- Song song hóa bằng MPI, trao đổi biên (ghost rows).
+- Đánh giá tốc độ: thời gian, speedup, hiệu năng.
 
-San pham can nop:
-- Report ~10 trang: bai toan, thuat toan, thiet ke song song, ket qua.
-- Slide 15 phut.
-- Code C tuan tu + code song song (MPI).
-- Readme huong dan chay.
+Sản phẩm cần nộp:
+- Báo cáo ~10 trang: bài toán, thuật toán, thiết kế song song, kết quả.
+- Slide thuyết trình 15 phút.
+- Mã nguồn C tuần tự + mã nguồn song song (MPI).
+- Readme hướng dẫn chạy.

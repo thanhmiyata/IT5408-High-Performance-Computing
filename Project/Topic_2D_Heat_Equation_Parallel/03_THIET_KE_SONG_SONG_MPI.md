@@ -1,51 +1,51 @@
-Thiet ke song song MPI (chia mien 1D)
+Thiết kế song song MPI (chia miền 1D)
 
-1. Y tuong chia mien
-- Chia luoi theo chieu x (chia theo hang).
-- Moi process xu ly mot khoi hang lien tiep.
-- Can 2 hang ghost (tren/duoi) de cap nhat stencil 5 diem.
+1. Ý tưởng chia miền
+- Chia lưới theo chiều x (chia theo hàng).
+- Mỗi tiến trình (process) xử lý một khối hàng liên tiếp.
+- Cần 2 hàng ảo (ghost rows) để cập nhật stencil 5 điểm.
 
-2. Kich thuoc cuc bo
-Giả sử so hang noi bo la n.
-So process = P.
-Chia do:
-rows_per_proc = n / P, du cho phan du neu n % P != 0.
+2. Kích thước cục bộ
+Giả sử số hàng nội bộ là n.
+Số tiến trình = P.
+Chia đó:
+rows_per_proc = n / P, xử lý phần dư nếu n % P != 0.
 
-Moi process co:
-- local_n = so hang noi bo ma process quan ly.
-- Mang local: (local_n + 2) x (n + 2)
-  (cong them 2 hang ghost).
+Mỗi tiến trình có:
+- local_n = số hàng nội bộ mà tiến trình quản lý.
+- Mảng cục bộ: (local_n + 2) x (n + 2)
+  (bao gồm 2 hàng ghost).
 
-3. Trao doi bien (ghost rows)
-Truoc moi buoc thoi gian:
-- Neu rank > 0: gui hang dau noi bo (1) cho rank-1,
-  nhan ghost tren (0) tu rank-1.
-- Neu rank < P-1: gui hang cuoi noi bo (local_n) cho rank+1,
-  nhan ghost duoi (local_n+1) tu rank+1.
+3. Trao đổi biên (ghost rows)
+Trước mỗi bước thời gian:
+- Nếu rank > 0: gửi hàng đầu nội bộ (1) cho rank-1,
+  nhận ghost trên (0) từ rank-1.
+- Nếu rank < P-1: gửi hàng cuối nội bộ (local_n) cho rank+1,
+  nhận ghost dưới (local_n+1) từ rank+1.
 
-Co the dung MPI_Sendrecv hoac MPI_Isend/Irecv.
+Có thể dùng MPI_Sendrecv hoặc MPI_Isend/Irecv.
 
-4. Vong lap cap nhat
+4. Vòng lặp cập nhật
 for k in 1..K:
-  exchange ghost rows
+  trao đổi các hàng ghost
   for i in 1..local_n:
     for j in 1..n:
-      update u_new[i][j] theo cong thuc FDM
+      cập nhật u_new[i][j] theo công thức FDM
   swap(u_old, u_new)
 
-5. Dieu kien bien
-- Hang bien toan cuc: i = 0 va i = n+1.
-- Chi process dau/cuoi moi gan bien tuong ung.
-- Cac cot bien (j=0, j=n+1) gan tuong ung tren tat ca process.
+5. Điều kiện biên
+- Hàng biên toàn cục: i = 0 và i = n+1.
+- Chỉ tiến trình đầu/cuối mới gán nhiệt độ biên tương ứng.
+- Các cột biên (j=0, j=n+1) gán tương ứng trên tất cả tiến trình.
 
-6. Gom ket qua
-Sau khi xong, gom cac khoi ve rank 0:
-MPI_Gatherv tren cac hang noi bo.
+6. Gom kết quả
+Sau khi xong, gom các khối về rank 0:
+Sử dụng MPI_Gatherv trên các hàng nội bộ.
 
-7. Do hieu nang
-- Do thoi gian bang MPI_Wtime (rank 0).
-- Tinh speedup va efficiency.
+7. Đo hiệu năng
+- Đo thời gian bằng MPI_Wtime (rank 0).
+- Tính speedup và hiệu năng (efficiency).
 
-8. Loi khuyen
-- Neu n nho, overhead giao tiep lon, speedup kem.
-- Neu n lon, speedup tot hon.
+8. Lời khuyên
+- Nếu n nhỏ, chi phí liên lạc lớn, speedup kém.
+- Nếu n lớn, speedup sẽ tốt hơn.

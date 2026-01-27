@@ -1,50 +1,49 @@
+Khung báo cáo (10 trang)
 
-Khung bao cao (10 trang)
+1. Giới thiệu
+- Bài toán nhiệt 2D và ứng dụng.
+- Lý do chọn và mục tiêu đề tài.
 
-1. Gioi thieu
-- Bai toan nhiet 2D va ung dung.
-- Ly do chon va muc tieu.
+2. Mô hình toán
+- Phương trình, điều kiện ban đầu, điều kiện biên.
+- Ý nghĩa các tham số.
 
-2. Mo hinh toan
-- Phuong trinh, dieu kien ban dau, dieu kien bien.
-- Y nghia cac tham so.
+3. Phương pháp số
+- Lưới không gian, thời gian.
+- FDM 5 điểm, công thức cập nhật.
+- Điều kiện ổn định (CFL).
 
-3. Phuong phap so
-- Luoi khong gian, thoi gian.
-- FDM 5 diem, cong thuc cap nhat.
-- Dieu kien on dinh (CFL).
+4. Thiết kế song song
+- Chia miền 1D theo hàng.
+- Hàng ghost và trao đổi biên.
+- Phân tích lượng giao tiếp và đồng bộ.
 
-4. Thiet ke song song
-- Chia mien 1D theo hang.
-- Ghost rows va trao doi bien.
-- Luong giao tiep va dong bo.
+5. Cài đặt
+- C tuần tự, MPI.
+- Cấu trúc dữ liệu, vòng lặp.
+- Các tham số đầu vào.
 
-5. Cai dat
-- C tuan tu, MPI.
-- Cau truc du lieu, vong lap.
-- Cac tham so dau vao.
+6. Thực nghiệm
+- Môi trường chạy (máy, số core).
+- Tham số n, delta_t, số bước K.
+- Kết quả thời gian, speedup, hiệu năng.
 
-6. Thuc nghiem
-- Moi truong chay (may, so core).
-- Tham so n, delta_t, so buoc K.
-- Thoi gian, speedup, efficiency.
+7. Đánh giá
+- Độ chính xác (kiểm tra ổn định, tính đối xứng).
+- Phân tích hiệu năng và nhận xét.
 
-7. Danh gia
-- Do chinh xac (kiem tra on dinh, doi xung).
-- Hieu nang va nhan xet.
+8. Kết luận
+- Tổng kết và hướng mở rộng (OpenMP/CUDA, 3D, implicit).
 
-8. Ket luan
-- Tong ket va huong mo rong (OpenMP/CUDA, 3D, implicit).
+Khung Slide thuyết trình (15 phút)
 
-Khung slide (15 phut)
-
-1. Tieu de + thanh vien
-2. Bai toan & y nghia
-3. Mo hinh toan (PDE + bien)
-4. FDM 5 diem + dieu kien on dinh
-5. Song song MPI: chia mien + ghost
-6. So do giao tiep
-7. Cai dat tong quan
-8. Thuc nghiem (tham so)
-9. Ket qua speedup/efficiency
-10. Ket luan + huong phat trien
+1. Tiêu đề + Thành viên thực hiện
+2. Bài toán & Ý nghĩa thực tiễn
+3. Mô hình toán (PDE + Điều kiện biên)
+4. Phương pháp FDM 5 điểm + Điều kiện ổn định
+5. Song song hóa bằng MPI: Chia miền + Ghost rows
+6. Sơ đồ giao tiếp giữa các tiến trình
+7. Tổng quan cài đặt mã nguồn
+8. Thực nghiệm (các kịch bản tham số)
+9. Kết quả speedup & hiệu năng
+10. Kết luận + Hướng phát triển

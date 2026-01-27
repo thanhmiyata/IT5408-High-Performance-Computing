@@ -1,18 +1,18 @@
 README - 2D Heat Equation (MPI)
 
-1. Mo ta
-- Giai phuong trinh nhiet 2D bang FDM explicit.
-- Song song hoa bang MPI (chia mien 1D theo hang).
+1. Mô tả
+- Giải phương trình nhiệt 2D bằng phương pháp FDM explicit.
+- Song song hóa bằng thư viện MPI (chia miền 1D theo hàng).
 
-2. Cau truc de xuat
-- src/heat_serial.c
-- src/heat_mpi.c
-- data/ (neu can)
-- report.pdf
-- slides.pdf
+2. Cấu trúc thư mục xu đề xuất
+- src/diffusion_serial.c: Mã nguồn tuần tự.
+- src/diffusion_mpi.c: Mã nguồn song song MPI.
+- data/: Thư mục chứa các file cấu hình đầu vào.
+- report.pdf: Báo cáo chi tiết.
+- slides.pdf: Slide thuyết trình.
 
-3. Input data (file)
-- Tao file text voi dinh dang key=value, vi du:
+3. Dữ liệu đầu vào (Input data)
+- File cấu hình sử dụng định dạng key=value, ví dụ:
   n=100
   K=500
   c=0.1
@@ -21,34 +21,34 @@ README - 2D Heat Equation (MPI)
   bottom=30
   top=50
   init=0
-- Da co san:
+- Các bộ dữ liệu có sẵn:
   data/case1.txt
   data/case2.txt
 
-4. Bien dich (vi du)
-- Serial:
-  gcc -O2 -o heat_serial src/heat_serial.c -lm
-- MPI:
-  mpicc -O2 -o heat_mpi src/heat_mpi.c -lm
+4. Biên dịch (Compilation)
+- Tuần tự (Serial):
+  gcc -O2 -o diffusion_serial src/diffusion_serial.c -lm
+- Song song (MPI):
+  mpicc -O2 -o diffusion_mpi src/diffusion_mpi.c -lm
 
-5. Chay (vi du)
-- Serial:
-  ./heat_serial data/case1.txt
-- MPI:
-  mpirun -np 4 ./heat_mpi data/case1.txt
+5. Chạy chương trình (Execution)
+- Tuần tự:
+  ./diffusion_serial data/case1.txt
+- Song song:
+  mpirun -np 4 ./diffusion_mpi data/case1.txt
 
-Trong do:
-- n: so diem noi bo moi chieu (luoi n+2)
-- K: so buoc thoi gian
-- c: he so khuech tan
-- left/right/bottom/top: bien nhiet
-- init: gia tri ban dau ben trong
+Giải thích tham số:
+- n: số điểm nội bộ mỗi chiều (tổng lưới là n+2).
+- K: số bước thời gian.
+- c: hệ số khuếch tán.
+- left/right/bottom/top: nhiệt độ tại các biên tương ứng.
+- init: giá trị nhiệt độ ban đầu bên trong lưới.
 
-6. Kiem tra
-- Kiem tra dieu kien on dinh: delta_t <= delta_s^2 / (2c).
-- Neu can, in ra gia tri u tai mot vai diem de so sanh.
-- So sanh checksum (sum) giua serial va MPI.
+6. Kiểm tra kết quả
+- Kiểm tra điều kiện ổn định: delta_t <= delta_s^2 / (2c).
+- In ra giá trị u tại một vài điểm đại diện để so sánh.
+- So sánh giá trị tổng (checksum) giữa bản tuần tự và song song.
 
-7. Do hieu nang
-- Thoi gian chay lay bang MPI_Wtime (rank 0).
+7. Đo lường hiệu năng
+- Lấy thời gian chạy bằng hàm MPI_Wtime (tại rank 0).
 - Speedup = T1 / Tp, Efficiency = Speedup / p.
