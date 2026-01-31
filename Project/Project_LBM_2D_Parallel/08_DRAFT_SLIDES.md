@@ -1,289 +1,178 @@
-# SLIDE THUYẾT TRÌNH: LATTICE BOLTZMANN METHOD - MPI
+# GIẢI THUẬT VÀ CÀI ĐẶT CHƯƠNG TRÌNH SONG SONG
+## BÀI TOÁN CÓ SỰ PHỤ THUỘC DỮ LIỆU: LATTICE BOLTZMANN METHOD (D2Q9)
 
-**Thời lượng dự kiến:** 15 phút  
-**Số slide:** 12-13
-
----
-
-## Slide 1: TIÊU ĐỀ
-
-**Lattice Boltzmann Method**  
-**Mô phỏng Dòng chảy 2D Song song với MPI**
-
-- **Môn học:** IT5408 - Tính toán Hiệu năng Cao
-- **Sinh viên:** Krizpham
-- **Giảng viên:** [Tên giảng viên]
-- **Năm:** 2026
+**Sinh viên:** Krizpham  
+**Môn học:** IT5408 - Tính toán hiệu năng cao  
+**Năm:** 2026
 
 ---
 
-## Slide 2: ĐẶT VẤN ĐỀ
+## Slide 2: Mô hình toán học và Phương pháp giải
 
-### Bài toán
-Mô phỏng dòng chảy chất lưu 2D
-
-### Ứng dụng thực tế
-- 🚗 Khí động học ô tô, máy bay
-- 🔬 Thiết kế vi lưu (lab-on-a-chip)
-- 🏗️ Dòng chảy trong vật liệu xốp
-- 🩺 Dòng máu trong mạch
-
-### Thách thức
-- Tính toán tốn kém → **Cần song song hóa**
+- **Phương trình Lattice Boltzmann (LBE):**
+  $f_i(x + c_i \Delta t, t + \Delta t) = f_i(x, t) - \omega[f_i(x, t) - f_i^{eq}(x, t)]$
+- **Công thức giải:**
+  - Khởi tạo giá trị ban đầu: $f_i(x, 0) = f_i^{eq}(\rho=1, u=0)$
+  - Tại bước $n+1$:
+    1. **Collision:** $f^*_i(x, t) = f_i(x, t) - \omega(f_i(x, t) - f_i^{eq}(x, t))$
+    2. **Streaming:** $f_i(x + c_i \Delta t, t + \Delta t) = f^*_i(x, t)$
+- **Mô hình Stencil D2Q9:**
+  *(Chèn ảnh lbm_d2q9_correct_stencil_diagram.png)*
 
 ---
 
-## Slide 3: LATTICE BOLTZMANN METHOD LÀ GÌ?
+## Slide 3: Sự phụ thuộc dữ liệu
 
-### So sánh với FDM/FEM
-
-| Phương pháp | Giải gì? | Ưu điểm | Nhược điểm |
-|-------------|----------|---------|------------|
-| **FDM/FEM** | Navier-Stokes trực tiếp | Chính xác cao | Phức tạp, khó song song |
-| **LBM** | Phương trình Boltzmann | Đơn giản, song song tốt | Bộ nhớ lớn |
-
-### Ưu điểm LBM
-✅ **Đơn giản:** Chỉ có Collision + Streaming  
-✅ **Song song tự nhiên:** Mỗi điểm lưới độc lập  
-✅ **Xử lý biên dễ:** Bounce-back đơn giản  
+- Trong LBM, sự phụ thuộc dữ liệu xảy ra ở bước **Streaming**:
+  - Tại vị trí $x$, hàm phân bố $f_i$ ở thời điểm tiếp theo phụ thuộc vào giá trị sau va chạm $f^*_i$ từ điểm láng giềng nằm ở hướng ngược lại với $c_i$.
+  - Cụ thể: $f_i(x, t+1)$ nhận giá trị từ điểm $x - c_i \Delta t$.
+- **Đối với chương trình tuần tự:** Xử lý điều kiện biên (Bounce-back tại tường, Periodic tại biên X).
+- **Đối với chương trình song song:** Cần trao đổi các hàm phân bố biên giữa các CPU (Ghost Columns) trước khi thực hiện Streaming.
 
 ---
 
-## Slide 4: MÔ HÌNH D2Q9
+## Slide 4: Các đại lượng vĩ mô và Ký hiệu
 
-### Sơ đồ 9 hướng vận tốc
-
-```
-  6   2   5
-    ↖ ↑ ↗
-  3 ← 0 → 1
-    ↙ ↓ ↘
-  7   4   8
-```
-
-### Thông số
-- **Trọng số:** w₀ = 4/9, w₁₋₄ = 1/9, w₅₋₈ = 1/36
-- **Hàm phân bố:** fᵢ tại mỗi điểm, mỗi hướng (9 giá trị)
+- $f_i$: Hàm phân bố hạt theo hướng $i$ ($i=0 \dots 8$).
+- $c_i$: Vector vận tốc rời rạc hướng $i$.
+- $w_i$: Trọng số lý thuyết ($w_0=4/9, w_{1-4}=1/9, w_{5-8}=1/36$).
+- **Đại lượng vĩ mô:**
+  - Mật độ: $\rho = \sum_{i=0}^{8} f_i$
+  - Vận tốc: $u = \frac{1}{\rho} \sum_{i=0}^{8} f_i c_i$
+- **Hàm phân bố cân bằng ($f_i^{eq}$):**
+  $f_i^{eq} = w_i \rho \left(1 + 3(c_i \cdot u) + \frac{9}{2}(c_i \cdot u)^2 - \frac{3}{2}u^2\right)$
 
 ---
 
-## Slide 5: THUẬT TOÁN LBM
+## Slide 5: Cài đặt thực tế: Collision & TinhMacro
 
-### 2 bước chính
-
-**1. Collision (Va chạm)**
-```
-f*ᵢ = fᵢ - ω(fᵢ - fᵢᵉᑫ)
-```
-- Tính hàm phân bố sau va chạm
-- ω = 1/τ: Tham số thư giãn
-
-**2. Streaming (Lan truyền)**
-```
-fᵢ(x + cᵢ) = f*ᵢ(x)
-```
-- Di chuyển hạt theo hướng vận tốc
-
-### Đơn giản!
-- Chỉ có phép cộng, trừ, nhân
-- Không có đạo hàm phức tạp
-
----
-
-## Slide 6: CHIẾN LƯỢC SONG SONG HÓA
-
-### Chia miền 1D theo X
-- Lưới NX×NY chia thành P khối theo chiều X
-- Mỗi tiến trình quản lý NX/P cột
-
-### Ghost Columns
-- Mỗi tiến trình cần 2 cột ảo (ghost_left, ghost_right)
-- Lưu dữ liệu từ tiến trình lân cận
-
-### Giao tiếp MPI
-- `MPI_Irecv` / `MPI_Isend` (non-blocking)
-- `MPI_Waitall` để đồng bộ
-
----
-
-## Slide 7: SƠ ĐỒ CHIA MIỀN
-
-### Ví dụ: Lưới 256×64 với 4 tiến trình
-
-```
-┌────────┬────────┬────────┬────────┐
-│ Rank 0 │ Rank 1 │ Rank 2 │ Rank 3 │
-│ 64 cột │ 64 cột │ 64 cột │ 64 cột │
-└────────┴────────┴────────┴────────┘
-    ↕         ↕         ↕         ↕
-  Ghost    Ghost    Ghost    Ghost
+```c
+// Trích xuất từ lbm_mpi.c
+void CollisionCucBo(double *f, double *f_new, double *rho, double *ux, double *uy, int nx_local, int ny, double omega) {
+    for (int x = 0; x < nx_local; x++) {
+        for (int y = 0; y < ny; y++) {
+            double r = *(rho + x*ny + y);
+            double usqr = ux[x*ny+y]*ux[x*ny+y] + uy[x*ny+y]*uy[x*ny+y];
+            for (int i = 0; i < Q; i++) {
+                double cu = cx[i]*ux[x*ny+y] + cy[i]*uy[x*ny+y];
+                double feq = w[i] * r * (1.0 + 3.0*cu + 4.5*cu*cu - 1.5*usqr);
+                double fi = *(f + (x*ny + y)*Q + i);
+                *(f_new + (x*ny + y)*Q + i) = fi - omega * (fi - feq);
+            }
+        }
+    }
+}
 ```
 
-### Trao đổi biên
-- Rank i ↔ Rank i-1 (ghost_left)
-- Rank i ↔ Rank i+1 (ghost_right)
-
 ---
 
-## Slide 8: CÀI ĐẶT
+## Slide 6: Cài đặt thực tế: Streaming cục bộ
 
-### Công nghệ
-- **Ngôn ngữ:** C
-- **Thư viện:** MPI (OpenMPI)
-- **Compiler:** GCC với flag `-O2`
-
-### File code
-- `lbm_serial.c` - Bản tuần tự
-- `lbm_mpi.c` - Bản song song MPI
-
-### Phong cách code
-- Tên hàm tiếng Việt không dấu
-- Truy cập mảng bằng con trỏ `*(A + i*n + j)`
-- Dấu phân cách `//===` giữa các hàm
-
----
-
-## Slide 9: KẾT QUẢ THỰC NGHIỆM
-
-### Cấu hình
-- **Lưới:** 256×64 (16,384 điểm)
-- **Số bước:** 10,000
-- **Tham số:** ω=1.0, u₀=0.1
-
-### Kết quả
-
-| P | Thời gian (s) | MLUPS | Speedup | Efficiency |
-|---|---------------|-------|---------|------------|
-| 1 | 1.802 | 90.94 | 1.0× | 100% |
-| 2 | 1.365 | 120.00 | 1.32× | 66% |
-| 4 | 0.738 | 222.13 | 2.44× | 61% |
-| 8 | 0.450 | 364.09 | 4.00× | 50% |
-
-**MLUPS:** Million Lattice Updates Per Second
-
----
-
-## Slide 10: BIỂU ĐỒ HIỆU NĂNG
-
-### Speedup vs Số tiến trình
-
-```
-Speedup
-  8 │                    ╱ Lý tưởng
-  7 │                  ╱
-  6 │                ╱
-  5 │              ╱
-  4 │            ╱  ●  Thực tế
-  3 │          ╱  ●
-  2 │        ╱  ●
-  1 │  ●───╱
-  0 └─────────────────────
-    1   2   4   6   8   P
+```c
+// Trích xuất từ lbm_mpi.c
+void StreamingCucBo(double *f_new, double *f, int nx_local, int ny, double *ghost_left, double *ghost_right, int rank, int size) {
+    for (int x = 0; x < nx_local; x++) {
+        for (int y = 0; y < ny; y++) {
+            for (int i = 0; i < Q; i++) {
+                int xn = x + cx[i]; int yn = y + cy[i];
+                if (yn < 0 || yn >= ny) { // Bounce-back biên Y
+                    *(f + (x*ny + y)*Q + opposite[i]) += *(f_new + (x*ny + y)*Q + i);
+                } else if (xn < 0) { // Lấy từ Ghost Left
+                    if (rank > 0) *(f + (x*ny + yn)*Q + i) += *(ghost_left + yn*Q + i);
+                    else *(f + ((nx_local-1)*ny + yn)*Q + i) += *(f_new + (x*ny + y)*Q + i); // Periodic
+                } else if (xn >= nx_local) { // Lấy từ Ghost Right
+                    if (rank < size-1) *(f + (x*ny + yn)*Q + i) += *(ghost_right + yn*Q + i);
+                    else *(f + (0*ny + yn)*Q + i) += *(f_new + (x*ny + y)*Q + i); // Periodic
+                } else {
+                    *(f + (xn*ny + yn)*Q + i) += *(f_new + (x*ny + y)*Q + i);
+                }
+            }
+        }
+    }
+}
 ```
 
-*(Cần vẽ biểu đồ thực tế bằng Excel/Python)*
+---
+
+## Slide 7: Giải thuật song song SPMD
+
+- **Mô hình:** Single Program Multiple Data.
+- **Chiến lược Chia miền (Domain Decomposition):**
+  - Chia 1D theo cột (chiều X).
+  - Mỗi tiến trình quản lý $nx\_local \approx NX/NP$ cột.
+  - Vùng đệm biên: **Ghost Columns** có kích thước $NY \times Q$.
+- **Giao tiếp:** Trao đổi Ghost Columns giữa các tiến trình láng giềng bằng `MPI_Isend` / `MPI_Irecv`.
 
 ---
 
-## Slide 11: PHÂN TÍCH HIỆU NĂNG
+## Slide 8: 5 Bước chính trong Giải thuật Song song
 
-### Tại sao Speedup < P?
-
-**Nguyên nhân:**
-1. ⏱️ **Overhead giao tiếp MPI**
-   - Mỗi bước: 9 KB × 2 = 18 KB
-   - Tổng 10,000 bước: 180 MB
-
-2. 🔄 **Overhead khởi tạo và đồng bộ**
-   - MPI_Init, MPI_Waitall
-
-3. 📊 **Định luật Amdahl**
-   - Phần code tuần tự (đọc file, ghi kết quả)
-
-### Khi nào hiệu quả tốt?
-✅ Lưới lớn (NX >> P)  
-✅ Tỉ lệ Computation/Communication cao  
+- **B1: Khởi tạo:** Cấp phát bộ nhớ ($f, f_{new}, \rho, u$, ghost buffers) và đặt trạng thái ban đầu.
+- **B2: Chia miền:** Tính toán phạm vi $nx\_local$ cho mỗi Rank (xử lý phần dư $NX \% NP$).
+- **B3: Phân tán:** Từng Rank tự khởi tạo vùng của mình hoặc Rank 0 phát tán dữ liệu.
+- **B4: Lặp tính toán:**
+  - Tính đại lượng vĩ mô $\to$ Collision $\to$ **Trao đổi biên** $\to$ Streaming.
+- **B5: Tổng hợp:** Rank 0 thu thập vận tốc trung bình và ghi kết quả (Gather).
 
 ---
 
-## Slide 12: KẾT LUẬN
+## Slide 9: Chi tiết Truyền thông (B4.1)
 
-### Đạt được
-✅ Cài đặt thành công LBM D2Q9 tuần tự và MPI  
-✅ Hiểu rõ cơ chế chia miền và trao đổi ghost columns  
-✅ Speedup 2.44× với 4 tiến trình  
-✅ MLUPS tăng từ 90.94 → 222.13  
-
-### Bài học
-- LBM có tính song song tự nhiên cao
-- Cần cân bằng giữa tính toán và giao tiếp
-- Lưới lớn cho hiệu quả tốt hơn
+- Sử dụng cơ chế truyền thông không khóa (**Non-blocking**) để tối ưu hóa thời gian chờ.
+- **Trao đổi Ghost Columns:**
+  - Rank $i$ gửi cột $0$ sang Rank $i-1$, nhận vào `ghost_left`.
+  - Rank $i$ gửi cột cuối sang Rank $i+1$, nhận vào `ghost_right`.
+- **Đồng bộ:** Sử dụng `MPI_Waitall` trước khi thực hiện bước Streaming để đảm bảo dữ liệu vùng biên đã sẵn sàng.
 
 ---
 
-## Slide 13: HƯỚNG PHÁT TRIỂN
+## Slide 10: Code MPI Trao đổi biên
 
-### Tối ưu hóa
-1. **Chia miền 2D** → Giảm lượng giao tiếp
-2. **Hybrid MPI + OpenMP** → Tận dụng đa nhân
-3. **GPU (CUDA/OpenCL)** → Tăng tốc hàng trăm lần
-
-### Mở rộng
-1. **3D** (D3Q19, D3Q27) → Mô phỏng thực tế hơn
-2. **Nhiều pha** (multiphase) → Dầu-nước, khí-lỏng
-3. **Truyền nhiệt** (thermal LBM) → Tản nhiệt vi mạch
-
-### Ứng dụng
-- Thiết kế khí động học ô tô
-- Mô phỏng vi lưu y sinh
-- Dòng chảy trong đá xốp (dầu khí)
-
----
-
-## Slide 14: Q&A
-
-### Cảm ơn thầy và các bạn đã lắng nghe!
-
-**Câu hỏi thảo luận:**
-1. Tại sao LBM phù hợp với song song hóa?
-2. Ưu nhược điểm của chia miền 1D vs 2D?
-3. Làm thế nào để cải thiện Efficiency?
-
-**Liên hệ:**
-- Email: [email của bạn]
-- GitHub: [link repository]
+```c
+void TraoDoiGhost(double *f_new, int nx_local, int ny, double *ghost_left, double *ghost_right, int rank, int size, MPI_Comm comm) {
+    MPI_Request reqs[4]; int rcount = 0;
+    if (rank > 0) { // Trao đổi với Rank trái
+        MPI_Irecv(ghost_left, ny*Q, MPI_DOUBLE, rank-1, 100, comm, &reqs[rcount++]);
+        MPI_Isend(f_new + 0, ny*Q, MPI_DOUBLE, rank-1, 101, comm, &reqs[rcount++]);
+    }
+    if (rank < size-1) { // Trao đổi với Rank phải
+        MPI_Irecv(ghost_right, ny*Q, MPI_DOUBLE, rank+1, 101, comm, &reqs[rcount++]);
+        MPI_Isend(f_new + (nx_local-1)*ny*Q, ny*Q, MPI_DOUBLE, rank+1, 100, comm, &reqs[rcount++]);
+    }
+    if (rcount > 0) MPI_Waitall(rcount, reqs, MPI_STATUSES_IGNORE);
+}
+```
 
 ---
 
-## GHI CHÚ CHO NGƯỜI THUYẾT TRÌNH
+## Slide 11: Kết quả thực nghiệm (Lưới 256x64)
 
-### Thời gian phân bổ
-- Slide 1-3 (Giới thiệu): 3 phút
-- Slide 4-5 (Lý thuyết): 3 phút
-- Slide 6-8 (Thiết kế & Cài đặt): 3 phút
-- Slide 9-11 (Kết quả & Phân tích): 4 phút
-- Slide 12-13 (Kết luận & Hướng phát triển): 2 phút
-- Q&A: Thời gian còn lại
+- **Thông số:** $\omega=1.0$, $Step=10,000$, $\nu = 0.1667$.
+- **Hiệu năng thực tế:**
 
-### Điểm nhấn
-- **Slide 4:** Vẽ rõ sơ đồ D2Q9 trên bảng
-- **Slide 7:** Giải thích chi tiết cách chia miền
-- **Slide 9:** Nhấn mạnh MLUPS tăng rõ rệt
-- **Slide 11:** Giải thích tại sao Efficiency giảm
+| Số CPU (P) | Thời gian (s) | MLUPS | Speedup | Efficiency |
+|---|---|---|---|---|
+| 1 (Serial) | 1.978 | 82.85 | 1.00x | 100% |
+| 2 | 0.993 | 165.02 | 1.99x | 99.5% |
+| 4 | 0.609 | 268.88 | 3.24x | 81.0% |
 
-### Demo (nếu có thời gian)
-- Chạy `./lbm_serial` và `mpirun -np 4 ./lbm_mpi`
-- So sánh thời gian chạy trực tiếp
+- **Nhận xét:** Speedup đạt gần như lý tưởng khi P=2 và duy trì mức tốt (>80%) khi P=4.
 
-### Câu hỏi dự kiến
-1. **"Tại sao không dùng FDM?"**
-   → LBM đơn giản hơn, song song tốt hơn, xử lý biên dễ hơn.
+---
 
-2. **"Chia miền 2D có tốt hơn không?"**
-   → Có, giảm lượng giao tiếp (tỉ lệ diện tích/chu vi tốt hơn), nhưng code phức tạp hơn.
+## Slide 12: Đánh giá độ chính xác & Visualization
 
-3. **"Tại sao Efficiency giảm khi tăng P?"**
-   → Overhead giao tiếp tăng, tỉ lệ Computation/Communication giảm.
+- **Sai số:** Vận tốc trung bình giữa bản MPI và Serial khớp nhau hoàn toàn (sai số máy tính).
+- **Trường vận tốc:** Đạt trạng thái ổn định với profile Parabol chuẩn Poiseuille.
+- *(Chèn hình ảnh velocity_field.png và velocity_profile.png)*
 
-4. **"LBM có thể chạy trên GPU không?"**
-   → Có, rất phù hợp với CUDA do tính song song cao và cấu trúc đều đặn.
+---
+
+## Slide 13: Kết luận
+
+- **Ưu điểm:** LBM D2Q9 rất phù hợp với MPI nhờ tính cục bộ của bước Collision.
+- **Hạn chế:** Hiệu năng bị giới hạn bởi `Overhead` truyền thông khi kích thước lưới cục bộ quá nhỏ.
+- **Hướng phát triển:** 
+  - Triển khai chia miền 2D.
+  - Tối ưu hóa bằng cách chồng lắp tính toán và truyền thông (overlapping).
+  - Chuyển đổi sang kiến trúc GPU (CUDA).
