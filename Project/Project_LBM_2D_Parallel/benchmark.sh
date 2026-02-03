@@ -18,12 +18,17 @@ fi
 
 echo "✅ Biên dịch thành công"
 
+# Tham số
+NX=${1:-256}
+NY=${2:-64}
+NSTEPS=${3:-10000}
+
 # Chạy serial
 echo ""
 echo "======================================"
-echo "CHẠY SERIAL"
+echo "CHẠY SERIAL (Luoi: $NX x $NY, $NSTEPS buoc)"
 echo "======================================"
-./lbm_serial
+./lbm_serial $NX $NY $NSTEPS
 
 # Chạy MPI với nhiều số tiến trình
 for np in 2 4 8; do
@@ -31,7 +36,7 @@ for np in 2 4 8; do
     echo "======================================"
     echo "CHẠY MPI VỚI $np TIẾN TRÌNH"
     echo "======================================"
-    mpirun -np $np ./lbm_mpi
+    mpirun -np $np ./lbm_mpi $NX $NY $NSTEPS
 done
 
 echo ""

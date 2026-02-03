@@ -1,9 +1,0 @@
-# Larger test case for timing
-n=200
-K=1000
-c=0.1
-left=10
-right=40
-bottom=30
-top=50
-init=0

@@ -6,7 +6,7 @@
 // Tham số mô phỏng
 #define NX  256      // Số điểm lưới theo chiều X
 #define NY  64       // Số điểm lưới theo chiều Y
-#define NSTEPS 10000 // Số bước thời gian
+#define NSTEPS 30000 // Số bước thời gian (tăng để hội tụ)
 #define OMEGA  1.0   // Tham số thư giãn (1/tau)
 #define U0     0.1   // Vận tốc đầu vào
 
@@ -89,35 +89,27 @@ void Collision(double *f, double *f_new, double *rho, double *ux, double *uy,
   }
 }
 //=========================
+//=========================
 void Streaming(double *f_new, double *f, int nx, int ny) {
   int x, y, i;
   
-  // Reset f
   for (x = 0; x < nx; x++) {
     for (y = 0; y < ny; y++) {
       for (i = 0; i < Q; i++) {
-        *(f + (x*ny + y)*Q + i) = 0.0;
-      }
-    }
-  }
-  
-  // Stream
-  for (x = 0; x < nx; x++) {
-    for (y = 0; y < ny; y++) {
-      for (i = 0; i < Q; i++) {
-        int xn = x + cx[i];
-        int yn = y + cy[i];
+        // Tọa độ nguồn (Pull model)
+        int xs = x - cx[i];
+        int ys = y - cy[i];
         
-        // Periodic boundary in X
-        if (xn < 0) xn = nx - 1;
-        if (xn >= nx) xn = 0;
+        // Xử lý biên chu kỳ theo chiều X
+        if (xs < 0) xs = nx - 1;
+        if (xs >= nx) xs = 0;
         
-        // Bounce-back on top/bottom walls
-        if (yn < 0 || yn >= ny) {
+        // Xử lý biên Bounce-back (vách) theo chiều Y
+        if (ys < 0 || ys >= ny) {
           int opp = opposite[i];
-          *(f + (x*ny + y)*Q + opp) += *(f_new + (x*ny + y)*Q + i);
+          *(f + (x*ny + y)*Q + i) = *(f_new + (x*ny + y)*Q + opp);
         } else {
-          *(f + (xn*ny + yn)*Q + i) += *(f_new + (x*ny + y)*Q + i);
+          *(f + (x*ny + y)*Q + i) = *(f_new + (xs*ny + ys)*Q + i);
         }
       }
     }
@@ -157,6 +149,21 @@ int main(int argc, char **argv) {
   int nsteps = NSTEPS;
   double omega = OMEGA;
   double u0 = U0;
+  
+  if (argc >= 6) {
+    nx = atoi(argv[1]);
+    ny = atoi(argv[2]);
+    nsteps = atoi(argv[3]);
+    omega = atof(argv[4]);
+    u0 = atof(argv[5]);
+  } else if (argc >= 4) {
+    nx = atoi(argv[1]);
+    ny = atoi(argv[2]);
+    nsteps = atoi(argv[3]);
+  } else if (argc > 1) {
+    printf("Su dung: %s [NX] [NY] [NSTEPS] [OMEGA] [U0]\n", argv[0]);
+    printf("Mac dinh: NX=%d, NY=%d, NSTEPS=%d, OMEGA=%.1f, U0=%.1f\n", NX, NY, NSTEPS, OMEGA, U0);
+  }
   
   printf("=== LBM D2Q9 - Phien ban tuan tu ===\n");
   printf("Luoi: %d x %d\n", nx, ny);
@@ -205,17 +212,32 @@ int main(int argc, char **argv) {
   printf("Thoi gian tinh: %.3f giay\n", elapsed);
   printf("MLUPS: %.2f\n", mlups);
   
-  // Tính vận tốc trung bình
+  // Tính các đại lượng vĩ mô cuối cùng
   TinhMacro(f, rho, ux, uy, nx, ny);
+  
+  // Tính checksum để so sánh với MPI
+  double sum_rho = 0.0;
+  double sum_ux = 0.0;
+  double sum_uy = 0.0;
   double avg_ux = 0.0;
   int x, y;
   for (x = 0; x < nx; x++) {
-    for (y = 1; y < ny-1; y++) {
-      avg_ux += *(ux + x*ny + y);
+    for (y = 0; y < ny; y++) {
+      sum_rho += *(rho + x*ny + y);
+      sum_ux += *(ux + x*ny + y);
+      sum_uy += *(uy + x*ny + y);
+      if (y > 0 && y < ny-1) {
+        avg_ux += *(ux + x*ny + y);
+      }
     }
   }
   avg_ux /= (nx * (ny-2));
+  
   printf("Van toc trung binh: %.6f\n", avg_ux);
+  printf("\n=== CHECKSUM (de so sanh voi MPI) ===\n");
+  printf("Sum(rho): %.10f\n", sum_rho);
+  printf("Sum(ux):  %.10f\n", sum_ux);
+  printf("Sum(uy):  %.10f\n", sum_uy);
   
   // Ghi kết quả
   GhiKetQua(rho, ux, uy, nx, ny, "lbm_result.dat");

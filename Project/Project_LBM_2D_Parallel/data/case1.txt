@@ -1,9 +1,0 @@
-# Basic test case
-n=100
-K=500
-c=0.1
-left=10
-right=40
-bottom=30
-top=50
-init=0

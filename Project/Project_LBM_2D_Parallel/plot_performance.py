@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
 Script vẽ biểu đồ hiệu năng cho LBM
+Dữ liệu từ thực nghiệm: lưới 512×128, 30000 bước
 """
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Dữ liệu từ thực nghiệm (lưới 256x64)
+# Dữ liệu từ thực nghiệm (lưới 512x128, 30000 bước)
 processes = np.array([1, 2, 4, 8])
-time_serial = 1.802
-times = np.array([1.802, 1.365, 0.738, 0.450])
-mlups = np.array([90.94, 120.00, 222.13, 364.09])
+time_serial = 19.197  # Serial time
+times = np.array([19.197, 12.969, 6.526, 12.668])  # Serial, MPI-2, MPI-4, MPI-8
+mlups = np.array([102.42, 151.60, 301.28, 155.20])
 
 # Tính toán
 speedup = time_serial / times
