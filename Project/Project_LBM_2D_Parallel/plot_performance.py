@@ -9,9 +9,9 @@ import numpy as np
 
 # Dữ liệu từ thực nghiệm (lưới 256x64, 10000 bước)
 processes = np.array([1, 2, 4, 8])
-time_serial = 1.802  # Serial time
-times = np.array([1.802, 1.365, 0.738, 0.450])  # Serial, MPI-2, MPI-4, MPI-8
-mlups = np.array([90.94, 120.00, 222.13, 364.09])
+time_serial = 1.594  # Serial time
+times = np.array([1.594, 0.950, 0.691, 1.111])  # Serial, MPI-2, MPI-4, MPI-8
+mlups = np.array([102.79, 172.55, 236.96, 147.48])
 
 # Tính toán
 speedup = time_serial / times

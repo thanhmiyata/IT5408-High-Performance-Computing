@@ -746,16 +746,17 @@ Sau khi thực hiện chạy benchmark, kết quả thu được về thời gia
 
 | Số tiến trình (P) | Thời gian (s) | MLUPS | Speedup | Efficiency |
 |-------------------|---------------|-------|---------|------------|
-| **1 (Serial)**    | 1.591         | 102.95| 1.00x   | 100.0%     |
-| **2**             | 0.990         | 165.45| 1.61x   | 80.5%      |
-| **4**             | 0.621         | 263.98| 2.56x   | 64.1%      |
+| **1 (Serial)**    | 1.594         | 102.79| 1.00x   | 100.0%     |
+| **2**             | 0.950         | 172.55| 1.68x   | 83.9%      |
+| **4**             | 0.691         | 236.96| 2.31x   | 57.7%      |
+| **8**             | 1.111         | 147.48| 1.44x   | 17.9%      |
 
 **Nhận xét:**
-*   **Tốc độ MLUPS**: Tăng đều khi số CORE tăng, đạt mức tối đa 263.98 triệu điểm lưới cập nhật mỗi giây khi sử dụng 4 CORE.
-*   **Speedup**: Đạt được tỷ lệ tăng trưởng tốt (2.56x trên 4 tiến trình).
-*   **Hiệu suất (Efficiency)**: Duy trì ở mức 64.1% khi chạy trên 4 CORE, cho thấy overhead giao tiếp MPI bắt đầu chiếm tỉ trọng khi kích thước lưới cục bộ cho mỗi node trở nên nhỏ đi.
-ến trình, thể hiện qua việc thời gian thực thi giảm, MLUPS tăng và speedup lớn hơn 1 ở tất cả các cấu hình song song.
-
+*   **Khi tăng số tiến trình từ 1 lên 2**: Thời gian thực thi giảm từ 1.594 s xuống 0.950 s, tương ứng với speedup 1.68x. Điều này cho thấy chương trình đã khai thác tốt tính song song, với efficiency đạt 83.9%.
+*   **Khi sử dụng 4 tiến trình**: Thời gian tiếp tục giảm xuống còn 0.691 s, speedup đạt 2.31x và MLUPS tăng lên mức cao nhất là 236.96. Ở mức này, chương trình vẫn duy trì hiệu năng tốt với efficiency 57.7%.
+*   **Tại 8 tiến trình**: Hiệu suất giảm mạnh (17.9%) và thời gian chạy tăng lên (1.111 s) so với 4 tiến trình. Điều này do giới hạn của phần cứng vật lý (số lõi thực) và overhead giao tiếp MPI bắt đầu chiếm tỉ trọng lớn khi kích thước lưới cục bộ cho mỗi node trở nên quá nhỏ (32x64), dẫn đến việc tranh chấp tài nguyên và chi phí đồng bộ hóa tăng cao.
+Thể hiện qua biểu đồ, speedup tăng trưởng ổn định ở vùng 1-4 core nhưng bị bão hòa và sụt giảm tại 8 core.
+x
 Trong đó:
 
 ![][image60]
@@ -800,22 +801,22 @@ Các kết quả thực nghiệm thu được cho thấy chương trình Lattice
 
 ### **Đánh giá hiệu năng song song**
 
-Xét về mặt hiệu năng, các chỉ số speedup, efficiency và MLUPS cho thấy chương trình khai thác tốt tính song song tự nhiên của phương pháp Lattice Boltzmann. Khi số tiến trình tăng từ 1 lên 4, speedup tăng gần tuyến tính và MLUPS tăng mạnh, chứng tỏ chi phí tính toán vẫn chiếm ưu thế so với chi phí giao tiếp. Điều này phản ánh tính hiệu quả của chiến lược chia miền một chiều theo phương X, trong đó mỗi tiến trình chỉ cần trao đổi dữ liệu với hai tiến trình lân cận.
+Xét về mặt hiệu năng, các chỉ số speedup, efficiency và MLUPS cho thấy chương trình khai thác tốt tính song song tự nhiên của phương pháp Lattice Boltzmann ở phạm vi các lõi thực vật lý. Khi số tiến trình tăng từ 1 lên 4, speedup tăng đáng kể (đạt 2.31x) và MLUPS tăng mạnh, chứng tỏ chi phí tính toán vẫn chiếm đóng góp tích cực. Điều này phản ánh tính hiệu quả của chiến lược chia miền một chiều theo phương X.
 
-Tuy nhiên, khi tăng số tiến trình lên 8, efficiency giảm rõ rệt. Nguyên nhân chính là kích thước miền con NXlocalNXlocal​ giảm, làm cho tỉ lệ giao tiếp trên tính toán tăng lên. Chi phí trao đổi ghost columns và đồng bộ MPI bắt đầu chiếm vai trò đáng kể, khiến speedup không còn tăng tuyến tính. Kết quả này phù hợp với mô hình strong scaling và phản ánh đúng giới hạn được mô tả bởi định luật Amdahl, trong đó phần mã tuần tự và overhead giao tiếp giới hạn speedup tối đa.
+Tuy nhiên, khi tăng số tiến trình lên 8, hiệu năng bị sụt giảm rõ rệt. Nguyên nhân chính là do máy tính thực hiện thử nghiệm chỉ có giới hạn số lõi thực, khi chạy 8 tiến trình sẽ xảy ra tình trạng tranh chấp tài nguyên (Resource contention). Đồng thời, kích thước miền con $nx\_local$ lúc này chỉ còn 32 cột, làm cho tỉ lệ giữa thời gian giao tiếp (trao đổi ghost columns) trên thời gian tính toán tăng lên đáng kể. Kết quả này phù hợp với mô hình strong scaling và phản ánh đúng giới hạn được mô tả bởi định luật Amdahl.
 
-Chương trình đạt hiệu năng tốt nhất ở vùng số tiến trình nhỏ đến trung bình (2–4 tiến trình), là vùng mà chi phí tính toán vẫn áp đảo chi phí giao tiếp.
+Chương trình đạt hiệu năng tốt nhất ở cấu hình 4 tiến trình, là điểm cân bằng tối ưu giữa việc tăng cường sức mạnh tính toán và duy trì overhead giao tiếp ở mức chấp nhận được.
 
 ### Ưu điểm
 
-* Speedup tăng rõ rệt khi tăng số tiến trình từ 1 lên 4\.  
-* MLUPS tăng gần tuyến tính ở vùng số tiến trình nhỏ.  
+* Speedup tăng rõ rệt từ 1 lên 4 tiến trình.  
+* MLUPS đạt đỉnh cao tại 4 tiến trình (236.96).  
 * Phiên bản MPI khai thác tốt tính song song tự nhiên của LBM.
 
 ### Nhược điểm
 
 * Efficiency giảm dần khi số tiến trình tăng.  
-* Với P=8, efficiency chỉ còn khoảng 50%, cho thấy overhead giao tiếp bắt đầu chiếm ưu thế.
+* Với P=8, hiệu năng bị sụt giảm do tranh chấp lõi CPU và overhead giao tiếp chiếm ưu thế.
 
 ### **Đánh giá độ chính xác và tính ổn định**
 
@@ -892,11 +893,11 @@ Trong báo cáo này, phương pháp Lattice Boltzmann (LBM) đã được nghi�
 
 Chương trình LBM sử dụng mô hình D2Q9 kết hợp với xấp xỉ BGK đã tái hiện chính xác dòng chảy kênh hai chiều. Các kết quả mô phỏng như biên dạng vận tốc theo chiBản báo cáo này cũng thực hiện kiểm tra độ sai lệch về mặt số học giữa bản MPI và Serial qua các đại lượng bảo toàn (Checksum) sau 10,000 bước:
 
-| Đại lượng | Serial | MPI (4P) | Sai lệch (%) |
+| Đại lượng | Serial | MPI (8P) | Sai lệch (%) |
 |-----------|--------|----------|--------------|
-| **Sum(ρ)** | 16383.9999 | 16381.4419 | 0.016% |
-| **Sum(uₓ)** | 1527.0476 | 1526.0273 | 0.066% |
-| **Avg uₓ**  | 0.096015 | 0.095958 | 0.060% |
+| **Sum(ρ)** | 16383.9999 | 16380.9514 | 0.018% |
+| **Sum(uₓ)** | 1527.0476 | 1527.1667 | 0.007% |
+| **Avg uₓ**  | 0.096015 | 0.096032 | 0.017% |
 
 **Nhận xét**: Sai lệch giữa hai phiên bản là cực nhỏ (< 0.1%), chủ yếu do sai số làm tròn số thực dấu phẩy động (floating point) khi tổng hợp dữ liệu từ các node khác nhau bằng `MPI_Reduce`. Điều này khẳng định thuật toán song song đã cài đặt hoàn toàn chính xác về mặt logic.
 

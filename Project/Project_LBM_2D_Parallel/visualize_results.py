@@ -70,50 +70,29 @@ def plot_velocity_profile(UX, ny):
     ux_profile = UX[mid_x, :]
     y_coords = np.arange(ny)
     
-    # Vẽ profile
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
-    
-    # ===== Subplot 1: Profile vận tốc =====
-    ax1.plot(ux_profile, y_coords, 'b-o', linewidth=2, markersize=3, label='LBM (Mô phỏng)')
-    ax1.set_xlabel('Vận tốc u_x', fontsize=12)
-    ax1.set_ylabel('Y', fontsize=12)
-    ax1.set_title('Profile vận tốc theo chiều Y', fontsize=14, fontweight='bold')
-    ax1.grid(True, alpha=0.3)
+    # Vẽ profile (Chỉ 1 subplot duy nhất)
+    plt.figure(figsize=(8, 6))
+    plt.plot(ux_profile, y_coords, 'b-o', linewidth=2, markersize=3, label='LBM (Mô phỏng)')
+    plt.xlabel('Vận tốc u_x', fontsize=12)
+    plt.ylabel('Y', fontsize=12)
+    plt.title('Profile vận tốc theo chiều Y', fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3)
     
     # Fit parabola: u(y) = a*y^2 + b*y + c
-    # Bỏ qua 2 điểm biên (y=0 và y=ny-1) để fit tốt hơn
     y_inner = y_coords[1:-1]
     ux_inner = ux_profile[1:-1]
-    
-    # Fit dạng parabola: u = u_max * (1 - ((y-y_center)/half_width)^2)
     y_center = (ny - 1) / 2.0
-    coeffs = np.polyfit(y_inner - y_center, ux_inner, 2)  # a*y^2 + b*y + c
+    coeffs = np.polyfit(y_inner - y_center, ux_inner, 2)
     u_fit = np.polyval(coeffs, y_coords - y_center)
     
-    ax1.plot(u_fit, y_coords, 'r--', linewidth=2, label='Fit Parabolic')
-    ax1.legend(fontsize=10)
+    plt.plot(u_fit, y_coords, 'r--', linewidth=2, label='Fit Parabolic (Lý thuyết)')
+    plt.legend(fontsize=10)
     
-    # Thêm thông tin
+    # Thêm thông tin thông số fit
     u_max = ux_profile.max()
-    u_max_theory = coeffs[2]  # hệ số c (đỉnh parabola)
-    ax1.text(0.02, ny*0.85, f'u_max (LBM) = {u_max:.4f}\nu_max (fit) = {u_max_theory:.4f}', 
-             fontsize=10, bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
-    
-    # ===== Subplot 2: Sai số so với parabola =====
-    error = ux_profile - u_fit
-    ax2.plot(error * 1000, y_coords, 'g-o', linewidth=2, markersize=3)  # Nhân 1000 để dễ thấy
-    ax2.axvline(x=0, color='k', linestyle='--', alpha=0.5)
-    ax2.set_xlabel('Sai số (×10⁻³)', fontsize=12)
-    ax2.set_ylabel('Y', fontsize=12)
-    ax2.set_title('Sai số: LBM - Fit Parabolic', fontsize=14, fontweight='bold')
-    ax2.grid(True, alpha=0.3)
-    
-    # Thêm thông tin sai số
-    rmse = np.sqrt(np.mean(error[1:-1]**2))
-    max_error = np.max(np.abs(error[1:-1]))
-    ax2.text(0.02, ny*0.85, f'RMSE = {rmse:.6f}\nMax Error = {max_error:.6f}', 
-             fontsize=10, bbox=dict(boxstyle='round', facecolor='lightgreen', alpha=0.5),
-             transform=ax2.get_yaxis_transform())
+    plt.text(0.02, ny*0.85, f'u_max (LBM) = {u_max:.4f}', 
+             fontsize=10, bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5),
+             transform=plt.gca().get_yaxis_transform())
     
     plt.tight_layout()
     plt.savefig('velocity_profile.png', dpi=300, bbox_inches='tight')
