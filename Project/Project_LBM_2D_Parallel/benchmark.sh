@@ -1,51 +1,53 @@
 #!/bin/bash
-# Script benchmark tự động cho LBM
 
 echo "======================================"
 echo "LBM BENCHMARK SCRIPT"
 echo "======================================"
 
-# Biên dịch
 echo ""
-echo "Đang biên dịch..."
+echo "Dang bien dich..."
 gcc -O2 -o lbm_serial src/lbm_serial.c -lm
 mpicc -O2 -o lbm_mpi src/lbm_mpi.c -lm
 
 if [ $? -ne 0 ]; then
-    echo "❌ Lỗi biên dịch!"
+    echo "❌ Loi bien dich!"
     exit 1
 fi
 
-echo "✅ Biên dịch thành công"
+echo "✅ Bien dich thanh cong"
 
-# Tham số
-NX=${1:-256}
-NY=${2:-64}
-NSTEPS=${3:-10000}
+CONFIG_FILE="config.txt"
 
-# Chạy serial
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "nx=256" > "$CONFIG_FILE"
+    echo "ny=64" >> "$CONFIG_FILE"
+    echo "nsteps=10000" >> "$CONFIG_FILE"
+    echo "omega=1.0" >> "$CONFIG_FILE"
+    echo "u0=0.1" >> "$CONFIG_FILE"
+fi
+
 echo ""
 echo "======================================"
-echo "CHẠY SERIAL (Luoi: $NX x $NY, $NSTEPS buoc)"
+echo "CHAY SERIAL (P=1 baseline)"
 echo "======================================"
-./lbm_serial $NX $NY $NSTEPS
+./lbm_serial -c "$CONFIG_FILE"
 
-# Chạy MPI với nhiều số tiến trình
 for np in 2 4 8; do
     echo ""
     echo "======================================"
-    echo "CHẠY MPI VỚI $np TIẾN TRÌNH"
+    echo "CHAY MPI VOI $np TIEN TRINH"
     echo "======================================"
-    mpirun -np $np ./lbm_mpi $NX $NY $NSTEPS
+    mpirun -np $np ./lbm_mpi -c "$CONFIG_FILE"
 done
 
 echo ""
 echo "======================================"
-echo "HOÀN TẤT BENCHMARK"
+echo "DANG XU LY KET QUA VA VE BIEU DO..."
 echo "======================================"
+python3 visualize_results.py
+python3 plot_performance.py
+
 echo ""
-echo "Để vẽ biểu đồ hiệu năng, chạy:"
-echo "  python3 plot_performance.py"
-echo ""
-echo "Để visualize kết quả, chạy:"
-echo "  python3 visualize_results.py"
+echo "======================================"
+echo "HOAN TAT TOAN BO QUY TRINH"
+echo "======================================"

@@ -4,71 +4,50 @@
 #include <math.h>
 #include <string.h>
 
-// Tham số mô phỏng mặc định
 #define DEFAULT_NX  256
 #define DEFAULT_NY  64
 #define DEFAULT_NSTEPS 10000
 #define DEFAULT_OMEGA  1.0
 #define DEFAULT_U0     0.1
 
-// Hằng số D2Q9
 #define Q 9
 
-// Trọng số cho 9 hướng
 static const double w[Q] = {
-  4.0/9.0,  // 0: center
-  1.0/9.0,  1.0/9.0,  1.0/9.0,  1.0/9.0,  // 1-4: cardinal
-  1.0/36.0, 1.0/36.0, 1.0/36.0, 1.0/36.0  // 5-8: diagonal
+  4.0/9.0,  
+  1.0/9.0,  1.0/9.0,  1.0/9.0,  1.0/9.0,  
+  1.0/36.0, 1.0/36.0, 1.0/36.0, 1.0/36.0
 };
 
-// Vector vận tốc rời rạc (cx, cy)
 static const int cx[Q] = {0, 1, 0, -1,  0, 1, -1, -1,  1};
 static const int cy[Q] = {0, 0, 1,  0, -1, 1,  1, -1, -1};
 
-// Hướng đối diện (cho bounce-back)
 static const int opposite[Q] = {0, 3, 4, 1, 2, 7, 8, 5, 6};
 
-//=========================
-// Hàm đọc file config
-//=========================
 int DocConfig(const char *filename, int *nx, int *ny, int *nsteps, double *omega, double *u0) {
   FILE *fp = fopen(filename, "r");
-  if (!fp) {
-    return -1;  // Không tìm thấy file
-  }
-  
+  if (!fp) return -1;
   char line[256];
+  int found = 0;
   while (fgets(line, sizeof(line), fp)) {
-    // Bỏ qua dòng trống và comment
     if (line[0] == '#' || line[0] == '\n' || line[0] == '\r') continue;
-    
-    char key[64];
-    char value[64];
-    
+    char key[64], value[64];
     if (sscanf(line, "%63[^=]=%63s", key, value) == 2) {
-      // Loại bỏ khoảng trắng
       char *k = key;
       while (*k == ' ' || *k == '\t') k++;
-      
-      if (strcmp(k, "nx") == 0) *nx = atoi(value);
-      else if (strcmp(k, "ny") == 0) *ny = atoi(value);
-      else if (strcmp(k, "nsteps") == 0) *nsteps = atoi(value);
-      else if (strcmp(k, "omega") == 0) *omega = atof(value);
-      else if (strcmp(k, "u0") == 0) *u0 = atof(value);
+      if (strcmp(k, "nx") == 0) { *nx = atoi(value); found++; }
+      else if (strcmp(k, "ny") == 0) { *ny = atoi(value); found++; }
+      else if (strcmp(k, "nsteps") == 0) { *nsteps = atoi(value); found++; }
+      else if (strcmp(k, "omega") == 0) { *omega = atof(value); found++; }
+      else if (strcmp(k, "u0") == 0) { *u0 = atof(value); found++; }
     }
   }
-  
   fclose(fp);
-  return 0;
+  return (found > 0) ? 0 : -2;
 }
 
-//=========================
 void KhoiTaoCucBo(double *f, int nx_local, int ny) {
   int x, y, i;
-  double rho = 1.0;
-  double ux = 0.0;
-  double uy = 0.0;
-  
+  double rho = 1.0, ux = 0.0, uy = 0.0;
   for (x = 0; x < nx_local; x++) {
     for (y = 0; y < ny; y++) {
       for (i = 0; i < Q; i++) {
@@ -80,47 +59,33 @@ void KhoiTaoCucBo(double *f, int nx_local, int ny) {
     }
   }
 }
-//=========================
-void TinhMacroCucBo(double *f, double *rho, double *ux, double *uy, 
-                     int nx_local, int ny) {
+
+void TinhMacroCucBo(double *f, double *rho, double *ux, double *uy, int nx_local, int ny) {
   int x, y, i;
-  
   for (x = 0; x < nx_local; x++) {
     for (y = 0; y < ny; y++) {
-      double r = 0.0;
-      double vx = 0.0;
-      double vy = 0.0;
-      
+      double r = 0.0, vx = 0.0, vy = 0.0;
       for (i = 0; i < Q; i++) {
         double fi = *(f + (x*ny + y)*Q + i);
-        r += fi;
-        vx += fi * cx[i];
-        vy += fi * cy[i];
+        r += fi; vx += fi * cx[i]; vy += fi * cy[i];
       }
-      
       *(rho + x*ny + y) = r;
       if (r > 1e-10) {
         *(ux + x*ny + y) = vx / r;
         *(uy + x*ny + y) = vy / r;
       } else {
-        *(ux + x*ny + y) = 0.0;
-        *(uy + x*ny + y) = 0.0;
+        *(ux + x*ny + y) = 0.0; *(uy + x*ny + y) = 0.0;
       }
     }
   }
 }
-//=========================
-void CollisionCucBo(double *f, double *f_new, double *rho, double *ux, double *uy,
-                     int nx_local, int ny, double omega) {
+
+void CollisionCucBo(double *f, double *f_new, double *rho, double *ux, double *uy, int nx_local, int ny, double omega) {
   int x, y, i;
-  
   for (x = 0; x < nx_local; x++) {
     for (y = 0; y < ny; y++) {
-      double r = *(rho + x*ny + y);
-      double u_x = *(ux + x*ny + y);
-      double u_y = *(uy + x*ny + y);
+      double r = *(rho + x*ny + y), u_x = *(ux + x*ny + y), u_y = *(uy + x*ny + y);
       double usqr = u_x*u_x + u_y*u_y;
-      
       for (i = 0; i < Q; i++) {
         double cu = cx[i]*u_x + cy[i]*u_y;
         double feq = w[i] * r * (1.0 + 3.0*cu + 4.5*cu*cu - 1.5*usqr);
@@ -130,42 +95,28 @@ void CollisionCucBo(double *f, double *f_new, double *rho, double *ux, double *u
     }
   }
 }
-//=========================
+
 void ApDungBienCucBo(double *ux, int nx_local, int ny, double u0, int rank, int size) {
   int y;
-  // Nếu là rank đầu (chứa biên trái)
   if (rank == 0) {
-    for (y = 1; y < ny-1; y++) {
-      *(ux + 0*ny + y) = u0;
-    }
+    for (y = 1; y < ny-1; y++) *(ux + 0*ny + y) = u0;
   }
-  // Nếu là rank cuối (chứa biên phải)
   if (rank == size - 1) {
-    for (y = 1; y < ny-1; y++) {
-      *(ux + (nx_local-1)*ny + y) = u0;
-    }
+    for (y = 1; y < ny-1; y++) *(ux + (nx_local-1)*ny + y) = u0;
   }
 }
-//=========================
-void StreamingCucBo(double *f_new, double *f, int nx_local, int ny,
-                     double *ghost_left, double *ghost_right) {
+
+void StreamingCucBo(double *f_new, double *f, int nx_local, int ny, double *ghost_left, double *ghost_right) {
   int x, y, i;
-  
   for (x = 0; x < nx_local; x++) {
     for (y = 0; y < ny; y++) {
       for (i = 0; i < Q; i++) {
-        // source coordinate
-        int xs = x - cx[i];
-        int ys = y - cy[i];
-        
-        // Xử lý biên Y (bounce-back)
+        int xs = x - cx[i], ys = y - cy[i];
         if (ys < 0 || ys >= ny) {
           int opp = opposite[i];
           *(f + (x*ny + y)*Q + i) = *(f_new + (x*ny + y)*Q + opp);
           continue;
         }
-        
-        // Xử lý biên X (Pull from ghost cells if needed)
         if (xs < 0) {
           *(f + (x*ny + y)*Q + i) = *(ghost_left + y*Q + i);
         } else if (xs >= nx_local) {
@@ -177,99 +128,54 @@ void StreamingCucBo(double *f_new, double *f, int nx_local, int ny,
     }
   }
 }
-//=========================
-void TraoDoiGhost(double *f_new, int nx_local, int ny, 
-                   double *ghost_left, double *ghost_right,
-                   int rank, int size, MPI_Comm comm) {
+
+void TraoDoiGhost(double *f_new, int nx_local, int ny, double *ghost_left, double *ghost_right, int rank, int size, MPI_Comm comm) {
   MPI_Request reqs[4];
   int rcount = 0;
-  
   int left = (rank - 1 + size) % size;
   int right = (rank + 1) % size;
-
-  // Nhận từ láng giềng
   MPI_Irecv(ghost_left, ny*Q, MPI_DOUBLE, left, 100, comm, &reqs[rcount++]);
   MPI_Irecv(ghost_right, ny*Q, MPI_DOUBLE, right, 101, comm, &reqs[rcount++]);
-  
-  // Gửi cho láng giềng
   MPI_Isend(f_new + 0*ny*Q, ny*Q, MPI_DOUBLE, left, 101, comm, &reqs[rcount++]);
   MPI_Isend(f_new + (nx_local-1)*ny*Q, ny*Q, MPI_DOUBLE, right, 100, comm, &reqs[rcount++]);
-  
   MPI_Waitall(rcount, reqs, MPI_STATUSES_IGNORE);
 }
-//=========================
+
 int main(int argc, char **argv) {
   int rank, size;
-  
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
-  
-  // Tham số mặc định
-  int nx = DEFAULT_NX;
-  int ny = DEFAULT_NY;
-  int nsteps = DEFAULT_NSTEPS;
-  double omega = DEFAULT_OMEGA;
-  double u0 = DEFAULT_U0;
-  
+  int nx, ny, nsteps;
+  double omega, u0;
   const char *config_file = "config.txt";
-  int use_config = 0;
-  
-  // Xử lý tham số dòng lệnh
-  if (argc >= 2 && strcmp(argv[1], "-c") == 0 && argc >= 3) {
-    // Sử dụng: mpirun -np 4 ./lbm_mpi -c config.txt
+  if (argc >= 3 && strcmp(argv[1], "-c") == 0) {
     config_file = argv[2];
-    use_config = 1;
-  } else if (argc >= 6) {
-    // Sử dụng: mpirun -np 4 ./lbm_mpi NX NY NSTEPS OMEGA U0
-    nx = atoi(argv[1]);
-    ny = atoi(argv[2]);
-    nsteps = atoi(argv[3]);
-    omega = atof(argv[4]);
-    u0 = atof(argv[5]);
-  } else if (argc >= 4) {
-    // Sử dụng: mpirun -np 4 ./lbm_mpi NX NY NSTEPS
-    nx = atoi(argv[1]);
-    ny = atoi(argv[2]);
-    nsteps = atoi(argv[3]);
-  } else {
-    // Thử đọc từ file config mặc định
-    use_config = 1;
+  } else if (argc > 1) {
+    if (rank == 0) fprintf(stderr, "Loi: Cu phap khong hop le. Su dung: mpirun -np <P> %s [-c <file_config>]\n", argv[0]);
+    MPI_Finalize(); return 1;
   }
-  
-  // Đọc config (chỉ rank 0 đọc, sau đó broadcast)
-  if (use_config) {
-    if (rank == 0) {
-      if (DocConfig(config_file, &nx, &ny, &nsteps, &omega, &u0) == 0) {
-        printf("Doc cau hinh tu file: %s\n", config_file);
-      } else {
-        printf("Su dung gia tri mac dinh (khong tim thay %s)\n", config_file);
-      }
-    }
-    // Broadcast các tham số từ rank 0
-    MPI_Bcast(&nx, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&ny, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&nsteps, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&omega, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&u0, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  int status = 0;
+  if (rank == 0) {
+    printf("Dang doc cau hinh tu: %s\n", config_file);
+    status = DocConfig(config_file, &nx, &ny, &nsteps, &omega, &u0);
+    if (status == -1) fprintf(stderr, "Loi: Khong tim thay file config '%s'\n", config_file);
+    else if (status == -2) fprintf(stderr, "Loi: File '%s' khong chua du lieu hop le\n", config_file);
   }
-  
-  // Chia miền theo X
+  MPI_Bcast(&status, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  if (status != 0) { MPI_Finalize(); return 1; }
+  MPI_Bcast(&nx, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&ny, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&nsteps, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&omega, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Bcast(&u0, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   int nx_local = nx / size;
   int remainder = nx % size;
   if (rank < remainder) nx_local++;
-  
   if (rank == 0) {
     printf("\n=== LBM D2Q9 - Phien ban MPI ===\n");
-    printf("So tien trinh: %d\n", size);
-    printf("Luoi toan cuc: %d x %d\n", nx, ny);
-    printf("Luoi cuc bo (rank 0): %d x %d\n", nx_local, ny);
-    printf("So buoc: %d\n", nsteps);
-    printf("Omega: %.3f\n", omega);
-    printf("Van toc dau vao: %.3f\n", u0);
+    printf("So tien trinh: %d, Luoi: %d x %d, So buoc: %d, Omega: %.3f, u0: %.3f\n", size, nx, ny, nsteps, omega, u0);
   }
-  
-  // Cấp phát bộ nhớ
   double *f = (double *)malloc(nx_local * ny * Q * sizeof(double));
   double *f_new = (double *)malloc(nx_local * ny * Q * sizeof(double));
   double *rho = (double *)malloc(nx_local * ny * sizeof(double));
@@ -277,19 +183,12 @@ int main(int argc, char **argv) {
   double *uy = (double *)malloc(nx_local * ny * sizeof(double));
   double *ghost_left = (double *)malloc(ny * Q * sizeof(double));
   double *ghost_right = (double *)malloc(ny * Q * sizeof(double));
-  
   if (!f || !f_new || !rho || !ux || !uy || !ghost_left || !ghost_right) {
     fprintf(stderr, "Rank %d: Loi cap phat bo nho!\n", rank);
     MPI_Abort(MPI_COMM_WORLD, 1);
   }
-  
-  // Khởi tạo
   KhoiTaoCucBo(f, nx_local, ny);
-  
-  // Bắt đầu đo thời gian
   double t_start = MPI_Wtime();
-  
-  // Vòng lặp thời gian
   int step;
   for (step = 0; step < nsteps; step++) {
     TinhMacroCucBo(f, rho, ux, uy, nx_local, ny);
@@ -297,22 +196,14 @@ int main(int argc, char **argv) {
     CollisionCucBo(f, f_new, rho, ux, uy, nx_local, ny, omega);
     TraoDoiGhost(f_new, nx_local, ny, ghost_left, ghost_right, rank, size, MPI_COMM_WORLD);
     StreamingCucBo(f_new, f, nx_local, ny, ghost_left, ghost_right);
-    
     if (rank == 0 && step % 1000 == 0) {
       printf("Buoc %d/%d\n", step, nsteps);
     }
   }
-  
   double t_end = MPI_Wtime();
   double elapsed = t_end - t_start;
-  
-  // Tính MLUPS
   double mlups = (double)(nx * ny * nsteps) / (elapsed * 1e6);
-  
-  // Tính các đại lượng vĩ mô cuối cùng
   TinhMacroCucBo(f, rho, ux, uy, nx_local, ny);
-  
-  // Tính checksum cục bộ
   double local_sum_rho = 0.0;
   double local_sum_ux = 0.0;
   double local_sum_uy = 0.0;
@@ -328,8 +219,6 @@ int main(int argc, char **argv) {
       }
     }
   }
-  
-  // Tổng hợp checksum từ tất cả các tiến trình
   double global_sum_rho = 0.0;
   double global_sum_ux = 0.0;
   double global_sum_uy = 0.0;
@@ -338,7 +227,6 @@ int main(int argc, char **argv) {
   MPI_Reduce(&local_sum_ux, &global_sum_ux, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
   MPI_Reduce(&local_sum_uy, &global_sum_uy, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
   MPI_Reduce(&local_avg_ux, &global_avg_ux, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-  
   if (rank == 0) {
     double avg_ux = global_avg_ux / (nx * (ny-2));
     printf("\n=== KET QUA ===\n");
@@ -350,8 +238,6 @@ int main(int argc, char **argv) {
     printf("Sum(ux):  %.10f\n", global_sum_ux);
     printf("Sum(uy):  %.10f\n", global_sum_uy);
   }
-  
-  // Giải phóng bộ nhớ
   free(f);
   free(f_new);
   free(rho);
@@ -359,7 +245,6 @@ int main(int argc, char **argv) {
   free(uy);
   free(ghost_left);
   free(ghost_right);
-  
   MPI_Finalize();
   return 0;
 }

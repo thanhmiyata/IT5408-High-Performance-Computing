@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
-"""
-Script visualize kết quả LBM
-Vẽ trường vận tốc và profile vận tốc
-"""
 
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 
 def load_lbm_data(filename):
-    """Đọc file kết quả LBM"""
     data = np.loadtxt(filename, skiprows=1)
     x = data[:, 0]
     y = data[:, 1]
@@ -17,11 +12,9 @@ def load_lbm_data(filename):
     ux = data[:, 3]
     uy = data[:, 4]
     
-    # Tìm kích thước lưới
     nx = len(np.unique(x))
     ny = len(np.unique(y))
     
-    # Reshape thành ma trận 2D
     X = x.reshape(nx, ny)
     Y = y.reshape(nx, ny)
     RHO = rho.reshape(nx, ny)
@@ -31,13 +24,10 @@ def load_lbm_data(filename):
     return X, Y, RHO, UX, UY, nx, ny
 
 def plot_velocity_field(X, Y, UX, UY, nx, ny):
-    """Vẽ trường vận tốc"""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
     
-    # Tính độ lớn vận tốc
     U_magnitude = np.sqrt(UX**2 + UY**2)
     
-    # ===== Plot 1: Contour của độ lớn vận tốc =====
     levels = np.linspace(0, U_magnitude.max(), 20)
     cf = ax1.contourf(X, Y, U_magnitude, levels=levels, cmap='jet')
     ax1.set_xlabel('X', fontsize=12)
@@ -47,8 +37,6 @@ def plot_velocity_field(X, Y, UX, UY, nx, ny):
     cbar1 = plt.colorbar(cf, ax=ax1)
     cbar1.set_label('|u|', fontsize=11)
     
-    # ===== Plot 2: Vector vận tốc (quiver) =====
-    # Lấy mẫu thưa để vẽ cho dễ nhìn
     skip = max(nx // 30, 1)
     ax2.quiver(X[::skip, ::skip], Y[::skip, ::skip], 
               UX[::skip, ::skip], UY[::skip, ::skip],
@@ -64,13 +52,10 @@ def plot_velocity_field(X, Y, UX, UY, nx, ny):
     print("✅ Đã lưu trường vận tốc vào: velocity_field.png")
 
 def plot_velocity_profile(UX, ny):
-    """Vẽ profile vận tốc theo chiều Y"""
-    # Lấy profile ở giữa lưới
     mid_x = UX.shape[0] // 2
     ux_profile = UX[mid_x, :]
     y_coords = np.arange(ny)
     
-    # Vẽ profile (Chỉ 1 subplot duy nhất)
     plt.figure(figsize=(8, 6))
     plt.plot(ux_profile, y_coords, 'b-o', linewidth=2, markersize=3, label='LBM (Mô phỏng)')
     plt.xlabel('Vận tốc u_x', fontsize=12)
@@ -78,7 +63,6 @@ def plot_velocity_profile(UX, ny):
     plt.title('Profile vận tốc theo chiều Y', fontsize=14, fontweight='bold')
     plt.grid(True, alpha=0.3)
     
-    # Fit parabola: u(y) = a*y^2 + b*y + c
     y_inner = y_coords[1:-1]
     ux_inner = ux_profile[1:-1]
     y_center = (ny - 1) / 2.0
@@ -88,7 +72,6 @@ def plot_velocity_profile(UX, ny):
     plt.plot(u_fit, y_coords, 'r--', linewidth=2, label='Fit Parabolic (Lý thuyết)')
     plt.legend(fontsize=10)
     
-    # Thêm thông tin thông số fit
     u_max = ux_profile.max()
     plt.text(0.02, ny*0.85, f'u_max (LBM) = {u_max:.4f}', 
              fontsize=10, bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5),
@@ -99,7 +82,6 @@ def plot_velocity_profile(UX, ny):
     print("✅ Đã lưu profile vận tốc vào: velocity_profile.png")
 
 def plot_density_field(X, Y, RHO):
-    """Vẽ trường mật độ"""
     plt.figure(figsize=(10, 5))
     levels = np.linspace(RHO.min(), RHO.max(), 20)
     cf = plt.contourf(X, Y, RHO, levels=levels, cmap='viridis')
@@ -113,7 +95,6 @@ def plot_density_field(X, Y, RHO):
     print("✅ Đã lưu trường mật độ vào: density_field.png")
 
 def main():
-    """Hàm chính"""
     filename = 'lbm_result.dat'
     
     print(f"Đang đọc file: {filename}...")
@@ -126,7 +107,6 @@ def main():
         plot_velocity_profile(UX, ny)
         plot_density_field(X, Y, RHO)
         
-        # In thống kê
         print("\n" + "="*50)
         print("THỐNG KÊ KẾT QUẢ")
         print("="*50)

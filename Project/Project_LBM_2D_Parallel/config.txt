@@ -1,6 +1,3 @@
-# Cấu hình LBM mặc định
-# Format: key=value
-
 # Kích thước lưới
 nx=256
 ny=64

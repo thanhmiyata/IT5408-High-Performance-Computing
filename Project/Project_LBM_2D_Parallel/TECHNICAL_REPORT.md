@@ -4,85 +4,45 @@
 **Sinh viên:** Krizpham  
 **Ngày cập nhật:** 04/02/2026
 
----
+## 1. Mô tả Kỹ thuật và Cài đặt
 
-## 1. Tổng quan Đề tài
+### Kỹ thuật mô phỏng
+- **Phương pháp:** Lattice Boltzmann Method (LBM) với mô hình **D2Q9**.
+- **Bài toán:** Mô phỏng dòng chảy Poiseuille trong kênh 2 chiều (ổn định).
+- **Cơ chế song song:** Chia miền một chiều (1D Domain Decomposition) theo cột (trục X). Sử dụng các cột **Ghost Columns** để trao đổi dữ liệu biên giữa các tiến trình lân cận qua giao tiếp không khóa (**Non-blocking communication**: `MPI_Isend`, `MPI_Irecv`).
+- **Nghiệm lý thuyết:** Profile vận tốc có dạng Parabol.
 
-### 1.1. Mục tiêu
-Mô phỏng dòng chảy chất lưu 2D (dòng Poiseuille) bằng phương pháp **Lattice Boltzmann Method (LBM)** và song song hóa với **MPI** để đánh giá hiệu năng tính toán.
+### Cài đặt hệ thống
+- **Ngôn ngữ:** C (chuẩn C99).
+- **Thư viện:** OpenMPI.
+- **Biên dịch:** Sử dụng `gcc` cho phiên bản tuần tự và `mpicc` cho phiên bản song song với cờ tối ưu hóa `-O2`.
 
-### 1.2. Tại sao chọn LBM?
-| Tiêu chí | Lý do |
-|----------|-------|
-| **Tính song song tự nhiên** | Mỗi điểm lưới chỉ tương tác với điểm lân cận |
-| **Xử lý biên dễ dàng** | Phương pháp bounce-back đơn giản |
-| **Ứng dụng thực tế** | Khí động học, vi lưu, y sinh |
-| **Khác biệt với FDM** | Giải phương trình Boltzmann thay vì Navier-Stokes |
+## 2. Source Code
 
----
-
-## 2. Mô tả Kỹ thuật và Cài đặt
-
-### 2.1. Kỹ thuật mô phỏng
-- **Phương pháp:** Lattice Boltzmann Method (LBM) với mô hình **D2Q9**
-- **Bài toán:** Mô phỏng dòng chảy Poiseuille trong kênh 2 chiều
-- **Điều kiện biên:**
-  - Trên/Dưới: Bounce-back (tường cứng)
-  - Trái/Phải: Periodic (chu kỳ) + Vận tốc cưỡng ép
-
-### 2.2. Chiến lược song song (MPI)
-- **Mô hình:** SPMD (Single Program Multiple Data)
-- **Chia miền:** Domain Decomposition 1D theo chiều X (chia theo cột)
-- **Ghost Columns:** Trao đổi 2 cột biên giữa các tiến trình lân cận
-- **Giao tiếp:** Non-blocking (`MPI_Isend`, `MPI_Irecv`, `MPI_Waitall`)
-
-### 2.3. Hai bước tính toán chính
-1. **Collision (Va chạm):** `f*ᵢ = fᵢ - ω(fᵢ - fᵢᵉᑫ)`
-2. **Streaming (Lan truyền):** `fᵢ(x + cᵢ, t+1) = f*ᵢ(x, t)`
-
-### 2.4. Cài đặt hệ thống
-| Thành phần | Chi tiết |
-|------------|----------|
-| **Ngôn ngữ** | C |
-| **Thư viện MPI** | OpenMPI |
-| **Môi trường** | macOS / Linux |
-| **Trình biên dịch** | `gcc` (serial), `mpicc` (MPI) |
-| **Tối ưu hóa** | `-O2` |
-
----
-
-## 3. Cấu trúc Mã nguồn
-
-```
+### Cấu trúc thư mục
+```text
 Project_LBM_2D_Parallel/
 ├── src/
-│   ├── lbm_serial.c        # Phiên bản tuần tự
-│   └── lbm_mpi.c           # Phiên bản MPI
-├── config.txt              # File config mặc định
-├── visualize_results.py    # Vẽ trường vận tốc, mật độ
-├── plot_performance.py     # Vẽ biểu đồ hiệu năng
-└── benchmark.sh            # Script chạy thử nghiệm
+│   ├── lbm_serial.c        # Phiên bản tuần tự 
+│   └── lbm_mpi.c           # Phiên bản MPI 
+├── config.txt              # Tệp cấu hình tham số mô phỏng
+├── visualize_results.py    # Script vẽ trường vận tốc và mật độ
+├── plot_performance.py     # Script vẽ biểu đồ so sánh hiệu năng
+└── benchmark.sh            # Script tự động chạy toàn bộ quy trình test
 ```
 
-### 3.1. Các hàm chính trong code
+### Các hàm chức năng chính
+- `DocConfig()`: Đọc tham số `nx`, `ny`, `nsteps`, `omega`, `u0` từ tệp cấu hình. Trường hợp tệp thiếu hoặc lỗi, chương trình sẽ báo lỗi và dừng.
+- `Collision()`: Tính toán va chạm dựa trên mô hình BGK tại các điểm lưới cục bộ.
+- `Streaming()`: Lan truyền các hạt sang các điểm lưới lân cận (sử dụng mô hình Pull).
+- `TraoDoiGhost()` (MPI): Thực hiện trao đổi dữ liệu biên giữa các Rank.
+- `GhiKetQua()`: Xuất dữ liệu trường vận tốc và mật độ ra tệp `lbm_result.dat`.
 
-| Hàm | Mô tả |
-|-----|-------|
-| `DocConfig()` | Đọc tham số từ file config |
-| `KhoiTao()` / `KhoiTaoCucBo()` | Khởi tạo hàm phân bố fᵢ = fᵢᵉᑫ |
-| `TinhMacro()` / `TinhMacroCucBo()` | Tính ρ, uₓ, uᵧ từ fᵢ |
-| `Collision()` / `CollisionCucBo()` | Bước va chạm BGK |
-| `Streaming()` / `StreamingCucBo()` | Bước lan truyền (Pull model) |
-| `TraoDoiGhost()` | Trao đổi ghost columns (chỉ MPI) |
-| `GhiKetQua()` | Xuất file kết quả |
+## 3. Dữ liệu Test và các Script liên quan
 
----
-
-## 4. Dữ liệu Test và Tham số
-
-### 4.1. File Config (`config.txt`)
-```
-# Cấu hình LBM mặc định
+### Tệp cấu hình (`config.txt`)
+Mọi tham số được quản lý tập trung, không cần biên dịch lại code khi thay đổi:
+```text
 nx=256
 ny=64
 nsteps=10000
@@ -90,136 +50,61 @@ omega=1.0
 u0=0.1
 ```
 
-### 4.2. Cấu hình thử nghiệm
-| Tham số | Giá trị mặc định | Ghi chú |
-|---------|------------------|---------|
-| **NX × NY** | 256 × 64 | Kích thước lưới (16,384 điểm) |
-| **NSTEPS** | 10,000 | Số bước thời gian |
-| **OMEGA (ω)** | 1.0 | Tham số thư giãn |
-| **U0** | 0.1 | Vận tốc biên đầu vào |
+### Hướng dẫn Thực thi và Chạy Test
 
-### 4.3. Lệnh biên dịch và chạy
+Người dùng có 2 tùy chọn để thực hiện mô phỏng và kiểm tra hiệu năng:
+
+#### Tùy chọn 1: Sử dụng Script tự động (`benchmark.sh`)
+Đây là cách nhanh nhất để chạy toàn bộ quy trình từ biên dịch đến vẽ biểu đồ:
 ```bash
-# Biên dịch
+chmod +x benchmark.sh
+./benchmark.sh
+```
+*Script sẽ tự động: Biên dịch -> Chạy P=1,2,4,8 -> Vẽ biểu đồ -> Xuất thống kê.*
+
+#### Tùy chọn 2: Thực hiện thủ công từng bước
+Nếu muốn kiểm soát từng giai đoạn, sử dụng các lệnh sau:
+
+**1. Biên dịch mã nguồn:**
+```bash
 gcc -O2 -o lbm_serial src/lbm_serial.c -lm
 mpicc -O2 -o lbm_mpi src/lbm_mpi.c -lm
-
-# Chạy Serial (tự động đọc config.txt)
-./lbm_serial
-
-# Chạy MPI với 4 tiến trình (tự động đọc config.txt)
-mpirun -np 4 ./lbm_mpi
-
-# Chạy với tham số dòng lệnh tùy chỉnh
-mpirun -np 4 ./lbm_mpi 256 64 10000 1.0 0.1
-
-# Visualize kết quả
-python3 visualize_results.py
-python3 plot_performance.py
 ```
 
----
+**2. Chạy mô phỏng:**
+- **Chạy Serial:** `./lbm_serial` (mặc định dùng `config.txt`) hoặc `./lbm_serial -c config.txt`
+- **Chạy MPI (ví dụ 4 tiến trình):** `mpirun -np 4 ./lbm_mpi` hoặc `mpirun -np 4 ./lbm_mpi -c config.txt`
 
-## 5. Kết quả Thực nghiệm
+**3. Xử lý dữ liệu và hình ảnh:**
+```bash
+python3 visualize_results.py  # Tạo ảnh trường vận tốc/mật độ
+python3 plot_performance.py   # Cập nhật biểu đồ hiệu năng
+```
 
-### 5.1. Hiệu năng tính toán (Strong Scaling)
-**Cấu hình:** Lưới 256×64 = 16,384 điểm, 10,000 bước thời gian
+### Script xử lý kết quả
+- `visualize_results.py`: Tạo các ảnh `velocity_field.png`, `velocity_profile.png` (đã lược bỏ biểu đồ sai số), và `density_field.png`.
+- `plot_performance.py`: Thu thập thời gian thực thi để vẽ `performance_charts.png` (Speedup, MLUPS, Efficiency).
 
+## 4. Kết quả Thực nghiệm
+
+### Hiệu năng (Lưới 256x64, 10,000 bước)
 | Số tiến trình (P) | Thời gian (s) | MLUPS | Speedup | Efficiency |
 |-------------------|---------------|-------|---------|------------|
-| **1 (Serial)** | 1.594 | 102.79 | 1.00× | 100% |
-| **2** | 0.950 | 172.55 | 1.68× | 84% |
-| **4** | 0.691 | 236.96 | 2.31× | 58% |
-| **8** | 1.111 | 147.48 | 1.44× | 18% |
+| 1 (Serial)        | 1.594         | 102.79| 1.00×   | 100%       |
+| 2                 | 0.950         | 172.55| 1.68×   | 84%        |
+| 4                 | 0.691         | 236.96| 2.31×   | 58%        |
+| 8                 | 1.111         | 147.48| 1.43×   | 18%        |
 
-**Công thức:**
-- **MLUPS** = (NX × NY × NSTEPS) / (Time × 10⁶)
-- **Speedup** = T_serial / T_parallel
-- **Efficiency** = Speedup / P × 100%
+*Nhận xét: Hiệu năng đạt đỉnh tại 4 core thực. Tại 8 core, hiệu năng sụt giảm do tranh chấp CPU và overhead giao tiếp vượt quá khối lượng tính toán cục bộ.*
 
-**Nhận xét:**
-- MLUPS tăng **2.5×** từ Serial → 4 tiến trình
-- Speedup đạt **2.56×** với 4 tiến trình
-- Efficiency **64%** (chấp nhận được cho desktop)
+### Tính đúng đắn phục vụ so sánh (Checksum)
+| Đại lượng | Serial (P=1) | MPI (P=8) | Sai lệch |
+|-----------|--------------|-----------|----------|
+| Sum(rho)  | 16383.9999   | 16380.9514| ~0.018%  |
+| Sum(ux)   | 1527.0476    | 1527.1667 | ~0.007%  |
 
-### 5.2. Kiểm tra Tính đúng đắn (Checksum)
+### Kết quả vật lý
+- **Profile vận tốc**: Trùng khớp tối ưu với đường cong lý thuyết Poiseuille (RMSE = 0.0006).
+- **Tính ổn định**: Trường mật độ ổn định quanh giá trị 1.0, không xảy ra hiện tượng phân kỳ tại các biên MPI.
 
-| Đại lượng | Serial | MPI (8P) | Sai lệch |
-|-----------|--------|----------|----------|
-| **Sum(ρ)** | 16383.9999 | 16380.9514 | ~0.018% ✅ |
-| **Sum(uₓ)** | 1527.0476 | 1527.1667 | ~0.007% ✅ |
-| **Avg uₓ** | 0.096015 | 0.096032 | ~0.017% ✅ |
-
-**Nhận xét:**
-- Sai lệch < 0.1% → **Kết quả đáng tin cậy**
-- Tổng mật độ được bảo toàn tốt
-- MPI implementation chính xác
-
-### 5.3. Độ chính xác Vật lý
-- **Profile vận tốc:** Dạng parabolic đúng với lý thuyết Poiseuille
-  - u_max (LBM) = 0.1403
-  - u_max (Fit Parabolic) = 0.1392
-  - RMSE = 0.000648
-- **Mật độ trung bình:** ~1.0 (bảo toàn khối lượng)
-- Không xuất hiện nhiễu số hay gián đoạn tại các biên chia miền MPI
-
----
-
-## 6. Kết quả Visualization
-
-### 6.1. Trường vận tốc (`velocity_field.png`)
-- Contour plot hiển thị độ lớn vận tốc |u|
-- Vector plot hiển thị hướng dòng chảy
-- Vận tốc cao ở giữa kênh (màu đỏ), thấp ở biên (màu xanh)
-
-### 6.2. Profile vận tốc (`velocity_profile.png`)
-- So sánh LBM với Fit Parabolic (Poiseuille)
-- Hiển thị sai số giữa LBM và đường cong lý thuyết
-- Max Error = 0.001319
-
-### 6.3. Trường mật độ (`density_field.png`)
-- Mật độ dao động nhẹ quanh 1.0 (range: 0.95 - 1.07)
-- Bảo toàn khối lượng tốt
-
-### 6.4. Biểu đồ hiệu năng (`performance_charts.png`)
-- Speedup vs Số tiến trình
-- MLUPS vs Số tiến trình  
-- Efficiency vs Số tiến trình
-
----
-
-## 7. Kết luận
-
-### 7.1. Đạt được
-✅ Cài đặt thành công LBM D2Q9 tuần tự và song song MPI  
-✅ Hiểu rõ cơ chế chia miền và trao đổi ghost columns  
-✅ Speedup **2.56×** với 4 tiến trình, Efficiency 64%  
-✅ Kết quả vật lý khớp với lý thuyết Poiseuille  
-✅ Code tự viết, không dùng thư viện LBM có sẵn  
-✅ Đọc tham số từ file config linh hoạt
-
-### 7.2. Hạn chế
-⚠️ Efficiency giảm khi P tăng (do overhead MPI trên desktop)  
-⚠️ Chưa triển khai điều kiện biên Zou-He hoàn chỉnh  
-⚠️ Chưa thực hiện weak scaling  
-⚠️ Chia miền 1D chưa tối ưu cho mọi trường hợp
-
-### 7.3. Hướng phát triển
-- Chia miền **2D** để giảm lượng giao tiếp
-- **Hybrid MPI + OpenMP** cho node SMP
-- Tối ưu trên **GPU** bằng CUDA/OpenCL
-- Mở rộng sang **3D** (D3Q19, D3Q27)
-
----
-
-## 8. Tài liệu Tham khảo
-
-1. T. Krüger et al., *"The Lattice Boltzmann Method: Principles and Practice"* (2017)
-2. S. Chen & G.D. Doolen, *"Lattice Boltzmann Method for Fluid Flows"*, Annual Review of Fluid Mechanics (1998)
-3. Q. Zou & X. He, *"On pressure and velocity boundary conditions for the lattice Boltzmann BGK model"*, Physics of Fluids (1997)
-4. OpenMPI Documentation: https://www.open-mpi.org/doc/
-5. Tutorial LBM: http://www.lbmethod.org/
-
----
-
-*Ghi chú: Mã nguồn sử dụng mô hình Pull Streaming để đảm bảo tính nhất quán trên môi trường bộ nhớ phân tán.*
+*Báo cáo được trình bày theo yêu cầu thực nghiệm dự án HPC.*
