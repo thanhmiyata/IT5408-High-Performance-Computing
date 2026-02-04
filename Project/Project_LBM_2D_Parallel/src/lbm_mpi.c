@@ -2,6 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
+
+// Tham số mô phỏng mặc định
+#define DEFAULT_NX  256
+#define DEFAULT_NY  64
+#define DEFAULT_NSTEPS 10000
+#define DEFAULT_OMEGA  1.0
+#define DEFAULT_U0     0.1
 
 // Hằng số D2Q9
 #define Q 9
@@ -19,6 +27,41 @@ static const int cy[Q] = {0, 0, 1,  0, -1, 1,  1, -1, -1};
 
 // Hướng đối diện (cho bounce-back)
 static const int opposite[Q] = {0, 3, 4, 1, 2, 7, 8, 5, 6};
+
+//=========================
+// Hàm đọc file config
+//=========================
+int DocConfig(const char *filename, int *nx, int *ny, int *nsteps, double *omega, double *u0) {
+  FILE *fp = fopen(filename, "r");
+  if (!fp) {
+    return -1;  // Không tìm thấy file
+  }
+  
+  char line[256];
+  while (fgets(line, sizeof(line), fp)) {
+    // Bỏ qua dòng trống và comment
+    if (line[0] == '#' || line[0] == '\n' || line[0] == '\r') continue;
+    
+    char key[64];
+    char value[64];
+    
+    if (sscanf(line, "%63[^=]=%63s", key, value) == 2) {
+      // Loại bỏ khoảng trắng
+      char *k = key;
+      while (*k == ' ' || *k == '\t') k++;
+      
+      if (strcmp(k, "nx") == 0) *nx = atoi(value);
+      else if (strcmp(k, "ny") == 0) *ny = atoi(value);
+      else if (strcmp(k, "nsteps") == 0) *nsteps = atoi(value);
+      else if (strcmp(k, "omega") == 0) *omega = atof(value);
+      else if (strcmp(k, "u0") == 0) *u0 = atof(value);
+    }
+  }
+  
+  fclose(fp);
+  return 0;
+}
+
 //=========================
 void KhoiTaoCucBo(double *f, int nx_local, int ny) {
   int x, y, i;
@@ -134,6 +177,7 @@ void StreamingCucBo(double *f_new, double *f, int nx_local, int ny,
     }
   }
 }
+//=========================
 void TraoDoiGhost(double *f_new, int nx_local, int ny, 
                    double *ghost_left, double *ghost_right,
                    int rank, int size, MPI_Comm comm) {
@@ -161,23 +205,53 @@ int main(int argc, char **argv) {
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   
-  // Tham số
-  int nx = 256;
-  int ny = 64;
-  int nsteps = 30000;  // Tăng để hội tụ tốt hơn
-  double omega = 1.0;
-  double u0 = 0.1;
+  // Tham số mặc định
+  int nx = DEFAULT_NX;
+  int ny = DEFAULT_NY;
+  int nsteps = DEFAULT_NSTEPS;
+  double omega = DEFAULT_OMEGA;
+  double u0 = DEFAULT_U0;
   
-  if (argc >= 6) {
+  const char *config_file = "config.txt";
+  int use_config = 0;
+  
+  // Xử lý tham số dòng lệnh
+  if (argc >= 2 && strcmp(argv[1], "-c") == 0 && argc >= 3) {
+    // Sử dụng: mpirun -np 4 ./lbm_mpi -c config.txt
+    config_file = argv[2];
+    use_config = 1;
+  } else if (argc >= 6) {
+    // Sử dụng: mpirun -np 4 ./lbm_mpi NX NY NSTEPS OMEGA U0
     nx = atoi(argv[1]);
     ny = atoi(argv[2]);
     nsteps = atoi(argv[3]);
     omega = atof(argv[4]);
     u0 = atof(argv[5]);
   } else if (argc >= 4) {
+    // Sử dụng: mpirun -np 4 ./lbm_mpi NX NY NSTEPS
     nx = atoi(argv[1]);
     ny = atoi(argv[2]);
     nsteps = atoi(argv[3]);
+  } else {
+    // Thử đọc từ file config mặc định
+    use_config = 1;
+  }
+  
+  // Đọc config (chỉ rank 0 đọc, sau đó broadcast)
+  if (use_config) {
+    if (rank == 0) {
+      if (DocConfig(config_file, &nx, &ny, &nsteps, &omega, &u0) == 0) {
+        printf("Doc cau hinh tu file: %s\n", config_file);
+      } else {
+        printf("Su dung gia tri mac dinh (khong tim thay %s)\n", config_file);
+      }
+    }
+    // Broadcast các tham số từ rank 0
+    MPI_Bcast(&nx, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&ny, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&nsteps, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&omega, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&u0, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   }
   
   // Chia miền theo X
@@ -186,12 +260,13 @@ int main(int argc, char **argv) {
   if (rank < remainder) nx_local++;
   
   if (rank == 0) {
-    printf("=== LBM D2Q9 - Phien ban MPI ===\n");
+    printf("\n=== LBM D2Q9 - Phien ban MPI ===\n");
     printf("So tien trinh: %d\n", size);
     printf("Luoi toan cuc: %d x %d\n", nx, ny);
     printf("Luoi cuc bo (rank 0): %d x %d\n", nx_local, ny);
     printf("So buoc: %d\n", nsteps);
     printf("Omega: %.3f\n", omega);
+    printf("Van toc dau vao: %.3f\n", u0);
   }
   
   // Cấp phát bộ nhớ

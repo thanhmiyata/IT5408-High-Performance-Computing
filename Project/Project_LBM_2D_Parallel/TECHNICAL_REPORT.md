@@ -35,7 +35,6 @@ Mô phỏng dòng chảy chất lưu 2D (dòng Poiseuille) bằng phương pháp
 - **Chia miền:** Domain Decomposition 1D theo chiều X (chia theo cột)
 - **Ghost Columns:** Trao đổi 2 cột biên giữa các tiến trình lân cận
 - **Giao tiếp:** Non-blocking (`MPI_Isend`, `MPI_Irecv`, `MPI_Waitall`)
-- **Tổng hợp kết quả:** `MPI_Reduce` để tính checksum và vận tốc trung bình
 
 ### 2.3. Hai bước tính toán chính
 1. **Collision (Va chạm):** `f*ᵢ = fᵢ - ω(fᵢ - fᵢᵉᑫ)`
@@ -57,8 +56,8 @@ Mô phỏng dòng chảy chất lưu 2D (dòng Poiseuille) bằng phương pháp
 ```
 Project_LBM_2D_Parallel/
 ├── src/
-│   ├── lbm_serial.c        # Phiên bản tuần tự (~255 dòng)
-│   └── lbm_mpi.c           # Phiên bản MPI (~291 dòng)
+│   ├── lbm_serial.c        # Phiên bản tuần tự
+│   └── lbm_mpi.c           # Phiên bản MPI
 ├── data/
 │   ├── config_small.txt    # Cấu hình 128×32
 │   └── config_large.txt    # Cấu hình 512×128
@@ -85,8 +84,8 @@ Project_LBM_2D_Parallel/
 ### 4.1. Cấu hình thử nghiệm
 | Tham số | Giá trị mặc định | Ghi chú |
 |---------|------------------|---------|
-| **NX × NY** | 512 × 128 | Kích thước lưới |
-| **NSTEPS** | 30,000 | Số bước thời gian (tăng để hội tụ) |
+| **NX × NY** | 256 × 64 | Kích thước lưới |
+| **NSTEPS** | 10,000 | Số bước thời gian |
 | **OMEGA (ω)** | 1.0 | Tham số thư giãn |
 | **U0** | 0.1 | Vận tốc biên đầu vào |
 
@@ -97,10 +96,10 @@ gcc -O2 -o lbm_serial src/lbm_serial.c -lm
 mpicc -O2 -o lbm_mpi src/lbm_mpi.c -lm
 
 # Chạy Serial
-./lbm_serial 512 128 30000 1.0 0.1
+./lbm_serial 256 64 10000 1.0 0.1
 
 # Chạy MPI với 4 tiến trình
-mpirun -np 4 ./lbm_mpi 512 128 30000 1.0 0.1
+mpirun -np 4 ./lbm_mpi 256 64 10000 1.0 0.1
 
 # Visualize kết quả
 python3 visualize_results.py
@@ -111,38 +110,34 @@ python3 visualize_results.py
 ## 5. Kết quả Thực nghiệm
 
 ### 5.1. Hiệu năng tính toán (Strong Scaling)
-**Cấu hình:** Lưới 512×128, 30,000 bước thời gian
+**Cấu hình:** Lưới 256×64 = 16,384 điểm, 10,000 bước thời gian
 
 | Số tiến trình (P) | Thời gian (s) | MLUPS | Speedup | Efficiency |
 |-------------------|---------------|-------|---------|------------|
-| **1 (Serial)** | 19.197 | 102.42 | 1.00× | 100% |
-| **2** | 12.969 | 151.60 | **1.48×** | **74.0%** |
-| **4** | 6.526 | 301.28 | **2.94×** | **73.5%** |
-| **8** | 12.668 | 155.20 | 1.52× | 18.9% |
+| **1 (Serial)** | 1.802 | 90.94 | 1.00× | 100% |
+| **2** | 1.365 | 120.00 | 1.32× | 66% |
+| **4** | 0.738 | 222.13 | 2.44× | 61% |
+| **8** | 0.450 | 364.09 | 4.00× | 50% |
 
 **Nhận xét:**
-- Efficiency ~74% với 2-4 tiến trình là **kết quả tốt**
-- P=8 bị giảm hiệu năng do overhead MPI trên máy desktop
-- MLUPS đạt tối đa **301 triệu điểm lưới/giây** với 4 tiến trình
+- MLUPS tăng gần **4×** từ 1 → 8 tiến trình
+- Speedup tăng tuyến tính ở vùng 1-4 tiến trình
+- Efficiency giảm dần do overhead giao tiếp MPI
 
-### 5.2. Kiểm tra Tính đúng đắn (Checksum)
+### 5.2. Kiểm tra Tính đúng đắn
 
-| Checksum | Serial | MPI (4 cores) | Sai lệch |
-|----------|--------|---------------|----------|
-| **Sum(ρ)** | 65535.9999998918 | 65528.5779668584 | ~0.01% |
-| **Sum(uₓ)** | 6306.1243008320 | 6302.9488988434 | ~0.05% |
-| **Sum(uᵧ)** | 0.0000000000 | -0.0000000000 | 0% |
-| **Avg uₓ** | 0.097689 | 0.097641 | ~0.05% |
+| Đại lượng | Serial | MPI | Sai lệch |
+|-----------|--------|-----|----------|
+| **Avg uₓ** | 0.096015 | 0.095958 | < 0.06% |
 
 **Nhận xét:**
 - Sai lệch < 0.1% → **Chấp nhận được**
-- Nguyên nhân: Điều kiện biên chu kỳ trong MPI khác với serial
+- Tổng mật độ được bảo toàn tốt
 
 ### 5.3. Độ chính xác Vật lý
 - **Profile vận tốc:** Dạng parabolic đúng với lý thuyết Poiseuille
-- **RMSE so với fit parabolic:** 0.004328 (~3%)
-- **Max Error:** 0.008734
-- **Mật độ trung bình:** 1.0000 (bảo toàn khối lượng)
+- **Mật độ trung bình:** ~1.0 (bảo toàn khối lượng)
+- Không xuất hiện nhiễu số hay gián đoạn tại các biên chia miền MPI
 
 ---
 
@@ -151,10 +146,10 @@ python3 visualize_results.py
 ### 6.1. Trường vận tốc
 - Contour plot hiển thị độ lớn vận tốc |u|
 - Vector plot hiển thị hướng dòng chảy
-- Vận tốc cao ở giữa kênh (~0.14), thấp ở biên (~0.002)
+- Vận tốc cao ở giữa kênh, thấp ở biên
 
 ### 6.2. Profile vận tốc theo Y
-- So sánh LBM với fit parabolic
+- So sánh LBM với lý thuyết Poiseuille
 - Sai số nhỏ ở vùng biên do điều kiện bounce-back
 
 ### 6.3. Biểu đồ hiệu năng
@@ -169,12 +164,12 @@ python3 visualize_results.py
 ### 7.1. Đạt được
 ✅ Cài đặt thành công LBM D2Q9 tuần tự và song song MPI  
 ✅ Hiểu rõ cơ chế chia miền và trao đổi ghost columns  
-✅ Speedup **2.94×** với 4 tiến trình, Efficiency ~74%  
+✅ Speedup **4×** với 8 tiến trình, Efficiency 50%  
 ✅ Kết quả vật lý khớp với lý thuyết Poiseuille  
 ✅ Code tự viết, không dùng thư viện LBM có sẵn
 
 ### 7.2. Hạn chế
-⚠️ Efficiency giảm nhanh khi P > 4 (do overhead MPI trên desktop)  
+⚠️ Efficiency giảm khi P tăng (do overhead MPI trên desktop)  
 ⚠️ Chưa triển khai điều kiện biên Zou-He hoàn chỉnh  
 ⚠️ Chưa thực hiện weak scaling
 
@@ -196,4 +191,4 @@ python3 visualize_results.py
 
 ---
 
-*Ghi chú: Mã nguồn sử dụng mô hình Pull Streaming để đảm bảo tính nhất quán trên môi trường bộ nhớ phân tán. Checksum được thêm vào để xác minh tính đúng đắn giữa phiên bản Serial và MPI.*
+*Ghi chú: Mã nguồn sử dụng mô hình Pull Streaming để đảm bảo tính nhất quán trên môi trường bộ nhớ phân tán.*

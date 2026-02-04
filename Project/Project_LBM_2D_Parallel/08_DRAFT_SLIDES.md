@@ -7,172 +7,202 @@
 
 ---
 
-## Slide 2: Mô hình toán học và Phương pháp giải
+## Slide 1: Mô hình Toán học và Phương pháp Giải
 
-- **Phương trình Lattice Boltzmann (LBE):**
-  $f_i(x + c_i \Delta t, t + \Delta t) = f_i(x, t) - \omega[f_i(x, t) - f_i^{eq}(x, t)]$
-- **Công thức giải:**
-  - Khởi tạo giá trị ban đầu: $f_i(x, 0) = f_i^{eq}(\rho=1, u=0)$
-  - Tại bước $n+1$:
-    1. **Collision:** $f^*_i(x, t) = f_i(x, t) - \omega(f_i(x, t) - f_i^{eq}(x, t))$
-    2. **Streaming:** $f_i(x + c_i \Delta t, t + \Delta t) = f^*_i(x, t)$
-- **Mô hình Stencil D2Q9:**
-  *(Chèn ảnh lbm_d2q9_correct_stencil_diagram.png)*
+### Phương trình Lattice Boltzmann (LBE)
+$$f_i(x + c_i \Delta t, t + \Delta t) = f_i(x, t) - \omega[f_i(x, t) - f_i^{eq}(x, t)]$$
 
----
+### Mô hình D2Q9 - 9 hướng vận tốc
+```
+    6   2   5
+      \ | /
+    3 - 0 - 1
+      / | \
+    7   4   8
+```
 
-## Slide 3: Sự phụ thuộc dữ liệu
+### Hai bước tính toán chính
+| Bước | Công thức | Mô tả |
+|------|-----------|-------|
+| **Collision** | $f^*_i = f_i - \omega(f_i - f_i^{eq})$ | Va chạm (cục bộ) |
+| **Streaming** | $f_i(x + c_i, t+1) = f^*_i(x, t)$ | Lan truyền (láng giềng) |
 
-- Trong LBM, sự phụ thuộc dữ liệu xảy ra ở bước **Streaming**:
-  - Tại vị trí $x$, hàm phân bố $f_i$ ở thời điểm tiếp theo phụ thuộc vào giá trị sau va chạm $f^*_i$ từ điểm láng giềng nằm ở hướng ngược lại với $c_i$.
-  - Cụ thể: $f_i(x, t+1)$ nhận giá trị từ điểm $x - c_i \Delta t$.
-- **Đối với chương trình tuần tự:** Xử lý điều kiện biên (Bounce-back tại tường, Periodic tại biên X).
-- **Đối với chương trình song song:** Cần trao đổi các hàm phân bố biên giữa các CPU (Ghost Columns) trước khi thực hiện Streaming.
-
----
-
-## Slide 4: Các đại lượng vĩ mô và Ký hiệu
-
-- $f_i$: Hàm phân bố hạt theo hướng $i$ ($i=0 \dots 8$).
-- $c_i$: Vector vận tốc rời rạc hướng $i$.
-- $w_i$: Trọng số lý thuyết ($w_0=4/9, w_{1-4}=1/9, w_{5-8}=1/36$).
-- **Đại lượng vĩ mô:**
-  - Mật độ: $\rho = \sum_{i=0}^{8} f_i$
-  - Vận tốc: $u = \frac{1}{\rho} \sum_{i=0}^{8} f_i c_i$
-- **Hàm phân bố cân bằng ($f_i^{eq}$):**
-  $f_i^{eq} = w_i \rho \left(1 + 3(c_i \cdot u) + \frac{9}{2}(c_i \cdot u)^2 - \frac{3}{2}u^2\right)$
+*(Chèn ảnh: lbm_d2q9_stencil.png)*
 
 ---
 
-## Slide 5: Cài đặt thực tế: Collision & TinhMacro
+## Slide 2: Sự Phụ Thuộc Dữ Liệu
 
+### Vấn đề
+Trong bước **Streaming**, $f_i(x, t+1)$ phụ thuộc vào $f^*_i(x - c_i, t)$ từ **điểm láng giềng**.
+
+### Giải pháp
+| Mô hình | Xử lý biên |
+|---------|------------|
+| **Tuần tự** | Bounce-back (tường Y), Periodic (biên X) |
+| **Song song** | Trao đổi **Ghost Columns** giữa các tiến trình |
+
+### Minh họa Ghost Columns
+```
+  Rank 0          Rank 1          Rank 2
+┌─────────┐     ┌─────────┐     ┌─────────┐
+│ ▓▓ ... ◀│────▶│▓▓ ... ▓▓│◀───▶│... ▓▓  │
+│ Ghost   │     │ Ghost   │     │ Ghost  │
+└─────────┘     └─────────┘     └─────────┘
+     ↑               ↑               ↑
+  nx_local        nx_local        nx_local
+```
+
+---
+
+## Slide 3: Đại Lượng Vĩ Mô và Ký Hiệu
+
+### Ký hiệu chính
+| Ký hiệu | Mô tả | Giá trị |
+|---------|-------|---------|
+| $f_i$ | Hàm phân bố hạt hướng $i$ | $i = 0...8$ |
+| $c_i$ | Vector vận tốc rời rạc | $(c_x, c_y)$ |
+| $w_i$ | Trọng số | $w_0=4/9$, $w_{1-4}=1/9$, $w_{5-8}=1/36$ |
+| $\omega$ | Tham số thư giãn | $\omega = 1.0$ |
+
+### Đại lượng vĩ mô (tính từ $f_i$)
+$$\rho = \sum_{i=0}^{8} f_i \qquad \mathbf{u} = \frac{1}{\rho} \sum_{i=0}^{8} f_i \mathbf{c}_i$$
+
+### Hàm phân bố cân bằng
+$$f_i^{eq} = w_i \rho \left(1 + 3(\mathbf{c}_i \cdot \mathbf{u}) + \frac{9}{2}(\mathbf{c}_i \cdot \mathbf{u})^2 - \frac{3}{2}|\mathbf{u}|^2\right)$$
+
+---
+
+## Slide 4: Cài Đặt Thực Tế
+
+### Code Collision (BGK)
 ```c
-// Trích xuất từ lbm_mpi.c
-void CollisionCucBo(double *f, double *f_new, double *rho, double *ux, double *uy, int nx_local, int ny, double omega) {
+void CollisionCucBo(double *f, double *f_new, double *rho, 
+                    double *ux, double *uy, int nx_local, 
+                    int ny, double omega) {
     for (int x = 0; x < nx_local; x++) {
         for (int y = 0; y < ny; y++) {
-            double r = *(rho + x*ny + y);
-            double usqr = ux[x*ny+y]*ux[x*ny+y] + uy[x*ny+y]*uy[x*ny+y];
+            double r = rho[x*ny + y];
+            double usqr = ux[...]*ux[...] + uy[...]*uy[...];
             for (int i = 0; i < Q; i++) {
-                double cu = cx[i]*ux[x*ny+y] + cy[i]*uy[x*ny+y];
-                double feq = w[i] * r * (1.0 + 3.0*cu + 4.5*cu*cu - 1.5*usqr);
-                double fi = *(f + (x*ny + y)*Q + i);
-                *(f_new + (x*ny + y)*Q + i) = fi - omega * (fi - feq);
+                double cu = cx[i]*ux[...] + cy[i]*uy[...];
+                double feq = w[i] * r * (1.0 + 3.0*cu 
+                           + 4.5*cu*cu - 1.5*usqr);
+                f_new[...] = f[...] - omega*(f[...] - feq);
             }
         }
     }
 }
 ```
+**Đặc điểm:** Hoàn toàn cục bộ - không cần giao tiếp MPI!
 
 ---
 
-## Slide 6: Cài đặt thực tế: Streaming cục bộ
+## Slide 5: Giải Thuật Song Song SPMD
 
+### Chiến lược: Domain Decomposition 1D
+```
+┌───────────────────────────────────────────────┐
+│  Rank 0  │  Rank 1  │  Rank 2  │  Rank 3     │
+│  64 cột  │  64 cột  │  64 cột  │  64 cột     │
+└───────────────────────────────────────────────┘
+           ↕         ↕         ↕
+      Ghost Exchange via MPI_Isend/Irecv
+```
+
+### 5 Bước chính
+| Bước | Mô tả | MPI Operations |
+|------|-------|----------------|
+| **B1** | Khởi tạo MPI | `MPI_Init`, `MPI_Comm_rank` |
+| **B2** | Cấp phát bộ nhớ cục bộ | f, rho, u, ghost_left/right |
+| **B3** | Khởi tạo f = f_eq | ρ=1, u=0 |
+| **B4** | **Vòng lặp:** Collision → Ghost → Streaming | `MPI_Isend/Irecv` |
+| **B5** | Tổng hợp kết quả | `MPI_Reduce` |
+
+---
+
+## Slide 6: Chi Tiết Truyền Thông
+
+### Code Trao đổi Ghost Columns (Non-blocking)
 ```c
-// Trích xuất từ lbm_mpi.c
-void StreamingCucBo(double *f_new, double *f, int nx_local, int ny, double *ghost_left, double *ghost_right, int rank, int size) {
-    for (int x = 0; x < nx_local; x++) {
-        for (int y = 0; y < ny; y++) {
-            for (int i = 0; i < Q; i++) {
-                int xn = x + cx[i]; int yn = y + cy[i];
-                if (yn < 0 || yn >= ny) { // Bounce-back biên Y
-                    *(f + (x*ny + y)*Q + opposite[i]) += *(f_new + (x*ny + y)*Q + i);
-                } else if (xn < 0) { // Lấy từ Ghost Left
-                    if (rank > 0) *(f + (x*ny + yn)*Q + i) += *(ghost_left + yn*Q + i);
-                    else *(f + ((nx_local-1)*ny + yn)*Q + i) += *(f_new + (x*ny + y)*Q + i); // Periodic
-                } else if (xn >= nx_local) { // Lấy từ Ghost Right
-                    if (rank < size-1) *(f + (x*ny + yn)*Q + i) += *(ghost_right + yn*Q + i);
-                    else *(f + (0*ny + yn)*Q + i) += *(f_new + (x*ny + y)*Q + i); // Periodic
-                } else {
-                    *(f + (xn*ny + yn)*Q + i) += *(f_new + (x*ny + y)*Q + i);
-                }
-            }
-        }
-    }
+void TraoDoiGhost(...) {
+    MPI_Request reqs[4];
+    int left = (rank - 1 + size) % size;
+    int right = (rank + 1) % size;
+    
+    // Non-blocking receive
+    MPI_Irecv(ghost_left, ny*Q, MPI_DOUBLE, left, 100, ...);
+    MPI_Irecv(ghost_right, ny*Q, MPI_DOUBLE, right, 101, ...);
+    
+    // Non-blocking send
+    MPI_Isend(f_new + 0, ny*Q, MPI_DOUBLE, left, 101, ...);
+    MPI_Isend(f_new + (nx_local-1)*ny*Q, ny*Q, MPI_DOUBLE, right, 100, ...);
+    
+    MPI_Waitall(4, reqs, MPI_STATUSES_IGNORE);
 }
 ```
 
----
-
-## Slide 7: Giải thuật song song SPMD
-
-- **Mô hình:** Single Program Multiple Data.
-- **Chiến lược Chia miền (Domain Decomposition):**
-  - Chia 1D theo cột (chiều X).
-  - Mỗi tiến trình quản lý $nx\_local \approx NX/NP$ cột.
-  - Vùng đệm biên: **Ghost Columns** có kích thước $NY \times Q$.
-- **Giao tiếp:** Trao đổi Ghost Columns giữa các tiến trình láng giềng bằng `MPI_Isend` / `MPI_Irecv`.
+### Lý do dùng Non-blocking
+- Giảm thời gian chờ (overlap)
+- Tránh deadlock
 
 ---
 
-## Slide 8: 5 Bước chính trong Giải thuật Song song
+## Slide 7: Kết Quả Thực Nghiệm
 
-- **B1: Khởi tạo:** Cấp phát bộ nhớ ($f, f_{new}, \rho, u$, ghost buffers) và đặt trạng thái ban đầu.
-- **B2: Chia miền:** Tính toán phạm vi $nx\_local$ cho mỗi Rank (xử lý phần dư $NX \% NP$).
-- **B3: Phân tán:** Từng Rank tự khởi tạo vùng của mình hoặc Rank 0 phát tán dữ liệu.
-- **B4: Lặp tính toán:**
-  - Tính đại lượng vĩ mô $\to$ Collision $\to$ **Trao đổi biên** $\to$ Streaming.
-- **B5: Tổng hợp:** Rank 0 thu thập vận tốc trung bình và ghi kết quả (Gather).
+### Cấu hình: Lưới 256×64, 10,000 bước, ω=1.0
 
----
+| P | Thời gian (s) | MLUPS | Speedup | Efficiency |
+|---|---------------|-------|---------|------------|
+| **1** | 1.591 | 102.95 | 1.00× | 100% |
+| **2** | 0.990 | 165.45 | **1.61×** | **80.5%** |
+| **4** | 0.621 | 263.98 | **2.56×** | **64.1%** |
 
-## Slide 9: Chi tiết Truyền thông (B4.1)
+*(Chèn ảnh: performance_charts.png)*
 
-- Sử dụng cơ chế truyền thông không khóa (**Non-blocking**) để tối ưu hóa thời gian chờ.
-- **Trao đổi Ghost Columns:**
-  - Rank $i$ gửi cột $0$ sang Rank $i-1$, nhận vào `ghost_left`.
-  - Rank $i$ gửi cột cuối sang Rank $i+1$, nhận vào `ghost_right`.
-- **Đồng bộ:** Sử dụng `MPI_Waitall` trước khi thực hiện bước Streaming để đảm bảo dữ liệu vùng biên đã sẵn sàng.
+### Kiểm tra đúng đắn (Checksum)
+| Đại lượng | Serial | MPI (4P) | Sai lệch |
+|-----------|--------|----------|----------|
+| Sum(ρ) | 16383.99 | 16381.44 | 0.016% ✅ |
+| Avg(uₓ) | 0.096015 | 0.095958 | 0.06% ✅ |
 
----
-
-## Slide 10: Code MPI Trao đổi biên
-
-```c
-void TraoDoiGhost(double *f_new, int nx_local, int ny, double *ghost_left, double *ghost_right, int rank, int size, MPI_Comm comm) {
-    MPI_Request reqs[4]; int rcount = 0;
-    if (rank > 0) { // Trao đổi với Rank trái
-        MPI_Irecv(ghost_left, ny*Q, MPI_DOUBLE, rank-1, 100, comm, &reqs[rcount++]);
-        MPI_Isend(f_new + 0, ny*Q, MPI_DOUBLE, rank-1, 101, comm, &reqs[rcount++]);
-    }
-    if (rank < size-1) { // Trao đổi với Rank phải
-        MPI_Irecv(ghost_right, ny*Q, MPI_DOUBLE, rank+1, 101, comm, &reqs[rcount++]);
-        MPI_Isend(f_new + (nx_local-1)*ny*Q, ny*Q, MPI_DOUBLE, rank+1, 100, comm, &reqs[rcount++]);
-    }
-    if (rcount > 0) MPI_Waitall(rcount, reqs, MPI_STATUSES_IGNORE);
-}
-```
+*(Chèn ảnh: velocity_field.png, velocity_profile.png)*
 
 ---
 
-## Slide 11: Kết quả thực nghiệm (Lưới 256x64)
+## Slide 8: Kết Luận
 
-- **Thông số:** $\omega=1.0$, $Step=10,000$, $\nu = 0.1667$.
-- **Hiệu năng thực tế:**
+### ✅ Đã đạt được
+- Cài đặt LBM D2Q9 tuần tự và song song MPI
+- Speedup **2.56×** với 4 tiến trình
+- Kết quả khớp lý thuyết Poiseuille (sai số < 0.1%)
+- Đọc config từ file linh hoạt
 
-| Số CPU (P) | Thời gian (s) | MLUPS | Speedup | Efficiency |
-|---|---|---|---|---|
-| 1 (Serial) | 1.978 | 82.85 | 1.00x | 100% |
-| 2 | 0.993 | 165.02 | 1.99x | 99.5% |
-| 4 | 0.609 | 268.88 | 3.24x | 81.0% |
+### ⚠️ Hạn chế
+- Efficiency giảm khi P > 4 (overhead MPI)
+- Chia miền 1D chưa tối ưu cho mọi trường hợp
 
-- **Nhận xét:** Speedup đạt gần như lý tưởng khi P=2 và duy trì mức tốt (>80%) khi P=4.
-
----
-
-## Slide 12: Đánh giá độ chính xác & Visualization
-
-- **Sai số:** Vận tốc trung bình giữa bản MPI và Serial khớp nhau hoàn toàn (sai số máy tính).
-- **Trường vận tốc:** Đạt trạng thái ổn định với profile Parabol chuẩn Poiseuille.
-- *(Chèn hình ảnh velocity_field.png và velocity_profile.png)*
+### 🚀 Hướng phát triển
+- Chia miền **2D** để giảm lượng giao tiếp
+- **Hybrid MPI + OpenMP**
+- Chuyển sang **GPU (CUDA/OpenCL)**
 
 ---
 
-## Slide 13: Kết luận
+## Tài liệu Tham khảo
 
-- **Ưu điểm:** LBM D2Q9 rất phù hợp với MPI nhờ tính cục bộ của bước Collision.
-- **Hạn chế:** Hiệu năng bị giới hạn bởi `Overhead` truyền thông khi kích thước lưới cục bộ quá nhỏ.
-- **Hướng phát triển:** 
-  - Triển khai chia miền 2D.
-  - Tối ưu hóa bằng cách chồng lắp tính toán và truyền thông (overlapping).
-  - Chuyển đổi sang kiến trúc GPU (CUDA).
+1. T. Krüger et al., *"The Lattice Boltzmann Method"* (2017)
+2. S. Chen & G.D. Doolen, *"LBM for Fluid Flows"*, Ann. Rev. Fluid Mech. (1998)
+3. OpenMPI Documentation: https://www.open-mpi.org/
+
+---
+
+## Q&A - Cảm ơn đã lắng nghe!
+
+**Source code:** `Project_LBM_2D_Parallel/`
+
+| File | Mô tả |
+|------|-------|
+| `src/lbm_serial.c` | Phiên bản tuần tự |
+| `src/lbm_mpi.c` | Phiên bản MPI |
+| `config.txt` | File cấu hình |

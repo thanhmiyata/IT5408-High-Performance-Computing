@@ -2,13 +2,14 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <string.h>
 
-// Tham số mô phỏng
-#define NX  256      // Số điểm lưới theo chiều X
-#define NY  64       // Số điểm lưới theo chiều Y
-#define NSTEPS 30000 // Số bước thời gian (tăng để hội tụ)
-#define OMEGA  1.0   // Tham số thư giãn (1/tau)
-#define U0     0.1   // Vận tốc đầu vào
+// Tham số mô phỏng mặc định
+#define DEFAULT_NX  256
+#define DEFAULT_NY  64
+#define DEFAULT_NSTEPS 10000
+#define DEFAULT_OMEGA  1.0
+#define DEFAULT_U0     0.1
 
 // Hằng số D2Q9
 #define Q 9
@@ -26,6 +27,41 @@ static const int cy[Q] = {0, 0, 1,  0, -1, 1,  1, -1, -1};
 
 // Hướng đối diện (cho bounce-back)
 static const int opposite[Q] = {0, 3, 4, 1, 2, 7, 8, 5, 6};
+
+//=========================
+// Hàm đọc file config
+//=========================
+int DocConfig(const char *filename, int *nx, int *ny, int *nsteps, double *omega, double *u0) {
+  FILE *fp = fopen(filename, "r");
+  if (!fp) {
+    return -1;  // Không tìm thấy file
+  }
+  
+  char line[256];
+  while (fgets(line, sizeof(line), fp)) {
+    // Bỏ qua dòng trống và comment
+    if (line[0] == '#' || line[0] == '\n' || line[0] == '\r') continue;
+    
+    char key[64];
+    char value[64];
+    
+    if (sscanf(line, "%63[^=]=%63s", key, value) == 2) {
+      // Loại bỏ khoảng trắng
+      char *k = key;
+      while (*k == ' ' || *k == '\t') k++;
+      
+      if (strcmp(k, "nx") == 0) *nx = atoi(value);
+      else if (strcmp(k, "ny") == 0) *ny = atoi(value);
+      else if (strcmp(k, "nsteps") == 0) *nsteps = atoi(value);
+      else if (strcmp(k, "omega") == 0) *omega = atof(value);
+      else if (strcmp(k, "u0") == 0) *u0 = atof(value);
+    }
+  }
+  
+  fclose(fp);
+  return 0;
+}
+
 //=========================
 void KhoiTao(double *f, int nx, int ny) {
   int x, y, i;
@@ -89,7 +125,6 @@ void Collision(double *f, double *f_new, double *rho, double *ux, double *uy,
   }
 }
 //=========================
-//=========================
 void Streaming(double *f_new, double *f, int nx, int ny) {
   int x, y, i;
   
@@ -118,7 +153,7 @@ void Streaming(double *f_new, double *f, int nx, int ny) {
 //=========================
 void ApDungBienVaoCung(double *ux, int nx, int ny, double u0) {
   int y;
-  // Đặt vận tốc tại biên trái
+  // Đặt vận tốc tại biên trái và phải
   for (y = 1; y < ny-1; y++) {
     *(ux + 0*ny + y) = u0;
     *(ux + (nx-1)*ny + y) = u0;
@@ -144,28 +179,49 @@ void GhiKetQua(double *rho, double *ux, double *uy, int nx, int ny, const char *
 }
 //=========================
 int main(int argc, char **argv) {
-  int nx = NX;
-  int ny = NY;
-  int nsteps = NSTEPS;
-  double omega = OMEGA;
-  double u0 = U0;
+  int nx = DEFAULT_NX;
+  int ny = DEFAULT_NY;
+  int nsteps = DEFAULT_NSTEPS;
+  double omega = DEFAULT_OMEGA;
+  double u0 = DEFAULT_U0;
   
-  if (argc >= 6) {
+  // Ưu tiên 1: Đọc từ file config nếu được chỉ định
+  // Ưu tiên 2: Đọc từ tham số dòng lệnh
+  // Ưu tiên 3: Dùng giá trị mặc định
+  
+  const char *config_file = "config.txt";  // File config mặc định
+  
+  // Kiểm tra tham số dòng lệnh
+  if (argc >= 2 && strcmp(argv[1], "-c") == 0 && argc >= 3) {
+    // Sử dụng: ./lbm_serial -c config_file.txt
+    config_file = argv[2];
+    printf("Doc cau hinh tu file: %s\n", config_file);
+    if (DocConfig(config_file, &nx, &ny, &nsteps, &omega, &u0) != 0) {
+      fprintf(stderr, "Khong the doc file config: %s\n", config_file);
+      return 1;
+    }
+  } else if (argc >= 6) {
+    // Sử dụng: ./lbm_serial NX NY NSTEPS OMEGA U0
     nx = atoi(argv[1]);
     ny = atoi(argv[2]);
     nsteps = atoi(argv[3]);
     omega = atof(argv[4]);
     u0 = atof(argv[5]);
   } else if (argc >= 4) {
+    // Sử dụng: ./lbm_serial NX NY NSTEPS
     nx = atoi(argv[1]);
     ny = atoi(argv[2]);
     nsteps = atoi(argv[3]);
-  } else if (argc > 1) {
-    printf("Su dung: %s [NX] [NY] [NSTEPS] [OMEGA] [U0]\n", argv[0]);
-    printf("Mac dinh: NX=%d, NY=%d, NSTEPS=%d, OMEGA=%.1f, U0=%.1f\n", NX, NY, NSTEPS, OMEGA, U0);
+  } else {
+    // Thử đọc từ file config mặc định
+    if (DocConfig(config_file, &nx, &ny, &nsteps, &omega, &u0) == 0) {
+      printf("Doc cau hinh tu file mac dinh: %s\n", config_file);
+    } else {
+      printf("Su dung gia tri mac dinh (khong tim thay %s)\n", config_file);
+    }
   }
   
-  printf("=== LBM D2Q9 - Phien ban tuan tu ===\n");
+  printf("\n=== LBM D2Q9 - Phien ban tuan tu ===\n");
   printf("Luoi: %d x %d\n", nx, ny);
   printf("So buoc: %d\n", nsteps);
   printf("Omega: %.3f\n", omega);

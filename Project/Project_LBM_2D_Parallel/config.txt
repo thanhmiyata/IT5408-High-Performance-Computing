@@ -1,0 +1,13 @@
+# Cấu hình LBM mặc định
+# Format: key=value
+
+# Kích thước lưới
+nx=256
+ny=64
+
+# Số bước thời gian
+nsteps=10000
+
+# Tham số vật lý
+omega=1.0
+u0=0.1
