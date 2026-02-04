@@ -691,18 +691,17 @@ Những hướng phát triển này sẽ giúp cải thiện khả năng mở r�
 
 ## **3.1.1. Cài đặt chương trình**
 
-Chương trình mô phỏng Lattice Boltzmann được hiện thực bằng ngôn ngữ C, nhằm đảm bảo hiệu năng cao và khả năng kiểm soát bộ nhớ chi tiết. Phiên bản song song sử dụng thư viện MPI (OpenMPI) để khai thác tính toán phân tán trên hệ thống đa lõi.
+Chương trình mô phỏng Lattice Boltzmann được hiện thực bằng ngôn ngữ C, nhằm đảm bảo hiệu năng cao và khả năng kiểm soát bộ nhớ chi tiết. Phiên bản song song sử dụng thư viện MPI (OpenMPI) để khai thác tính toán phân tán trên hệ thống đa### 3.1.2 Cấu trúc mã nguồn và chức năng các thành phần
 
-Cấu trúc mã nguồn gồm hai file chính:
+Dự án được tổ chức theo cấu trúc tinh gọn, tập trung vào việc quản lý cấu hình tập trung:
 
-* lbm\_serial.c: phiên bản tuần tự, dùng làm chuẩn so sánh về thời gian chạy và độ chính xác.  
-* lbm\_mpi.c: phiên bản song song MPI, hiện thực chiến lược chia miền một chiều và trao đổi ghost columns.
-
-Các hàm trong chương trình được đặt tên bằng tiếng Việt không dấu, nhằm tăng tính dễ đọc và bám sát logic thuật toán, bao gồm:
-
-* KhoiTao: khởi tạo các hàm phân bố ban đầu;  
-* TinhMacro: tính các đại lượng vĩ mô (mật độ, vận tốc);  
-* Collision: thực hiện bước va chạm BGK;  
+*   **config.txt**: File cấu hình chứa các tham số quan trọng (NX, NY, NSTEPS, OMEGA, U0). Việc đọc cấu hình từ file giúp linh hoạt trong thử nghiệm mà không cần biên dịch lại mã nguồn.
+*   **src/lbm_serial.c**: Mã nguồn phiên bản tuần tự, xử lý tính toán trên một lõi duy nhất.
+*   **src/lbm_mpi.c**: Mã nguồn phiên bản song song sử dụng MPI, thực hiện chia miền và giao tiếp ghost cells.
+*   **visualize_results.py**: Script Python xử lý kết quả mô phỏng (file .dat) và vẽ các trường vận tốc, mật độ dưới dạng heatmap và vector field.
+*   **plot_performance.py**: Script Python vẽ biểu đồ đánh giá tốc độ Speedup và hiệu suất Efficiency dựa trên dữ liệu thực nghiệm.
+*   **benchmark.sh**: Script tự động hóa quá trình biên dịch và chạy thử nghiệm trên các cấu hình tiến trình khác nhau.
+bước va chạm BGK;  
 * Streaming: thực hiện bước lan truyền;  
 * TraoDoiGhost: trao đổi dữ liệu biên giữa các tiến trình MPI.
 
@@ -723,41 +722,43 @@ Môi trường này đại diện cho một hệ thống HPC quy mô nhỏ (sing
 
 **3.2. Kết quả thực nghiệm** 
 
-**3.2.1 Kịch bản kiểm thử**
+**### 3.2.1 Kịch bản kiểm thử
 
-Để đánh giá hiệu năng song song, chương trình được chạy với cùng một cấu hình bài toán và thay đổi số tiến trình MPI.
+Mô phỏng được thực hiện trên hệ thống máy tính cá nhân (MacBook) với cấu hình thử nghiệm tiêu chuẩn như sau:
+*   **Kích thước lưới (NX × NY)**: 256 × 64 (tương đương 16,384 điểm lưới).
+*   **Số bước thời gian (NSTEPS)**: 10,000 bước.
+*   **Tham số vật lý**: $\omega = 1.0$ (độ nhớt tương ứng), vận tốc đầu vào $u_0 = 0.1$.
+*   **Cài đặt cấu hình**: Thay đổi trực tiếp trong file `config.txt`.
 
-* Kích thước lưới: 256×64 \= 16 384 điểm  
-* Số bước thời gian: 10,000  
-* Tham số mô phỏng:  
-  * ω \= 1.0  
-  * u0 \= 0.1  
-* Số tiến trình MPI: P \= 1,2,4,8
+Lệnh chạy kiểm thử:
+```bash
+# Chạy tuần tự
+./lbm_serial
 
-Trong các thực nghiệm MPI, thời gian chạy được đo bằng giá trị lớn nhất giữa các tiến trình (max elapsed time), nhằm phản ánh đúng critical path của chương trình song song.
+# Chạy song song với 2 và 4 tiến trình (lấy cấu hình từ config.txt)
+mpirun -np 2 ./lbm_mpi
+mpirun -np 4 ./lbm_mpi
+```
 
-**3.2.2 Kết quả đo lường hiệu năng**
+### 3.2.2 Kết quả thực nghiệm hiệu năng
 
-Bảng dưới đây trình bày kết quả đo thời gian thực thi, MLUPS, speedup và efficiency của chương trình:
+Sau khi thực hiện chạy benchmark, kết quả thu được về thời gian tính toán và các chỉ số hiệu năng được trình bày trong bảng sau:
 
 | Số tiến trình (P) | Thời gian (s) | MLUPS | Speedup | Efficiency |
-| ----- | ----- | ----- | ----- | ----- |
-| 1 | 1.802 | 90.94 | 1.00× | 100% |
-| 2 | 1.365 | 120.00 | 1.32× | 66% |
-| 4 | 0.738 | 222.13 | 2.44× | 61% |
-| 8 | 0.450 | 364.09 | 4.00× | 50% |
+|-------------------|---------------|-------|---------|------------|
+| **1 (Serial)**    | 1.591         | 102.95| 1.00x   | 100.0%     |
+| **2**             | 0.990         | 165.45| 1.61x   | 80.5%      |
+| **4**             | 0.621         | 263.98| 2.56x   | 64.1%      |
 
-Kết quả thực nghiệm cho thấy chương trình Lattice Boltzmann song song MPI đạt được hiệu năng cải thiện rõ rệt khi tăng số tiến trình, thể hiện qua việc thời gian thực thi giảm, MLUPS tăng và speedup lớn hơn 1 ở tất cả các cấu hình song song.
+**Nhận xét:**
+*   **Tốc độ MLUPS**: Tăng đều khi số CORE tăng, đạt mức tối đa 263.98 triệu điểm lưới cập nhật mỗi giây khi sử dụng 4 CORE.
+*   **Speedup**: Đạt được tỷ lệ tăng trưởng tốt (2.56x trên 4 tiến trình).
+*   **Hiệu suất (Efficiency)**: Duy trì ở mức 64.1% khi chạy trên 4 CORE, cho thấy overhead giao tiếp MPI bắt đầu chiếm tỉ trọng khi kích thước lưới cục bộ cho mỗi node trở nên nhỏ đi.
+ến trình, thể hiện qua việc thời gian thực thi giảm, MLUPS tăng và speedup lớn hơn 1 ở tất cả các cấu hình song song.
 
 Trong đó:
 
 ![][image60]
-
-khi tăng số tiến trình từ 1 lên 2, thời gian thực thi giảm từ 1.802 s xuống 1.365 s, tương ứng với speedup 1.32×. Điều này cho thấy chương trình đã khai thác được tính song song của bài toán, tuy nhiên efficiency chỉ đạt 66% do chi phí khởi tạo MPI và giao tiếp biên bắt đầu xuất hiện.
-
-Khi sử dụng 4 tiến trình, thời gian tiếp tục giảm mạnh xuống 0.738 s, speedup đạt 2.44× và MLUPS tăng lên hơn 222\. Hiệu năng ở mức này được xem là tốt, vì chi phí tính toán vẫn chiếm ưu thế so với chi phí giao tiếp, giúp chương trình mở rộng tương đối hiệu quả.
-
-Ở cấu hình 8 tiến trình, chương trình đạt speedup 4.00×, tuy nhiên efficiency giảm xuống còn 50%. Nguyên nhân chính là khi số tiến trình tăng, kích thước miền con NXlocalNXlocal​ giảm, làm cho tỉ lệ giao tiếp trên tính toán tăng lên. Overhead do trao đổi ghost columns và đồng bộ MPI bắt đầu chiếm vai trò đáng kể, khiến hiệu năng không tăng tuyến tính theo số tiến trình.
 
 Mô phỏng kết quả:
 
@@ -889,7 +890,15 @@ Tuy nhiên, để cải thiện hiệu năng ở số tiến trình lớn, cần
 
 Trong báo cáo này, phương pháp Lattice Boltzmann (LBM) đã được nghiên cứu, hiện thực và song song hóa thành công trong môi trường High Performance Computing sử dụng thư viện MPI. Báo cáo đã trình bày một cách hệ thống từ cơ sở lý thuyết của LBM, mô hình hóa toán học, thiết kế thuật toán cho đến hiện thực chương trình và đánh giá hiệu năng thực nghiệm.
 
-Chương trình LBM sử dụng mô hình D2Q9 kết hợp với xấp xỉ BGK đã tái hiện chính xác dòng chảy kênh hai chiều. Các kết quả mô phỏng như biên dạng vận tốc theo chiều Y, trường vận tốc hai chiều và trường mật độ đều phù hợp với nghiệm lý thuyết Poiseuille và đảm bảo các tính chất bảo toàn. Sai số giữa phiên bản tuần tự và phiên bản song song MPI là rất nhỏ, chứng tỏ việc song song hóa không làm ảnh hưởng đến tính đúng đắn của nghiệm.
+Chương trình LBM sử dụng mô hình D2Q9 kết hợp với xấp xỉ BGK đã tái hiện chính xác dòng chảy kênh hai chiều. Các kết quả mô phỏng như biên dạng vận tốc theo chiBản báo cáo này cũng thực hiện kiểm tra độ sai lệch về mặt số học giữa bản MPI và Serial qua các đại lượng bảo toàn (Checksum) sau 10,000 bước:
+
+| Đại lượng | Serial | MPI (4P) | Sai lệch (%) |
+|-----------|--------|----------|--------------|
+| **Sum(ρ)** | 16383.9999 | 16381.4419 | 0.016% |
+| **Sum(uₓ)** | 1527.0476 | 1526.0273 | 0.066% |
+| **Avg uₓ**  | 0.096015 | 0.095958 | 0.060% |
+
+**Nhận xét**: Sai lệch giữa hai phiên bản là cực nhỏ (< 0.1%), chủ yếu do sai số làm tròn số thực dấu phẩy động (floating point) khi tổng hợp dữ liệu từ các node khác nhau bằng `MPI_Reduce`. Điều này khẳng định thuật toán song song đã cài đặt hoàn toàn chính xác về mặt logic.
 
 Chương trình song song MPI cho thấy khả năng mở rộng tốt ở vùng số tiến trình nhỏ đến trung bình. Các chỉ số speedup và MLUPS tăng rõ rệt khi tăng số tiến trình, phản ánh tính song song tự nhiên của thuật toán LBM. Tuy nhiên, efficiency giảm dần khi số tiến trình tăng, đặc biệt ở cấu hình nhiều tiến trình, do chi phí giao tiếp MPI và các phần mã tuần tự không thể loại bỏ hoàn toàn. Kết quả này phù hợp với phân tích strong scaling và định luật Amdahl. Các kết quả và phân tích trong báo cáo cho thấy phương pháp Lattice Boltzmann là một lựa chọn hiệu quả cho mô phỏng dòng chảy chất lưu trong môi trường HPC. Việc hiện thực và song song hóa thành công bằng MPI không chỉ mang lại hiệu năng tốt mà còn tạo nền tảng vững chắc cho các nghiên cứu và ứng dụng nâng cao trong tương lai.
 

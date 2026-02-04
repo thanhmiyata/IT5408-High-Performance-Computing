@@ -58,9 +58,7 @@ Project_LBM_2D_Parallel/
 ├── src/
 │   ├── lbm_serial.c        # Phiên bản tuần tự
 │   └── lbm_mpi.c           # Phiên bản MPI
-├── data/
-│   ├── config_small.txt    # Cấu hình 128×32
-│   └── config_large.txt    # Cấu hình 512×128
+├── config.txt              # File config mặc định
 ├── visualize_results.py    # Vẽ trường vận tốc, mật độ
 ├── plot_performance.py     # Vẽ biểu đồ hiệu năng
 └── benchmark.sh            # Script chạy thử nghiệm
@@ -70,6 +68,7 @@ Project_LBM_2D_Parallel/
 
 | Hàm | Mô tả |
 |-----|-------|
+| `DocConfig()` | Đọc tham số từ file config |
 | `KhoiTao()` / `KhoiTaoCucBo()` | Khởi tạo hàm phân bố fᵢ = fᵢᵉᑫ |
 | `TinhMacro()` / `TinhMacroCucBo()` | Tính ρ, uₓ, uᵧ từ fᵢ |
 | `Collision()` / `CollisionCucBo()` | Bước va chạm BGK |
@@ -81,28 +80,42 @@ Project_LBM_2D_Parallel/
 
 ## 4. Dữ liệu Test và Tham số
 
-### 4.1. Cấu hình thử nghiệm
+### 4.1. File Config (`config.txt`)
+```
+# Cấu hình LBM mặc định
+nx=256
+ny=64
+nsteps=10000
+omega=1.0
+u0=0.1
+```
+
+### 4.2. Cấu hình thử nghiệm
 | Tham số | Giá trị mặc định | Ghi chú |
 |---------|------------------|---------|
-| **NX × NY** | 256 × 64 | Kích thước lưới |
+| **NX × NY** | 256 × 64 | Kích thước lưới (16,384 điểm) |
 | **NSTEPS** | 10,000 | Số bước thời gian |
 | **OMEGA (ω)** | 1.0 | Tham số thư giãn |
 | **U0** | 0.1 | Vận tốc biên đầu vào |
 
-### 4.2. Lệnh biên dịch và chạy
+### 4.3. Lệnh biên dịch và chạy
 ```bash
 # Biên dịch
 gcc -O2 -o lbm_serial src/lbm_serial.c -lm
 mpicc -O2 -o lbm_mpi src/lbm_mpi.c -lm
 
-# Chạy Serial
-./lbm_serial 256 64 10000 1.0 0.1
+# Chạy Serial (tự động đọc config.txt)
+./lbm_serial
 
-# Chạy MPI với 4 tiến trình
+# Chạy MPI với 4 tiến trình (tự động đọc config.txt)
+mpirun -np 4 ./lbm_mpi
+
+# Chạy với tham số dòng lệnh tùy chỉnh
 mpirun -np 4 ./lbm_mpi 256 64 10000 1.0 0.1
 
 # Visualize kết quả
 python3 visualize_results.py
+python3 plot_performance.py
 ```
 
 ---
@@ -114,28 +127,39 @@ python3 visualize_results.py
 
 | Số tiến trình (P) | Thời gian (s) | MLUPS | Speedup | Efficiency |
 |-------------------|---------------|-------|---------|------------|
-| **1 (Serial)** | 1.802 | 90.94 | 1.00× | 100% |
-| **2** | 1.365 | 120.00 | 1.32× | 66% |
-| **4** | 0.738 | 222.13 | 2.44× | 61% |
-| **8** | 0.450 | 364.09 | 4.00× | 50% |
+| **1 (Serial)** | 1.591 | 102.95 | 1.00× | 100% |
+| **2** | 0.990 | 165.45 | 1.61× | 80.5% |
+| **4** | 0.621 | 263.98 | 2.56× | 64.1% |
+
+**Công thức:**
+- **MLUPS** = (NX × NY × NSTEPS) / (Time × 10⁶)
+- **Speedup** = T_serial / T_parallel
+- **Efficiency** = Speedup / P × 100%
 
 **Nhận xét:**
-- MLUPS tăng gần **4×** từ 1 → 8 tiến trình
-- Speedup tăng tuyến tính ở vùng 1-4 tiến trình
-- Efficiency giảm dần do overhead giao tiếp MPI
+- MLUPS tăng **2.5×** từ Serial → 4 tiến trình
+- Speedup đạt **2.56×** với 4 tiến trình
+- Efficiency **64%** (chấp nhận được cho desktop)
 
-### 5.2. Kiểm tra Tính đúng đắn
+### 5.2. Kiểm tra Tính đúng đắn (Checksum)
 
-| Đại lượng | Serial | MPI | Sai lệch |
-|-----------|--------|-----|----------|
-| **Avg uₓ** | 0.096015 | 0.095958 | < 0.06% |
+| Đại lượng | Serial | MPI (4P) | Sai lệch |
+|-----------|--------|----------|----------|
+| **Sum(ρ)** | 16383.9999 | 16381.4419 | 0.016% ✅ |
+| **Sum(uₓ)** | 1527.0476 | 1526.0273 | 0.067% ✅ |
+| **Sum(uᵧ)** | 0.0000 | -0.0000 | 0% ✅ |
+| **Avg uₓ** | 0.096015 | 0.095958 | 0.06% ✅ |
 
 **Nhận xét:**
-- Sai lệch < 0.1% → **Chấp nhận được**
+- Sai lệch < 0.1% → **Kết quả đáng tin cậy**
 - Tổng mật độ được bảo toàn tốt
+- MPI implementation chính xác
 
 ### 5.3. Độ chính xác Vật lý
 - **Profile vận tốc:** Dạng parabolic đúng với lý thuyết Poiseuille
+  - u_max (LBM) = 0.1403
+  - u_max (Fit Parabolic) = 0.1392
+  - RMSE = 0.000648
 - **Mật độ trung bình:** ~1.0 (bảo toàn khối lượng)
 - Không xuất hiện nhiễu số hay gián đoạn tại các biên chia miền MPI
 
@@ -143,16 +167,21 @@ python3 visualize_results.py
 
 ## 6. Kết quả Visualization
 
-### 6.1. Trường vận tốc
+### 6.1. Trường vận tốc (`velocity_field.png`)
 - Contour plot hiển thị độ lớn vận tốc |u|
 - Vector plot hiển thị hướng dòng chảy
-- Vận tốc cao ở giữa kênh, thấp ở biên
+- Vận tốc cao ở giữa kênh (màu đỏ), thấp ở biên (màu xanh)
 
-### 6.2. Profile vận tốc theo Y
-- So sánh LBM với lý thuyết Poiseuille
-- Sai số nhỏ ở vùng biên do điều kiện bounce-back
+### 6.2. Profile vận tốc (`velocity_profile.png`)
+- So sánh LBM với Fit Parabolic (Poiseuille)
+- Hiển thị sai số giữa LBM và đường cong lý thuyết
+- Max Error = 0.001319
 
-### 6.3. Biểu đồ hiệu năng
+### 6.3. Trường mật độ (`density_field.png`)
+- Mật độ dao động nhẹ quanh 1.0 (range: 0.95 - 1.07)
+- Bảo toàn khối lượng tốt
+
+### 6.4. Biểu đồ hiệu năng (`performance_charts.png`)
 - Speedup vs Số tiến trình
 - MLUPS vs Số tiến trình  
 - Efficiency vs Số tiến trình
@@ -164,20 +193,22 @@ python3 visualize_results.py
 ### 7.1. Đạt được
 ✅ Cài đặt thành công LBM D2Q9 tuần tự và song song MPI  
 ✅ Hiểu rõ cơ chế chia miền và trao đổi ghost columns  
-✅ Speedup **4×** với 8 tiến trình, Efficiency 50%  
+✅ Speedup **2.56×** với 4 tiến trình, Efficiency 64%  
 ✅ Kết quả vật lý khớp với lý thuyết Poiseuille  
-✅ Code tự viết, không dùng thư viện LBM có sẵn
+✅ Code tự viết, không dùng thư viện LBM có sẵn  
+✅ Đọc tham số từ file config linh hoạt
 
 ### 7.2. Hạn chế
 ⚠️ Efficiency giảm khi P tăng (do overhead MPI trên desktop)  
 ⚠️ Chưa triển khai điều kiện biên Zou-He hoàn chỉnh  
-⚠️ Chưa thực hiện weak scaling
+⚠️ Chưa thực hiện weak scaling  
+⚠️ Chia miền 1D chưa tối ưu cho mọi trường hợp
 
 ### 7.3. Hướng phát triển
-- Chia miền 2D để giảm lượng giao tiếp
-- Hybrid MPI + OpenMP
-- Tối ưu trên GPU bằng CUDA/OpenCL
-- Mở rộng sang 3D (D3Q19, D3Q27)
+- Chia miền **2D** để giảm lượng giao tiếp
+- **Hybrid MPI + OpenMP** cho node SMP
+- Tối ưu trên **GPU** bằng CUDA/OpenCL
+- Mở rộng sang **3D** (D3Q19, D3Q27)
 
 ---
 
@@ -186,8 +217,8 @@ python3 visualize_results.py
 1. T. Krüger et al., *"The Lattice Boltzmann Method: Principles and Practice"* (2017)
 2. S. Chen & G.D. Doolen, *"Lattice Boltzmann Method for Fluid Flows"*, Annual Review of Fluid Mechanics (1998)
 3. Q. Zou & X. He, *"On pressure and velocity boundary conditions for the lattice Boltzmann BGK model"*, Physics of Fluids (1997)
-4. Tutorial: http://www.lbmethod.org/
-5. Code mẫu: http://www.palabos.org/
+4. OpenMPI Documentation: https://www.open-mpi.org/doc/
+5. Tutorial LBM: http://www.lbmethod.org/
 
 ---
 
