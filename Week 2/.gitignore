@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+.DS_Store
+*.o
+*.dSYM/
+tsp_solver
+prime_count
+count_paths
+matmul_serial
+matmul_thread
+matmul_openmp
+matmul_mpi
