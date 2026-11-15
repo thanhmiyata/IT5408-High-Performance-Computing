@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Báo cáo Bài tập Tuần 1 - IT5408</title>
+<!-- MathJax cho cong thuc LaTeX -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+@page {
+    size: A4;
+    margin: 18mm 18mm 18mm 18mm;
+}
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+    color: #1a1a1a;
+    font-size: 11pt;
+    margin: 0;
+    padding: 0;
+}
+h1 {
+    font-size: 18pt;
+    text-align: center;
+    color: #0d3b66;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+h2 {
+    font-size: 14pt;
+    text-align: center;
+    color: #1d3557;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+h3 {
+    font-size: 12.5pt;
+    color: #2b2d42;
+    border-bottom: 1.5px solid #0d3b66;
+    padding-bottom: 4px;
+    margin-top: 22px;
+    margin-bottom: 10px;
+    page-break-after: avoid;
+}
+h4 {
+    font-size: 11pt;
+    color: #333333;
+    margin-top: 14px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
+}
+hr {
+    border: none;
+    border-top: 1px solid #dcdcdc;
+    margin: 15px 0;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+}
+th, td {
+    border: 1px solid #b0bec5;
+    padding: 6px 10px;
+    text-align: left;
+}
+th {
+    background-color: #f0f4f8;
+    color: #102a43;
+    font-weight: 600;
+}
+tr:nth-child(even) {
+    background-color: #fafbfc;
+}
+code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 9pt;
+    background-color: #f1f3f5;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+pre {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 8.5pt;
+    overflow-x: auto;
+    page-break-inside: avoid;
+}
+pre code {
+    background-color: transparent;
+    padding: 0;
+}
+blockquote {
+    border-left: 3.5px solid #0d3b66;
+    margin: 10px 0;
+    padding: 6px 15px;
+    background-color: #f7f9fb;
+    color: #495057;
+}
+ul, ol {
+    margin-top: 4px;
+    margin-bottom: 8px;
+    padding-left: 22px;
+}
+li {
+    margin-bottom: 3px;
+}
+strong {
+    color: #0f172a;
+}
+</style>
+</head>
+<body>
+<h1>ĐẠI HỌC BÁCH KHOA HÀ NỘI</h1>
+<h3>TRƯỜNG CÔNG NGHỆ THÔNG TIN VÀ TRUYỀN THÔNG</h3>
+<hr />
+<h1>BÁO CÁO BÀI TẬP TUẦN 1</h1>
+<h2>HỌC PHẦN: IT5408 – TÍNH TOÁN HIỆU NĂNG CAO (HPC)</h2>
+<p><strong>Chủ đề:</strong> Kiến trúc song song, Thiết kế thuật toán song song và Thực nghiệm Định luật Amdahl</p>
+<ul>
+<li><strong>Giảng viên hướng dẫn:</strong> TS. Vũ Văn Thiệu, TS. Nguyễn Quốc Tuấn</li>
+<li><strong>Học viên thực hiện:</strong> Phạm Tiến Thành</li>
+<li><strong>Mã số học viên (MSSV):</strong> 20242422M</li>
+<li><strong>Khóa đào tạo:</strong> Cao học Công nghệ Thông tin</li>
+<li><strong>Thời gian nộp:</strong> 15/11/2026</li>
+</ul>
+<hr />
+<h2>MỤC LỤC</h2>
+<ol>
+<li><a href="#phần-a--kiến-trúc-song-song-và-hiệu-năng">PHẦN A: KIẾN TRÚC SONG SONG VÀ HIỆU NĂNG</a></li>
+<li><a href="#bài-1-tính-speedup-theo-định-luật-amdahl">Bài 1: Tính Speedup theo Định luật Amdahl</a></li>
+<li><a href="#bài-2-xác-định-tỉ-lệ-phần-tuần-tự-tối-đa">Bài 2: Xác định tỉ lệ phần tuần tự tối đa</a></li>
+<li><a href="#bài-3-phân-loại-flynn-cho-gpu-và-cpu-đa-lõi-hỗ-trợ-avx">Bài 3: Phân loại Flynn cho GPU và CPU đa lõi hỗ trợ AVX</a></li>
+<li><a href="#bài-4-giới-hạn-mở-rộng-của-kiến-trúc-bộ-nhớ-chia-sẻ">Bài 4: Giới hạn mở rộng của kiến trúc bộ nhớ chia sẻ</a></li>
+<li><a href="#bài-5-phân-biệt-kiến-trúc-numa-và-bộ-nhớ-phân-tán">Bài 5: Phân biệt kiến trúc NUMA và Bộ nhớ phân tán</a></li>
+<li><a href="#bài-6-phân-tích-độ-phức-tạp-tính-toán-bài-toán-mô-phỏng-dự-báo-thời-tiết">Bài 6: Phân tích độ phức tạp tính toán bài toán mô phỏng dự báo thời tiết</a></li>
+<li><a href="#phần-b--mô-hình-và-thiết-kế-thuật-toán-song-song">PHẦN B: MÔ HÌNH VÀ THIẾT KẾ THUẬT TOÁN SONG SONG</a></li>
+<li><a href="#bài-7-mô-hình-spmd-trong-thực-thi-chương-trình-mpi">Bài 7: Mô hình SPMD trong thực thi chương trình MPI</a></li>
+<li><a href="#bài-8-phân-tích-sự-cố-của-phép-toán-logic-and-trên-crcw-pram-arbitrary">Bài 8: Phân tích sự cố của phép toán logic AND trên CRCW PRAM Arbitrary</a></li>
+<li><a href="#bài-9-thuật-toán-tìm-phần-tử-lớn-nhất-trên-mô-hình-erew-pram">Bài 9: Thuật toán tìm phần tử lớn nhất trên mô hình EREW PRAM</a></li>
+<li><a href="#bài-10-phân-tích-thời-gian-broadcast-trên-crew-pram-và-erew-pram">Bài 10: Phân tích thời gian Broadcast trên CREW PRAM và EREW PRAM</a></li>
+<li><a href="#bài-11-áp-dụng-kỹ-thuật-nhảy-con-trỏ-pointer-jumping">Bài 11: Áp dụng kỹ thuật nhảy con trỏ (Pointer Jumping)</a></li>
+<li><a href="#bài-12-phân-tích-tối-ưu-kích-thước-phân-hoạch-trong-thuật-toán-trộn-song-song">Bài 12: Phân tích tối ưu kích thước phân hoạch trong thuật toán trộn song song</a></li>
+<li><a href="#phần-c--thực-nghiệm-đo-đạc-runtime-và-đối-chiếu-định-luật-amdahl">PHẦN C: THỰC NGHIỆM ĐO ĐẠC RUNTIME VÀ ĐỐI CHIẾU ĐỊNH LUẬT AMDAHL</a></li>
+<li><a href="#1-thiết-kế-bài-toán-thực-nghiệm">1. Thiết kế bài toán thực nghiệm</a></li>
+<li><a href="#2-môi-trường-phần-cứng-và-cấu-hình-đo">2. Môi trường phần cứng và cấu hình đo</a></li>
+<li><a href="#3-bảng-số-liệu-thực-nghiệm-runtime-và-speedup">3. Bảng số liệu thực nghiệm Runtime và Speedup</a></li>
+<li><a href="#4-phân-tích-đối-chiếu-giữa-amdahl-potential-speedup-và-thực-tế">4. Phân tích đối chiếu giữa Amdahl Potential Speedup và Thực tế</a></li>
+</ol>
+<hr />
+<h1>PHẦN A – KIẾN TRÚC SONG SONG VÀ HIỆU NĂNG</h1>
+<hr />
+<h3>Bài 1. Tính Speedup theo Định luật Amdahl</h3>
+<p><strong>Đề bài:</strong> Một chương trình có $95\%$ thời gian chạy có thể song song hóa được. Tính speedup tối đa:<br />
+* Khi chạy trên $32$ lõi;<br />
+* Khi số lõi tiến tới vô hạn.<br />
+Sử dụng định luật Amdahl và trình bày rõ công thức.</p>
+<h4>Lời giải:</h4>
+<p>Gọi:<br />
+* $p$ là tỉ lệ khối lượng công việc có thể song song hóa: $p = 0.95$.<br />
+* $s = 1 - p$ là tỉ lệ khối lượng công việc bắt buộc phải thực hiện tuần tự: $s = 1 - 0.95 = 0.05$.<br />
+* $N$ là số lượng bộ xử lý (lõi tính toán).</p>
+<p>Theo Định luật Amdahl, hệ số tăng tốc (Speedup) $S(N)$ khi sử dụng $N$ bộ xử lý được xác định theo công thức:<br />
+$$S(N) = \frac{T(1)}{T(N)} = \frac{1}{(1 - p) + \dfrac{p}{N}} = \frac{1}{s + \dfrac{p}{N}}$$</p>
+<ol>
+<li>
+<p><strong>Trường hợp chạy trên $N = 32$ lõi:</strong><br />
+   $$S(32) = \frac{1}{0.05 + \dfrac{0.95}{32}} = \frac{1}{0.05 + 0.0296875} = \frac{1}{0.0796875} \approx \mathbf{12.5490}$$<br />
+   Hệ số tăng tốc đạt xấp xỉ <strong>$12.55$ lần</strong>.</p>
+</li>
+<li>
+<p><strong>Trường hợp số lõi tiến tới vô hạn ($N \to \infty$):</strong><br />
+   Khi số lượng bộ xử lý tăng vô hạn, thời gian thực thi của thành phần song song tiến về $0$ ($\lim_{N \to \infty} \frac{p}{N} = 0$):<br />
+   $$S_{\max} = \lim_{N \to \infty} S(N) = \frac{1}{s} = \frac{1}{1 - p} = \frac{1}{0.05} = \mathbf{20.00}$$</p>
+</li>
+</ol>
+<p><strong>Kết luận:</strong> Trên $32$ lõi, chương trình đạt tốc độ gấp $12.55$ lần so với chạy đơn lõi. Giới hạn tăng tốc tối đa tuyệt đối của chương trình không thể vượt quá <strong>$20$ lần</strong>, bị chặn trên bởi $5\%$ phần mã tuần tự.</p>
+<hr />
+<h3>Bài 2. Xác định tỉ lệ phần tuần tự tối đa</h3>
+<p><strong>Đề bài:</strong> Muốn đạt speedup bằng $80$ trên $100$ bộ xử lý thì tỉ lệ phần tuần tự tối đa của chương trình là bao nhiêu?</p>
+<h4>Lời giải:</h4>
+<p>Gọi $s$ là tỉ lệ phần tuần tự của chương trình ($0 \le s \le 1$), phần có thể song song hóa là $p = 1 - s$.<br />
+Cho số bộ xử lý $N = 100$ và hệ số tăng tốc mong muốn $S(100) \ge 80$.</p>
+<p>Áp dụng phương trình Định luật Amdahl:<br />
+$$S(N) = \frac{1}{s + \dfrac{1 - s}{N}} \ge 80$$<br />
+$$\Leftrightarrow s + \frac{1 - s}{100} \le \frac{1}{80} = 0.0125$$<br />
+$$\Leftrightarrow s + 0.01 - 0.01s \le 0.0125$$<br />
+$$\Leftrightarrow 0.99s \le 0.0025$$<br />
+$$\Leftrightarrow s \le \frac{0.0025}{0.99} = \frac{25}{9900} = \frac{1}{396} \approx \mathbf{0.002525...}$$</p>
+<p><strong>Kết luận:</strong> Tỉ lệ phần tuần tự tối đa cho phép là $s \le \dfrac{1}{396} \approx \mathbf{0.2525\%}$ (khoảng $0.25\%$). Nói cách khác, chương trình phải có tối thiểu <strong>$99.7475\%$</strong> thời lượng tính toán được song song hóa hoàn toàn thì mới có thể đạt hệ số tăng tốc $80$ lần trên hệ thống $100$ lõi.</p>
+<hr />
+<h3>Bài 3. Phân loại Flynn cho GPU và CPU đa lõi hỗ trợ AVX</h3>
+<p><strong>Đề bài:</strong> GPU thuộc loại nào trong phân loại Flynn? Một CPU đa lõi có hỗ trợ lệnh vector AVX nên được phân loại như thế nào? Giải thích ngắn gọn sự khác nhau giữa mức toàn chip và mức thực thi vector trong từng lõi.</p>
+<h4>Lời giải:</h4>
+<ol>
+<li><strong>Phân loại Flynn đối với GPU:</strong></li>
+<li>Trong hệ thống phân loại Flynn, GPU thuộc lớp <strong>SIMD (Single Instruction, Multiple Data)</strong>.</li>
+<li>
+<p>Ở cấp độ kiến trúc phần cứng vi mô của các hãng sản xuất (như NVIDIA), mô hình này được mở rộng thành <strong>SIMT (Single Instruction, Multiple Threads)</strong>: tại mỗi chu kỳ lệnh, một bộ điều phối lệnh (Warp Scheduler) phát đồng thời duy nhất một chỉ thị máy cho $32$ luồng phần cứng (trong một Warp) thực thi trên các phần tử dữ liệu khác nhau.</p>
+</li>
+<li>
+<p><strong>Phân loại CPU đa lõi hỗ trợ tập lệnh vector AVX:</strong><br />
+   Kiến trúc này mang tính phân tầng kết hợp hai mô hình:</p>
+</li>
+<li><strong>Mức toàn chip (Chip-level / Inter-core):</strong> Thuộc mô hình <strong>MIMD (Multiple Instruction, Multiple Data)</strong>. Các lõi CPU hoạt động hoàn toàn độc lập, mỗi lõi sở hữu bộ đếm chương trình (Program Counter - PC) và khối giải mã lệnh riêng biệt, có khả năng xử lý các luồng lệnh bất đồng bộ khác nhau.</li>
+<li>
+<p><strong>Mức trong từng lõi (Within-core / Intra-core):</strong> Thuộc mô hình <strong>SIMD (Single Instruction, Multiple Data)</strong>. Khi thực thi các chỉ thị vector hóa (như AVX2 256-bit hoặc AVX-512), một lệnh máy đơn lẻ điều khiển đường ống ALU/FPU thực hiện cùng một thao tác tính toán trên nhiều phần tử dữ liệu đóng gói trong thanh ghi vector (ví dụ $8$ số thực 32-bit hoặc $4$ số thực 64-bit).</p>
+</li>
+<li>
+<p><strong>Bảng so sánh giữa mức toàn chip và mức thực thi vector trong lõi:</strong></p>
+</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Tiêu chí</th>
+<th style="text-align: left;">Mức toàn chip (Inter-core)</th>
+<th style="text-align: left;">Mức thực thi vector trong lõi (Intra-core)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Mô hình Flynn</strong></td>
+<td style="text-align: left;"><strong>MIMD</strong></td>
+<td style="text-align: left;"><strong>SIMD</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Điều khiển luồng lệnh</strong></td>
+<td style="text-align: left;">Độc lập, bất đồng bộ; mỗi lõi có PC riêng.</td>
+<td style="text-align: left;">Đồng bộ tuyệt đối; dùng chung 1 mạch giải mã lệnh.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Mức độ song song</strong></td>
+<td style="text-align: left;">Song song mức luồng/tiến trình (TLP).</td>
+<td style="text-align: left;">Song song mức dữ liệu thanh ghi (DLP).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Không gian trao đổi dữ liệu</strong></td>
+<td style="text-align: left;">Qua bộ nhớ đệm dùng chung (L3 Cache) hoặc RAM.</td>
+<td style="text-align: left;">Qua tập thanh ghi vector nội bộ lõi (YMM, ZMM).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Bài 4. Giới hạn mở rộng của kiến trúc bộ nhớ chia sẻ</h3>
+<p><strong>Đề bài:</strong> Vì sao kiến trúc bộ nhớ chia sẻ khó mở rộng lên hàng nghìn bộ xử lý? Phân tích ít nhất hai nguyên nhân liên quan đến băng thông bộ nhớ, cache coherence, đồng bộ hoặc chi phí phần cứng.</p>
+<h4>Lời giải:</h4>
+<p>Kiến trúc bộ nhớ chia sẻ (Shared Memory) gặp phải giới hạn vật lý và kỹ thuật khi mở rộng quy mô (Scalability) lên hàng nghìn bộ xử lý do các nguyên nhân cơ bản sau:</p>
+<ol>
+<li><strong>Nút thắt băng thông bộ nhớ và tranh chấp đường truyền (Memory Bandwidth &amp; Contention):</strong></li>
+<li>Tất cả các bộ xử lý trong hệ thống đều truy xuất vào một không gian địa chỉ bộ nhớ vật lý chung thông qua bus hệ thống hoặc mạng liên kết.</li>
+<li>
+<p>Khi quy mô tăng lên hàng nghìn lõi, tần suất yêu cầu truy xuất bộ nhớ đồng thời vượt xa năng lực thông lượng của các bộ điều khiển bộ nhớ (Memory Controllers). Hiện tượng bão hòa băng thông dẫn đến hiện tượng trễ nghiêm trọng (Memory Wall), các lõi xử lý phải rơi vào trạng thái chờ nhàn rỗi (Stall cycles), làm suy giảm nghiêm trọng hiệu năng toàn hệ thống.</p>
+</li>
+<li>
+<p><strong>Chi phí duy trì tính nhất quán bộ đệm (Cache Coherence Overhead):</strong></p>
+</li>
+<li>Để che giấu độ trễ truy cập RAM, mỗi bộ xử lý đều trang bị bộ đệm Cache riêng (L1, L2). Khi một bộ xử lý thực hiện thao tác ghi vào một biến dùng chung, giao thức duy trì tính nhất quán bộ đệm (như MESI, MOESI) bắt buộc phải phát tín hiệu vô hiệu hóa (Invalidate) hoặc cập nhật (Update) trên toàn bộ bản sao trong Cache của các bộ xử lý khác.</li>
+<li>Với giao thức Snooping: Lưu lượng thông điệp broadcast trên bus tăng theo cấp số bậc hai $O(N^2)$, gây nghẽn hoàn toàn đường truyền khi $N &gt; 32 - 64$.</li>
+<li>
+<p>Với giao thức Directory-based: Dung lượng bộ nhớ đòi hỏi cho bảng thư mục lưu trạng thái tăng vọt, đồng thời số lượng thông điệp điểm-điểm (Point-to-point coherence messages) làm tắc nghẽn mạng liên kết nội bộ.</p>
+</li>
+<li>
+<p><strong>Độ phức tạp phần cứng và chi phí mạng liên kết tăng phi tuyến:</strong></p>
+</li>
+<li>Mạng chuyển mạch chéo (Crossbar Switch) cho phép kết nối toàn phần nhưng chi phí phần cứng tăng theo $O(N^2)$ điểm chuyển mạch (switches). Khi $N = 1000$, số lượng điểm chuyển mạch lên tới $10^6$, vượt quá giới hạn diện tích silicon, tiêu thụ năng lượng và độ phức tạp thiết kế mạch vật lý.</li>
+<li>
+<p>Mạng liên kết đa tầng (Multistage Interconnection Network) tuy giảm chi phí xuống $O(N \log N)$ nhưng lại làm tăng độ trễ truy cập bộ nhớ tỉ lệ với $O(\log N)$.</p>
+</li>
+<li>
+<p><strong>Tranh chấp đồng bộ hóa (Synchronization Bottleneck):</strong></p>
+</li>
+<li>Các thao tác đồng bộ cơ bản như Mutex, Spinlock hoặc lệnh nguyên tử (Atomic CAS) khi bị tranh chấp bởi hàng nghìn luồng đồng thời sẽ gây ra hiện tượng xung đột dữ liệu trên đường truyền (Lock Contention), triệt tiêu hoàn toàn tính năng song song của hệ thống.</li>
+</ol>
+<hr />
+<h3>Bài 5. Phân biệt kiến trúc NUMA và Bộ nhớ phân tán</h3>
+<p><strong>Đề bài:</strong> Phân biệt kiến trúc NUMA với kiến trúc bộ nhớ phân tán. Trong câu trả lời, làm rõ:<br />
+• không gian địa chỉ;<br />
+• cách một bộ xử lý truy cập dữ liệu ở xa;<br />
+• vai trò của phần cứng và của lập trình viên.</p>
+<h4>Lời giải:</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Tiêu chí</th>
+<th style="text-align: left;">Kiến trúc NUMA (Non-Uniform Memory Access)</th>
+<th style="text-align: left;">Kiến trúc Bộ nhớ phân tán (Distributed Memory)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Không gian địa chỉ (Address Space)</strong></td>
+<td style="text-align: left;"><strong>DUY NHẤT VÀ CHIA SẺ TOÀN CỤC.</strong> Toàn bộ hệ thống sử dụng chung một không gian địa chỉ bộ nhớ vật lý phẳng. Bất kỳ bộ xử lý nào cũng có thể truy xuất đến bất kỳ vị trí ô nhớ nào trong hệ thống thông qua địa chỉ con trỏ thông thường.</td>
+<td style="text-align: left;"><strong>CÁCH LY VÀ ĐỘC LẬP.</strong> Mỗi nút tính toán (Node) sở hữu một không gian địa chỉ vật lý riêng biệt. Một tiến trình tại nút $A$ hoàn toàn không thể trực tiếp truy cập vào địa chỉ bộ nhớ thuộc nút $B$.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Cơ chế truy cập dữ liệu ở xa (Remote Data Access)</strong></td>
+<td style="text-align: left;"><strong>Trực tiếp qua tập lệnh CPU (<code>LOAD</code>/<code>STORE</code>).</strong> Bộ xử lý đọc/ghi dữ liệu ở xa trực tiếp thông qua hạ tầng phần cứng liên kết nội bộ (Intel UPI, AMD Infinity Fabric). Thời gian truy cập bộ nhớ cục bộ (Local RAM) nhanh hơn đáng kể so với truy cập bộ nhớ từ xa (Remote RAM).</td>
+<td style="text-align: left;"><strong>Gián tiếp thông qua truyền thông báo (Message Passing).</strong> Dữ liệu bắt buộc phải được đóng gói và truyền tải qua giao diện mạng vật lý (Ethernet, InfiniBand). Nút nguồn chủ động gửi (<code>MPI_Send</code>) và nút đích chủ động nhận (<code>MPI_Recv</code>).</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Vai trò của phần cứng</strong></td>
+<td style="text-align: left;"><strong>Cực kỳ phức tạp.</strong> Phần cứng chịu trách nhiệm tự động định tuyến địa chỉ từ xa, đồng thời duy trì tính nhất quán bộ đệm trên toàn bộ hệ thống bằng mạch điện tử (ccNUMA).</td>
+<td style="text-align: left;"><strong>Tương đối đơn giản.</strong> Hệ thống cấu thành từ các máy tính thương phẩm độc lập kết nối qua card mạng (NIC) và switch. Phần cứng không can thiệp vào tính nhất quán dữ liệu giữa các nút.</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Vai trò của lập trình viên</strong></td>
+<td style="text-align: left;"><strong>Tương đối thuận tiện.</strong> Có thể sử dụng các thư viện đa luồng chuẩn (OpenMP, POSIX Threads). Để đạt hiệu năng tối ưu, lập trình viên cần quản lý vị trí dữ liệu (chính sách first-touch) và gán luồng vào lõi (thread affinity) để tối đa hóa truy xuất cục bộ.</td>
+<td style="text-align: left;"><strong>Phức tạp và tường minh.</strong> Lập trình viên phải trực tiếp thiết kế phân rã miền dữ liệu (Domain Decomposition), chủ động lập trình các thủ tục truyền/nhận thông điệp, kiểm soát đồng bộ hóa và quản lý tối ưu băng thông mạng.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>Bài 6. Phân tích độ phức tạp tính toán bài toán mô phỏng dự báo thời tiết</h3>
+<p><strong>Đề bài:</strong> Trong ví dụ dự báo thời tiết, giả sử ban đầu khí quyển được chia thành các ô kích thước $1 \times 1 \times 1$ dặm, có khoảng $5 \times 10^8$ ô, mỗi ô cần khoảng $200$ phép tính cho mỗi bước thời gian, và mô phỏng một tuần với bước thời gian $1$ phút.<br />
+Tính lại thời gian chạy khi:<br />
+• kích thước ô giảm xuống còn $0.5 \times 0.5 \times 0.5$ dặm;<br />
+• bước thời gian giảm xuống còn $30$ giây;<br />
+• máy thực hiện được $10^9$ phép tính/giây.</p>
+<h4>Lời giải:</h4>
+<ol>
+<li><strong>Số lượng ô lưới khí quyển mới ($N_{\text{cells}}$):</strong></li>
+<li>Kích thước mỗi chiều ô giảm đi $2$ lần (từ $1$ dặm xuống $0.5$ dặm) trên cả 3 chiều không gian ($x, y, z$).</li>
+<li>Thể tích của một ô giảm $2 \times 2 \times 2 = 8$ lần.</li>
+<li>
+<p>Để bao phủ cùng một thể tích khí quyển, số ô tính toán mới là:<br />
+     $$N_{\text{cells}} = 5 \times 10^8 \times 8 = \mathbf{4 \times 10^9 \text{ (ô)}}$$</p>
+</li>
+<li>
+<p><strong>Số bước thời gian mô phỏng ($N_{\text{steps}}$):</strong></p>
+</li>
+<li>Thời gian mô phỏng là $1$ tuần:<br />
+     $$T_{\text{simulation}} = 7 \text{ ngày} \times 24 \text{ giờ/ngày} \times 3600 \text{ giây/giờ} = 604,800 \text{ giây}$$</li>
+<li>Bước thời gian mới: $\Delta t = 30 \text{ giây}$.</li>
+<li>
+<p>Số bước thời gian cần thực hiện:<br />
+     $$N_{\text{steps}} = \frac{604,800 \text{ giây}}{30 \text{ giây}} = \mathbf{20,160 \text{ (bước)}}$$</p>
+</li>
+<li>
+<p><strong>Tổng số phép tính của toàn bộ mô phỏng:</strong></p>
+</li>
+<li>Mỗi ô tại một bước thời gian cần $C_{\text{cell}} = 200$ phép tính.</li>
+<li>
+<p>Tổng khối lượng phép tính:<br />
+     $$\text{Total Operations} = N_{\text{cells}} \times N_{\text{steps}} \times C_{\text{cell}}$$<br />
+     $$\text{Total Operations} = (4 \times 10^9) \times 20,160 \times 200 = \mathbf{1.6128 \times 10^{16} \text{ (phép tính)}}$$</p>
+</li>
+<li>
+<p><strong>Thời gian thực thi trên hệ thống đạt $10^9$ phép tính/giây (1 GigaOps):</strong><br />
+   $$T_{\text{run}} = \frac{\text{Total Operations}}{\text{Tốc độ xử lý}} = \frac{1.6128 \times 10^{16}}{10^9} = \mathbf{16,128,000 \text{ giây}}$$<br />
+   Quy đổi sang giờ và ngày:<br />
+   $$T_{\text{run}} = \frac{16,128,000}{3,600} = \mathbf{4,480 \text{ giờ}}$$<br />
+   $$T_{\text{run}} = \frac{4,480}{24} \approx \mathbf{186.67 \text{ ngày}} \text{ (tương đương } 6.22 \text{ tháng)}$$</p>
+</li>
+</ol>
+<p><strong>Nhận xét:</strong> Một bài toán dự báo thời tiết cho $1$ tuần mà máy tính phải chạy mất hơn $6$ tháng thì kết quả hoàn toàn vô nghĩa. Điều này lý giải tại sao mô phỏng dự báo thời tiết luôn là một trong những bài toán Grand Challenge của nhân loại, đòi hỏi các siêu máy tính PetaFLOPS/ExaFLOPS với hàng trăm nghìn lõi song song để hoàn thành mô phỏng chỉ trong vòng vài chục phút.</p>
+<hr />
+<h1>PHẦN B – MÔ HÌNH VÀ THIẾT KẾ THUẬT TOÁN SONG SONG</h1>
+<hr />
+<h3>Bài 7. Mô hình SPMD trong thực thi chương trình MPI</h3>
+<p><strong>Đề bài:</strong> Một chương trình MPI được chạy bằng lệnh</p>
+<pre><code class="language-bash">mpirun -np 8 ./sim
+</code></pre>
+<p>trong đó tiến trình 0 đọc dữ liệu và phân phối cho các tiến trình khác, còn các tiến trình còn lại thực hiện tính toán. Đây là mô hình SPMD hay MPMD? Giải thích.</p>
+<h4>Lời giải:</h4>
+<p>Chương trình trên hoàn toàn thuộc mô hình <strong>SPMD (Single Program, Multiple Data)</strong>.</p>
+<p><strong>Giải thích:</strong><br />
+1. <strong>Mức hệ thống và quản lý tiến trình:</strong><br />
+   Lệnh <code>mpirun -np 8 ./sim</code> chỉ tải duy nhất <strong>một file mã máy nhị phân</strong> (<code>./sim</code>) lên toàn bộ $8$ tiến trình độc lập. Cả $8$ tiến trình cùng thực thi chung một khối mã chương trình đồng nhất ("Single Program").<br />
+2. <strong>Cơ chế rẽ nhánh nội bộ:</strong><br />
+   Sự phân chia vai trò Master (tiến trình 0 đọc dữ liệu) và Workers (các tiến trình $1..7$ tính toán) được thực hiện thông qua cấu trúc điều kiện rẽ nhánh dựa vào định danh tiến trình (<code>rank</code>):<br />
+<code>c
+   int rank;
+   MPI_Comm_rank(MPI_COMM_WORLD, &amp;rank);
+   if (rank == 0) {
+       // Nhiệm vụ Master: Đọc dữ liệu và phân phối qua MPI_Bcast / MPI_Scatter
+   } else {
+       // Nhiệm vụ Worker: Nhận phân vùng dữ liệu và thực hiện tính toán
+   }</code><br />
+3. <strong>Đặc trưng của SPMD:</strong><br />
+   Mô hình SPMD cho phép các tiến trình thực thi các nhánh lệnh (Control paths) khác nhau của <strong>cùng một chương trình</strong> tùy thuộc vào dữ liệu đầu vào hoặc <code>rank</code> của tiến trình. Mô hình chỉ được coi là MPMD (Multiple Programs, Multiple Data) khi hệ thống thực thi đồng thời các file nhị phân độc lập khác nhau (ví dụ lệnh dạng <code>mpirun -np 1 ./master : -np 7 ./worker</code>).</p>
+<hr />
+<h3>Bài 8. Phân tích sự cố của phép toán logic AND trên CRCW PRAM Arbitrary</h3>
+<p><strong>Đề bài:</strong> Xét bài toán tính phép AND của $n$ giá trị logic. Thuật toán sau khởi tạo RESULT = FALSE, sau đó mọi bộ xử lý cùng ghi giá trị của phần tử mình phụ trách vào RESULT:</p>
+<pre><code class="language-text">RESULT = FALSE
+FOR i = 1..n IN PARALLEL
+    RESULT = A[i]
+</code></pre>
+<p>Vì sao thuật toán này không dùng được với quy tắc ghi đồng thời Arbitrary của CRCW PRAM? Hãy chỉ ra một trường hợp đầu vào làm thuật toán có thể cho kết quả sai.</p>
+<h4>Lời giải:</h4>
+<ol>
+<li>
+<p><strong>Quy tắc phân giải xung đột Arbitrary trên CRCW PRAM:</strong><br />
+   Trong mô hình CRCW PRAM Arbitrary, khi có nhiều bộ xử lý cùng cố gắng ghi dữ liệu vào một ô nhớ tại cùng một thời điểm, cơ chế phần cứng sẽ chọn ngẫu nhiên một bộ xử lý bất kỳ được phép ghi thành công, dữ liệu từ các bộ xử lý còn lại bị hủy bỏ. Thứ tự ưu tiên không được đảm bảo.</p>
+</li>
+<li>
+<p><strong>Nguyên nhân thuật toán thất bại:</strong></p>
+</li>
+<li>Phép toán logic $\text{AND}$ của $n$ giá trị logic:<br />
+     $$\text{RESULT} = A[1] \land A[2] \land \dots \land A[n]$$<br />
+     Kết quả chỉ bằng $\text{TRUE}$ khi <strong>toàn bộ</strong> các phần tử $A[i] = \text{TRUE}$. Chỉ cần tồn tại <strong>ít nhất một</strong> phần tử $A[k] = \text{FALSE}$, kết quả bắt buộc phải là $\text{FALSE}$.</li>
+<li>
+<p>Trong thuật toán trên, nếu mảng đầu vào chứa cả giá trị $\text{TRUE}$ và $\text{FALSE}$, các bộ xử lý sẽ cùng lúc ghi giá trị $\text{TRUE}$ và $\text{FALSE}$ vào <code>RESULT</code>. Với quy tắc Arbitrary, phần cứng có thể chọn ngẫu nhiên một bộ xử lý đang giữ giá trị $\text{TRUE}$ ghi đè thành công, dẫn đến <code>RESULT = TRUE</code>, vi phạm tính đúng đắn toán học của phép AND.</p>
+</li>
+<li>
+<p><strong>Trường hợp phản ví dụ cụ thể:</strong></p>
+</li>
+<li>Cho $n = 2$ phần tử với dữ liệu đầu vào:<br />
+     $$A[1] = \text{FALSE}, \quad A[2] = \text{TRUE}$$</li>
+<li><strong>Kết quả đúng:</strong> $\text{RESULT} = \text{FALSE} \land \text{TRUE} = \mathbf{FALSE}$.</li>
+<li><strong>Quá trình thực thi thuật toán:</strong><ul>
+<li>Khởi tạo: <code>RESULT = FALSE</code>.</li>
+<li>Bước thực thi song song:</li>
+<li>Bộ xử lý $P_1$ ghi $A[1] = \text{FALSE}$ vào <code>RESULT</code>.</li>
+<li>Bộ xử lý $P_2$ ghi $A[2] = \text{TRUE}$ vào <code>RESULT</code>.</li>
+<li>Do xảy ra xung đột ghi đồng thời, quy tắc Arbitrary chọn ngẫu nhiên bộ xử lý $P_2$ được phép ghi.</li>
+<li>Ô nhớ bị cập nhật thành: <code>RESULT = TRUE</code>.</li>
+</ul>
+</li>
+<li><strong>Kết quả:</strong> Thuật toán trả về $\text{TRUE}$ trong khi kết quả đúng là $\text{FALSE}$. Thuật toán hoàn toàn sai lệch.</li>
+</ol>
+<p><em>(Thuật toán đúng trên CRCW Common/Arbitrary: Khởi tạo <code>RESULT = TRUE</code>. Chỉ các bộ xử lý có $A[i] == \text{FALSE}$ mới được phép ghi <code>RESULT = FALSE</code>).</em></p>
+<hr />
+<h3>Bài 9. Thuật toán tìm phần tử lớn nhất trên mô hình EREW PRAM</h3>
+<p><strong>Đề bài:</strong> Viết thuật toán song song tìm phần tử lớn nhất của $n$ số trên mô hình EREW PRAM.<br />
+• Phân tích thời gian thực hiện $T(n)$.<br />
+• Xác định số bộ xử lý cần dùng.<br />
+• Tính chi phí $C(n) = p \cdot T(n)$.<br />
+• Đề xuất cách điều chỉnh số bộ xử lý để thuật toán trở thành tối ưu về chi phí mà vẫn giữ thời gian $O(\log n)$.</p>
+<h4>Lời giải:</h4>
+<ol>
+<li><strong>Mô tả thuật toán cây khử song song (Binary Tree Reduction):</strong><br />
+   Mô hình EREW PRAM không cho phép đọc đồng thời và không cho phép ghi đồng thời. Thuật toán tổ chức các phép so sánh theo cấu trúc cây nhị phân trên mảng chia sẻ $A[1..n]$:<br />
+   ```text<br />
+   Thuật toán EREW_Max(A, n)<br />
+   Đầu vào: Mảng A[1..n]<br />
+   Đầu ra: Phần tử lớn nhất được lưu tại A[1]</li>
+</ol>
+<p>FOR d = 1 TO ceil(log2(n)) DO<br />
+       step = 2^d<br />
+       half = 2^(d - 1)<br />
+       FOR i = 1 TO n STEP step IN PARALLEL DO<br />
+           j = i + half<br />
+           IF j &lt;= n THEN<br />
+               IF A[j] &gt; A[i] THEN<br />
+                   A[i] = A[j]<br />
+   RETURN A[1]<br />
+   ```<br />
+<em>Tính hợp lệ EREW:</em> Tại mỗi vòng lặp $d$, mỗi bộ xử lý thao tác trên hai chỉ số $(i, j)$ hoàn toàn phân biệt, độc lập đọc $A[i], A[j]$ và chỉ ghi đè vào $A[i]$, không vi phạm quy tắc Exclusive Access.</p>
+<ol>
+<li>
+<p><strong>Phân tích độ phức tạp thời gian $T(n)$:</strong><br />
+   Cây nhị phân có độ sâu là $\lceil \log_2 n \rceil$ bước. Tại mỗi bước, các bộ xử lý thực hiện phép so sánh và gán trong thời gian $O(1)$. Do đó:<br />
+   $$T(n) = O(\log n)$$</p>
+</li>
+<li>
+<p><strong>Số lượng bộ xử lý cần dùng ($p$):</strong><br />
+   Tại tầng đầu tiên ($d = 1$), có $n/2$ phép so sánh độc lập cần thực hiện song song. Do đó:<br />
+   $$p = \lceil n/2 \rceil = O(n)$$</p>
+</li>
+<li>
+<p><strong>Tính chi phí của thuật toán ($C(n) = p \cdot T(n)$):</strong><br />
+   $$C(n) = p \times T(n) = O(n) \times O(\log n) = O(n \log n)$$<br />
+   Vì thuật toán tuần tự tìm Max tối ưu chỉ mất thời gian $O(n)$, mà chi phí $C(n) = O(n \log n) &gt; O(n)$, nên thuật toán này <strong>chưa tối ưu về chi phí (Not Cost-Optimal)</strong>.</p>
+</li>
+<li>
+<p><strong>Điều chỉnh số bộ xử lý để tối ưu chi phí (Áp dụng Định lý Brent):</strong></p>
+</li>
+<li><strong>Nguyên lý:</strong> Kết hợp pha xử lý tuần tự cục bộ và pha rút gọn song song.</li>
+<li><strong>Thiết kế giải thuật 2 pha:</strong><ul>
+<li>Chọn số bộ xử lý: $p = \dfrac{n}{\log_2 n}$.</li>
+<li><strong>Pha 1 (Xử lý tuần tự cục bộ):</strong> Phân chia $n$ phần tử thành $p$ khối độc lập, mỗi khối có độ dài $\dfrac{n}{p} = \log_2 n$ phần tử. Mỗi bộ xử lý tìm giá trị cực đại cục bộ trên khối của mình bằng thuật toán tuần tự thông thường.<br />
+   $$T_1 = O\left(\frac{n}{p}\right) = O(\log n)$$</li>
+<li><strong>Pha 2 (Khử song song theo cây nhị phân):</strong> Thu được $p$ giá trị cực đại từ $p$ bộ xử lý. Áp dụng thuật toán cây khử song song EREW cho $p$ phần tử này.<br />
+   $$T_2 = O(\log p) = O\left(\log \frac{n}{\log n}\right) \le O(\log n)$$</li>
+<li><strong>Tổng thời gian thực thi:</strong><br />
+   $$T(n) = T_1 + T_2 = O(\log n) + O(\log n) = \mathbf{O(\log n)}$$</li>
+<li><strong>Tổng chi phí tính toán mới:</strong><br />
+   $$C(n) = p \times T(n) = \left(\frac{n}{\log n}\right) \times O(\log n) = \mathbf{O(n)}$$</li>
+</ul>
+</li>
+<li><strong>Kết luận:</strong> Thuật toán đạt trạng thái <strong>tối ưu về chi phí (Cost-Optimal)</strong> vì $C(n) = O(n)$ bằng đúng chi phí của giải thuật tuần tự tối ưu, trong khi vẫn duy trì thời gian thực thi song song là <strong>$O(\log n)$</strong>.</li>
+</ol>
+<hr />
+<h3>Bài 10. Phân tích thời gian Broadcast trên CREW PRAM và EREW PRAM</h3>
+<p><strong>Đề bài:</strong> Trên mô hình CREW PRAM, bài toán broadcast một giá trị từ một bộ xử lý tới tất cả các bộ xử lý mất bao lâu? Vì sao trên EREW PRAM phải dùng kỹ thuật growing by doubling (nhân đôi)? Phân tích số bước cần thiết theo $n$.</p>
+<h4>Lời giải:</h4>
+<ol>
+<li><strong>Thời gian Broadcast trên CREW PRAM:</strong></li>
+<li>Mô hình CREW (Concurrent Read, Exclusive Write) cho phép nhiều bộ xử lý cùng đọc đồng thời tại một địa chỉ bộ nhớ trong cùng một chu kỳ thời gian.</li>
+<li>Giả sử giá trị cần broadcast được bộ xử lý nguồn đặt tại ô nhớ dùng chung <code>M[0]</code>.</li>
+<li>Tất cả $n$ bộ xử lý cùng đồng thời thực hiện thao tác đọc từ ô nhớ <code>M[0]</code>.</li>
+<li>
+<p><strong>Thời gian thực hiện:</strong> Mất đúng <strong>$1$ bước</strong> ($T(n) = \mathbf{O(1)}$).</p>
+</li>
+<li>
+<p><strong>Nguyên nhân EREW PRAM phải áp dụng kỹ thuật nhân đôi (Growing by Doubling):</strong></p>
+</li>
+<li>Mô hình EREW (Exclusive Read, Exclusive Write) nghiêm cấm hoàn toàn hành vi đọc đồng thời. Hai bộ xử lý không được phép cùng đọc một ô nhớ tại cùng một chu kỳ xung nhịp.</li>
+<li>Do đó, thông điệp không thể được đọc trực tiếp từ một nguồn duy nhất mà phải được truyền lan truyền qua các thao tác sao chép dữ liệu giữa các cặp bộ xử lý độc lập.</li>
+<li>Để tối ưu hóa thời gian truyền thông, ở mỗi bước tính toán, mỗi bộ xử lý đã nhận dữ liệu sẽ tiến hành sao chép thông điệp đó cho một bộ xử lý mới chưa có dữ liệu:<ul>
+<li>Bước 0: $1$ bộ xử lý nắm giữ dữ liệu ($2^0$).</li>
+<li>Bước 1: Bộ xử lý 1 chép cho bộ xử lý 2 $\Rightarrow 2$ bộ xử lý có dữ liệu ($2^1$).</li>
+<li>Bước 2: $2$ bộ xử lý cùng lúc chép cho $2$ bộ xử lý khác $\Rightarrow 4$ bộ xử lý có dữ liệu ($2^2$).</li>
+<li>Bước $k$: Số lượng bộ xử lý nắm giữ dữ liệu nhân đôi thành $2^k$.</li>
+</ul>
+</li>
+<li>
+<p>Kỹ thuật nhân đôi này khai thác tối đa cấu trúc cây nhị phân phát tán mà không gây ra bất kỳ xung đột đọc nào.</p>
+</li>
+<li>
+<p><strong>Phân tích số bước cần thiết theo $n$ trên EREW PRAM:</strong></p>
+</li>
+<li>Sau $k$ bước sao chép nhân đôi, số lượng bộ xử lý đã nhận được giá trị là $2^k$.</li>
+<li>Để toàn bộ $n$ bộ xử lý đều nhận được dữ liệu, điều kiện thỏa mãn là:<br />
+     $$2^k \ge n \iff k \ge \lceil \log_2 n \rceil$$</li>
+<li><strong>Kết luận:</strong> Số bước cần thiết là <strong>$\lceil \log_2 n \rceil$ bước</strong> (thời gian $T(n) = \mathbf{O(\log n)}$).</li>
+</ol>
+<hr />
+<h3>Bài 11. Áp dụng kỹ thuật nhảy con trỏ (Pointer Jumping)</h3>
+<p><strong>Đề bài:</strong> Áp dụng kỹ thuật nhảy con trỏ (pointer jumping) cho danh sách liên kết<br />
+$$2 \to 4 \to 1 \to 3, \quad \text{HEAD} = 2.$$<br />
+Khởi tạo $\text{RANK}[i] = 1$ và $\text{NEXT}[i] = \text{LINK}[i]$. Ghi lại giá trị của hai mảng $\text{RANK}$ và $\text{NEXT}$ sau mỗi bước song song cho đến khi mọi $\text{NEXT}[i] = 0$.</p>
+<h4>Lời giải:</h4>
+<p>Danh sách liên kết ban đầu có trật tự: $2 \to 4 \to 1 \to 3 \to \text{NULL}$ (nút 3 trỏ về 0).<br />
+Các giá trị liên kết ban đầu:<br />
+* $\text{LINK}[2] = 4$<br />
+* $\text{LINK}[4] = 1$<br />
+* $\text{LINK}[1] = 3$<br />
+* $\text{LINK}[3] = 0$ (NULL)</p>
+<p>Công thức biến đổi song song cho mỗi nút $i$ ($1 \le i \le 4$):<br />
+$$\text{Nếu } \text{NEXT}[i] \ne 0 \text{ thì: } \begin{cases} \text{RANK}[i] = \text{RANK}[i] + \text{RANK}[\text{NEXT}[i]] \ \text{NEXT}[i] = \text{NEXT}[\text{NEXT}[i]] \end{cases}$$<br />
+<em>(Các giá trị vế phải được đọc đồng thời từ trạng thái của bước trước đó).</em></p>
+<h4>Bảng theo dõi giá trị mảng $\text{RANK}$ và $\text{NEXT}$ qua từng bước:</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Bước</th>
+<th style="text-align: center;">Nút $i$</th>
+<th style="text-align: center;">$\text{NEXT}[i]$</th>
+<th style="text-align: center;">$\text{RANK}[i]$</th>
+<th style="text-align: left;">Chi tiết biến đổi trạng thái</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><strong>Khởi tạo (Bước 0)</strong></td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: left;">$\text{LINK}[1] = 3$</td>
+</tr>
+<tr>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: left;">$\text{LINK}[2] = 4$</td>
+</tr>
+<tr>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: left;">$\text{LINK}[3] = 0$ (Nút cuối danh sách)</td>
+</tr>
+<tr>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: left;">$\text{LINK}[4] = 1$</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>Bước 1</strong></td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;"><strong>0</strong></td>
+<td style="text-align: center;"><strong>2</strong></td>
+<td style="text-align: left;">$\text{RANK}[1] = 1 + \text{RANK}[3] = 1 + 1 = 2$; $\text{NEXT}[1] = \text{NEXT}[3] = 0$</td>
+</tr>
+<tr>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;"><strong>1</strong></td>
+<td style="text-align: center;"><strong>2</strong></td>
+<td style="text-align: left;">$\text{RANK}[2] = 1 + \text{RANK}[4] = 1 + 1 = 2$; $\text{NEXT}[2] = \text{NEXT}[4] = 1$</td>
+</tr>
+<tr>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;"><strong>0</strong></td>
+<td style="text-align: center;"><strong>1</strong></td>
+<td style="text-align: left;">$\text{NEXT}[3] = 0 \Rightarrow$ Giữ nguyên trạng thái</td>
+</tr>
+<tr>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;"><strong>3</strong></td>
+<td style="text-align: center;"><strong>2</strong></td>
+<td style="text-align: left;">$\text{RANK}[4] = 1 + \text{RANK}[1] = 1 + 1 = 2$; $\text{NEXT}[4] = \text{NEXT}[1] = 3$</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>Bước 2</strong></td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;"><strong>0</strong></td>
+<td style="text-align: center;"><strong>2</strong></td>
+<td style="text-align: left;">$\text{NEXT}[1] = 0 \Rightarrow$ Giữ nguyên trạng thái</td>
+</tr>
+<tr>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">2</td>
+<td style="text-align: center;"><strong>0</strong></td>
+<td style="text-align: center;"><strong>4</strong></td>
+<td style="text-align: left;">$\text{RANK}[2] = 2 + \text{RANK}[1] = 2 + 2 = 4$; $\text{NEXT}[2] = \text{NEXT}[1] = 0$</td>
+</tr>
+<tr>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">3</td>
+<td style="text-align: center;"><strong>0</strong></td>
+<td style="text-align: center;"><strong>1</strong></td>
+<td style="text-align: left;">$\text{NEXT}[3] = 0 \Rightarrow$ Giữ nguyên trạng thái</td>
+</tr>
+<tr>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">4</td>
+<td style="text-align: center;"><strong>0</strong></td>
+<td style="text-align: center;"><strong>3</strong></td>
+<td style="text-align: left;">$\text{RANK}[4] = 2 + \text{RANK}[3] = 2 + 1 = 3$; $\text{NEXT}[4] = \text{NEXT}[3] = 0$</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Kết luận:</strong><br />
+* Tại <strong>Bước 2</strong>, toàn bộ mảng $\text{NEXT}$ đều bằng $0$ ($\text{NEXT} = [0, 0, 0, 0]$), thuật toán dừng lại sau đúng <strong>$2$ bước</strong> song song ($\lceil \log_2 4 \rceil = 2$).<br />
+* Mảng kết quả $\text{RANK}$ cuối cùng xác định chính xác khoảng cách (số nút) từ vị trí hiện tại tới cuối danh sách:<br />
+  * $\text{RANK}[2] = \mathbf{4}$ (Nút đầu danh sách - Head: $2 \to 4 \to 1 \to 3$)<br />
+  * $\text{RANK}[4] = \mathbf{3}$ (Nút thứ hai: $4 \to 1 \to 3$)<br />
+  * $\text{RANK}[1] = \mathbf{2}$ (Nút thứ ba: $1 \to 3$)<br />
+  * $\text{RANK}[3] = \mathbf{1}$ (Nút đuôi danh sách - Tail: $3$)</p>
+<hr />
+<h3>Bài 12. Phân tích tối ưu kích thước phân hoạch trong thuật toán trộn song song</h3>
+<p><strong>Đề bài:</strong> Trong thuật toán trộn song song hai dãy đã sắp xếp bằng kỹ thuật phân hoạch, vì sao kích thước nhóm thường được chọn là $\log n$ thay vì $1$ hoặc $\sqrt{n}$? Phân tích sự cân bằng giữa:<br />
+• thời gian tìm kiếm nhị phân;<br />
+• thời gian trộn trong mỗi nhóm;<br />
+• số bộ xử lý;<br />
+• tổng chi phí của thuật toán.</p>
+<h4>Lời giải:</h4>
+<p>Bài toán yêu cầu trộn hai dãy số đã sắp xếp kích thước $n$. Sử dụng kỹ thuật phân hoạch theo kích thước khối $B$:<br />
+* Chia dãy thứ nhất thành $k = \dfrac{n}{B}$ khối con có độ dài $B$.<br />
+* Dùng tìm kiếm nhị phân trên dãy thứ hai để xác định vị trí tương ứng của các điểm phân hoạch, tạo ra $k$ bài toán con độc lập.<br />
+* Phân phối $k$ bài toán con cho $p = \dfrac{n}{B}$ bộ xử lý thực hiện trộn tuần tự song song.</p>
+<h4>1. Các thành phần độ phức tạp theo kích thước khối $B$:</h4>
+<ul>
+<li><strong>Thời gian tìm kiếm nhị phân ($T_{\text{BS}}$):</strong> Với $p = n/B$ bộ xử lý thực thi song song, mỗi phép tìm kiếm nhị phân trên mảng kích thước $n$ mất $O(\log n)$. Do đó:<br />
+  $$T_{\text{BS}} = O(\log n)$$</li>
+<li><strong>Thời gian trộn trong mỗi nhóm ($T_{\text{merge}}$):</strong> Mỗi bài toán con có kích thước khoảng $O(B)$, giải thuật trộn tuần tự bằng hai con trỏ mất:<br />
+  $$T_{\text{merge}} = O(B)$$</li>
+<li><strong>Tổng thời gian song song:</strong><br />
+  $$T(n) = T_{\text{BS}} + T_{\text{merge}} = O(\log n + B)$$</li>
+<li><strong>Số lượng bộ xử lý cần dùng:</strong><br />
+  $$p = \frac{n}{B}$$</li>
+<li><strong>Tổng chi phí của thuật toán ($C(n) = p \times T(n)$):</strong><br />
+  $$C(n) = \frac{n}{B} \times O(\log n + B) = O\left(\frac{n \log n}{B} + n\right)$$</li>
+</ul>
+<h4>2. So sánh và phân tích sự cân bằng giữa 3 lựa chọn của $B$:</h4>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Tiêu chí</th>
+<th style="text-align: left;">Lựa chọn $B = 1$</th>
+<th style="text-align: left;">Lựa chọn $B = \sqrt{n}$</th>
+<th style="text-align: left;">Lựa chọn $B = \log n$ (Tối ưu)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Số bộ xử lý $p = n/B$</strong></td>
+<td style="text-align: left;">$p = n$ (Chi phí phần cứng rất lớn)</td>
+<td style="text-align: left;">$p = \sqrt{n}$</td>
+<td style="text-align: left;">$p = \dfrac{n}{\log n}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Thời gian tìm kiếm nhị phân</strong></td>
+<td style="text-align: left;">$O(\log n)$</td>
+<td style="text-align: left;">$O(\log n)$</td>
+<td style="text-align: left;">$O(\log n)$</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Thời gian trộn trong nhóm</strong></td>
+<td style="text-align: left;">$O(1)$</td>
+<td style="text-align: left;">$O(\sqrt{n})$</td>
+<td style="text-align: left;">$O(\log n)$</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Tổng thời gian $T(n)$</strong></td>
+<td style="text-align: left;">$O(\log n)$</td>
+<td style="text-align: left;">$O(\sqrt{n})$</td>
+<td style="text-align: left;"><strong>$O(\log n)$</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Tổng chi phí $C(n)$</strong></td>
+<td style="text-align: left;">$n \times O(\log n) = \mathbf{O(n \log n)}$</td>
+<td style="text-align: left;">$\sqrt{n} \times O(\sqrt{n}) = \mathbf{O(n)}$</td>
+<td style="text-align: left;">$\left(\dfrac{n}{\log n}\right) \times O(\log n) = \mathbf{O(n)}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Đánh giá hiệu quả</strong></td>
+<td style="text-align: left;"><strong>Lãng phí chi phí:</strong> Chi phí $O(n \log n)$ lớn hơn thuật toán tuần tự $O(n)$, lãng phí tài nguyên tính toán vào $n$ phép tìm kiếm nhị phân độc lập.</td>
+<td style="text-align: left;"><strong>Tốc độ chậm:</strong> Mặc dù chi phí tối ưu $O(n)$, nhưng thời gian thực thi $O(\sqrt{n})$ kém xa mức $O(\log n)$ khi kích thước dữ liệu $n$ lớn.</td>
+<td style="text-align: left;"><strong>Điểm cân bằng tối ưu:</strong> Thời gian tìm kiếm nhị phân cân bằng tuyệt đối với thời gian trộn tuần tự ($O(\log n)$), đạt thời gian thực thi tối ưu <strong>$O(\log n)$</strong> và chi phí tối ưu <strong>$C(n) = O(n)$</strong>.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Kết luận:</strong> $B = \log n$ là kích thước phân hoạch duy nhất đạt được trạng thái <strong>Cost-Optimal</strong> (tổng chi phí $O(n)$ tương đương thuật toán tuần tự tốt nhất) mà vẫn bảo toàn thời gian thực thi song song nhanh nhất ở mức $O(\log n)$.</p>
+<hr />
+<h1>PHẦN C – THỰC NGHIỆM ĐO ĐẠC RUNTIME VÀ ĐỐI CHIẾU ĐỊNH LUẬT AMDAHL</h1>
+<p>Theo chỉ dẫn chuyên môn từ Giảng viên trong buổi họp hướng dẫn bài tập tuần, việc đánh giá hiệu năng song song không chỉ dừng lại ở mô hình giải tích lý thuyết mà cần được kiểm chứng thông qua thực nghiệm đo đạc Runtime thực tế theo các kích thước dữ liệu tăng dần và số lượng luồng tính toán khác nhau, từ đó đối chiếu trực tiếp với hệ số tăng tốc tiềm năng (Potential Speedup) của Định luật Amdahl.</p>
+<hr />
+<h3>1. Thiết kế bài toán thực nghiệm</h3>
+<ul>
+<li><strong>Bài toán:</strong> Đếm số lượng các số nguyên tố trong khoảng $[1, N]$ bằng thuật toán kiểm tra tính nguyên tố độc lập (Trial Division Optimization) kết hợp song song hóa đa luồng với OpenMP (<code>schedule(guided, 1000)</code>).</li>
+<li><strong>Các kích thước bài toán khảo sát:</strong></li>
+<li>$N = 10^6$ ($1$ triệu)</li>
+<li>$N = 10^7$ ($10$ triệu)</li>
+<li>$N = 5 \times 10^7$ ($50$ triệu)</li>
+<li>$N = 10^8$ ($100$ triệu)</li>
+<li><strong>Số luồng thực thi khảo sát:</strong> $P \in {1, 2, 4, 8}$ luồng.</li>
+</ul>
+<hr />
+<h3>2. Môi trường phần cứng và cấu hình đo</h3>
+<ul>
+<li><strong>Thiết bị:</strong> Apple MacBook Air M3</li>
+<li><strong>Kiến trúc vi xử lý:</strong> Apple Silicon M3 gồm $8$ nhân vật lý ($4$ nhân hiệu năng cao Performance P-cores xung nhịp $4.05\text{ GHz}$ + $4$ nhân tiết kiệm điện Efficiency E-cores xung nhịp $2.75\text{ GHz}$).</li>
+<li><strong>Trình biên dịch:</strong> Apple Clang C++17, cờ tối ưu hóa <code>-O3</code>, thư viện OpenMP (<code>libomp</code> v19.x).</li>
+<li><strong>Phương pháp đo:</strong> Sử dụng <code>omp_get_wtime()</code>, mỗi ca đo thực hiện lặp $3$ lần lấy giá trị trung bình ổn định.</li>
+</ul>
+<hr />
+<h3>3. Bảng số liệu thực nghiệm Runtime và Speedup</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Kích thước bài toán ($N$)</th>
+<th style="text-align: center;">Số luồng ($P$)</th>
+<th style="text-align: center;">Runtime thực tế ($s$)</th>
+<th style="text-align: center;">Hệ số Speedup thực tế $S(P)$</th>
+<th style="text-align: center;">Hiệu suất song song $E(P)$</th>
+<th style="text-align: center;">Amdahl Potential Speedup</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>$1$ Triệu ($10^6$)</strong></td>
+<td style="text-align: center;">$1$ (Serial)</td>
+<td style="text-align: center;">$0.0159\text{ s}$</td>
+<td style="text-align: center;">$1.00\text{x}$</td>
+<td style="text-align: center;">$100.0\%$</td>
+<td style="text-align: center;">$1.00\text{x}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;">$2$ luồng</td>
+<td style="text-align: center;">$0.0082\text{ s}$</td>
+<td style="text-align: center;">$1.94\text{x}$</td>
+<td style="text-align: center;">$97.0\%$</td>
+<td style="text-align: center;">$1.93\text{x}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;">$4$ luồng</td>
+<td style="text-align: center;">$0.0044\text{ s}$</td>
+<td style="text-align: center;">$3.61\text{x}$</td>
+<td style="text-align: center;">$90.3\%$</td>
+<td style="text-align: center;">$3.59\text{x}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;">$8$ luồng</td>
+<td style="text-align: center;">$0.0037\text{ s}$</td>
+<td style="text-align: center;">$4.30\text{x}$</td>
+<td style="text-align: center;">$53.7\%$</td>
+<td style="text-align: center;">$6.31\text{x}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>$10$ Triệu ($10^7$)</strong></td>
+<td style="text-align: center;">$1$ (Serial)</td>
+<td style="text-align: center;">$0.3734\text{ s}$</td>
+<td style="text-align: center;">$1.00\text{x}$</td>
+<td style="text-align: center;">$100.0\%$</td>
+<td style="text-align: center;">$1.00\text{x}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;">$2$ luồng</td>
+<td style="text-align: center;">$0.1923\text{ s}$</td>
+<td style="text-align: center;">$1.94\text{x}$</td>
+<td style="text-align: center;">$97.1\%$</td>
+<td style="text-align: center;">$1.93\text{x}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;">$4$ luồng</td>
+<td style="text-align: center;">$0.1048\text{ s}$</td>
+<td style="text-align: center;">$3.56\text{x}$</td>
+<td style="text-align: center;">$89.1\%$</td>
+<td style="text-align: center;">$3.59\text{x}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;">$8$ luồng</td>
+<td style="text-align: center;">$0.0893\text{ s}$</td>
+<td style="text-align: center;">$4.18\text{x}$</td>
+<td style="text-align: center;">$52.3\%$</td>
+<td style="text-align: center;">$6.31\text{x}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>$50$ Triệu ($5 \times 10^7$)</strong></td>
+<td style="text-align: center;">$1$ (Serial)</td>
+<td style="text-align: center;">$3.5966\text{ s}$</td>
+<td style="text-align: center;">$1.00\text{x}$</td>
+<td style="text-align: center;">$100.0\%$</td>
+<td style="text-align: center;">$1.00\text{x}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;">$2$ luồng</td>
+<td style="text-align: center;">$1.8329\text{ s}$</td>
+<td style="text-align: center;">$1.96\text{x}$</td>
+<td style="text-align: center;">$98.1\%$</td>
+<td style="text-align: center;">$1.93\text{x}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;">$4$ luồng</td>
+<td style="text-align: center;">$1.0107\text{ s}$</td>
+<td style="text-align: center;">$3.56\text{x}$</td>
+<td style="text-align: center;">$89.0\%$</td>
+<td style="text-align: center;">$3.59\text{x}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;">$8$ luồng</td>
+<td style="text-align: center;">$0.8510\text{ s}$</td>
+<td style="text-align: center;">$4.23\text{x}$</td>
+<td style="text-align: center;">$52.8\%$</td>
+<td style="text-align: center;">$6.31\text{x}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>$100$ Triệu ($10^8$)</strong></td>
+<td style="text-align: center;">$1$ (Serial)</td>
+<td style="text-align: center;">$9.7520\text{ s}$</td>
+<td style="text-align: center;">$1.00\text{x}$</td>
+<td style="text-align: center;">$100.0\%$</td>
+<td style="text-align: center;">$1.00\text{x}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;">$2$ luồng</td>
+<td style="text-align: center;">$4.9268\text{ s}$</td>
+<td style="text-align: center;"><strong>$1.98\text{x}$</strong></td>
+<td style="text-align: center;"><strong>$99.0\%$</strong></td>
+<td style="text-align: center;">$1.93\text{x}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;">$4$ luồng</td>
+<td style="text-align: center;">$2.7170\text{ s}$</td>
+<td style="text-align: center;"><strong>$3.59\text{x}$</strong></td>
+<td style="text-align: center;"><strong>$89.7\%$</strong></td>
+<td style="text-align: center;">$3.59\text{x}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;">$8$ luồng</td>
+<td style="text-align: center;">$2.2966\text{ s}$</td>
+<td style="text-align: center;"><strong>$4.25\text{x}$</strong></td>
+<td style="text-align: center;"><strong>$53.1\%$</strong></td>
+<td style="text-align: center;">$6.31\text{x}$</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3>4. Phân tích đối chiếu giữa Amdahl Potential Speedup và Thực tế</h3>
+<p>Dựa trên dữ liệu thực nghiệm ở bài toán kích thước lớn $N = 100$ triệu ($T_1 = 9.7520\text{ s}, T_4 = 2.7170\text{ s}$):</p>
+<ol>
+<li>
+<p><strong>Ước lượng tỉ lệ phần song song thực tế ($p$) và tuần tự ($s$):</strong><br />
+   Từ hệ số tăng tốc tại $4$ luồng $S(4) = 3.59\text{x}$, nghịch đảo công thức Amdahl cho phép xác định tỉ lệ phần song song hóa hiệu dụng:<br />
+   $$S(4) = \frac{1}{(1 - p) + \dfrac{p}{4}} = 3.59 \implies p \approx \mathbf{96.19\%}, \quad s = 1 - p \approx \mathbf{3.81\%}$$<br />
+   Từ đó, hệ số tăng tốc tối đa lý thuyết (Amdahl Potential Speedup khi $P \to \infty$) bị chặn trên bởi:<br />
+   $$S_{\max} = \frac{1}{s} = \frac{1}{0.0381} \approx \mathbf{26.22\text{ lần}}$$</p>
+</li>
+<li>
+<p><strong>Đánh giá sự tương thích giữa lý thuyết Amdahl và thực nghiệm đo đạc:</strong></p>
+</li>
+<li><strong>Tại $P = 2$ luồng:</strong> Hệ số tăng tốc thực tế đạt <strong>$1.98\text{x}$</strong> (rất gần mức lý tưởng $2.0\text{x}$), hiệu suất song song đạt <strong>$99.0\%$</strong>, hoàn toàn khớp với mô hình Amdahl lý thuyết ($1.93\text{x}$).</li>
+<li><strong>Tại $P = 4$ luồng:</strong> Hệ số tăng tốc thực tế đạt <strong>$3.59\text{x}$</strong> (hiệu suất đạt <strong>$89.7\%$</strong>), trùng khớp chính xác với giá trị dự báo của Định luật Amdahl. Cả 4 luồng đều được phân bổ trên 4 nhân hiệu năng cao (P-cores) của chip M3.</li>
+<li>
+<p><strong>Tại $P = 8$ luồng:</strong> Mô hình Amdahl lý thuyết dự báo speedup đạt $6.31\text{x}$. Tuy nhiên, trên thực tế đo đạc, speedup chỉ đạt <strong>$4.25\text{x}$</strong> (hiệu suất giảm xuống $53.1\%$). Hiện tượng này minh chứng hai rào cản kinh điển trong tính toán hiệu năng cao:</p>
+<ul>
+<li><em>Đặc thù vi kiến trúc lõi không đồng nhất (Heterogeneous Architecture):</em> Chip Apple M3 chỉ có 4 nhân P-core mạnh, 4 nhân còn lại là E-core có năng lực tính toán và xung nhịp thấp hơn. Khi phân bổ 8 luồng, các luồng trên P-core tính toán nhanh hơn và phải dừng chờ rào cản đồng bộ (<code>barrier</code>) với các luồng trên E-core, gây ra hiện tượng lệch tải (Load Imbalance).</li>
+<li><em>Chi phí đồng bộ hóa và quản lý OpenMP runtime:</em> Việc tạo và duy trì điều phối động (<code>guided schedule</code>) bắt đầu chiếm tỉ trọng chi phí khi số luồng tăng.</li>
+</ul>
+</li>
+<li>
+<p><strong>Tổng kết:</strong> Thực nghiệm đã kiểm chứng trực quan Định luật Amdahl trên vi xử lý đa lõi hiện đại, khẳng định rằng tốc độ song song trong thực tế không chỉ bị giới hạn bởi phần mã tuần tự $s$ mà còn phụ thuộc chặt chẽ vào sự đồng nhất của kiến trúc phần cứng vi mô.</p>
+</li>
+</ol>
+</body>
+</html>
