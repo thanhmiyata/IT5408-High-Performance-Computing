@@ -7,7 +7,7 @@
 ## HỌC PHẦN: IT5408 – TÍNH TOÁN HIỆU NĂNG CAO (HPC)
 **Chủ đề:** Kiến trúc song song, Thiết kế thuật toán song song và Thực nghiệm Định luật Amdahl
 
-* **Giảng viên hướng dẫn:** TS. Vũ Văn Thiệu, TS. Nguyễn Quốc Tuấn
+* **Giảng viên hướng dẫn:** TS. Nguyễn Quốc Tuấn
 * **Học viên thực hiện:** Phạm Tiến Thành
 * **Mã số học viên (MSSV):** 20242422M
 * **Khóa đào tạo:** Cao học Công nghệ Thông tin

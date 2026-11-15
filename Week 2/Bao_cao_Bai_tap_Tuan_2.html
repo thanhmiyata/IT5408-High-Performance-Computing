@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Báo cáo Bài tập Tuần 2 - IT5408</title>
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+@page {
+    size: A4;
+    margin: 18mm 18mm 18mm 18mm;
+}
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.55;
+    color: #1a1a1a;
+    font-size: 11pt;
+    margin: 0;
+    padding: 0;
+}
+h1 {
+    font-size: 18pt;
+    text-align: center;
+    color: #0d3b66;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+h2 {
+    font-size: 14pt;
+    text-align: center;
+    color: #1d3557;
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+h3 {
+    font-size: 12.5pt;
+    color: #2b2d42;
+    border-bottom: 1.5px solid #0d3b66;
+    padding-bottom: 4px;
+    margin-top: 22px;
+    margin-bottom: 10px;
+    page-break-after: avoid;
+}
+h4 {
+    font-size: 11pt;
+    color: #333333;
+    margin-top: 14px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
+}
+hr {
+    border: none;
+    border-top: 1px solid #dcdcdc;
+    margin: 15px 0;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+}
+th, td {
+    border: 1px solid #b0bec5;
+    padding: 6px 10px;
+    text-align: left;
+}
+th {
+    background-color: #f0f4f8;
+    color: #102a43;
+    font-weight: 600;
+}
+tr:nth-child(even) {
+    background-color: #fafbfc;
+}
+code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 9pt;
+    background-color: #f1f3f5;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+pre {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 8.5pt;
+    overflow-x: auto;
+    page-break-inside: avoid;
+}
+pre code {
+    background-color: transparent;
+    padding: 0;
+}
+ul, ol {
+    margin-top: 4px;
+    margin-bottom: 8px;
+    padding-left: 22px;
+}
+li {
+    margin-bottom: 3px;
+}
+strong {
+    color: #0f172a;
+}
+</style>
+</head>
+<body>
+<h1>ĐẠI HỌC BÁCH KHOA HÀ NỘI</h1>
+<h3>TRƯỜNG CÔNG NGHỆ THÔNG TIN VÀ TRUYỀN THÔNG</h3>
+<hr />
+<h1>BÁO CÁO BÀI TẬP TUẦN 2</h1>
+<h2>HỌC PHẦN: IT5408 – TÍNH TOÁN HIỆU NĂNG CAO (HPC)</h2>
+<p><strong>Chủ đề:</strong> Lập trình song song với OpenMP, Giải thuật Nhánh &amp; Cận (TSP), Đếm số nguyên tố, Phân tích đồ thị và Nhân ma trận</p>
+<ul>
+<li><strong>Giảng viên hướng dẫn:</strong> TS. Nguyễn Quốc Tuấn</li>
+<li><strong>Học viên thực hiện:</strong> Phạm Tiến Thành</li>
+<li><strong>Mã số học viên (MSSV):</strong> 20242422M</li>
+<li><strong>Khóa đào tạo:</strong> Cao học Công nghệ Thông tin</li>
+<li><strong>Thời gian hoàn thành:</strong> 15/11/2026</li>
+</ul>
+<hr />
+<h2>MỤC LỤC</h2>
+<ol>
+<li><a href="#bài-toán-1--traveling-salesman-problem-tsp">BÀI TOÁN 1: TRAVELING SALESMAN PROBLEM (TSP)</a></li>
+<li><a href="#11-mô-hình-toán-học-và-thuật-toán-nhánh--cận">1.1. Mô hình toán học và Thuật toán Nhánh &amp; Cận</a></li>
+<li><a href="#12-kỹ-thuật-song-song-hóa-với-openmp">1.2. Kỹ thuật song song hóa với OpenMP</a></li>
+<li><a href="#13-bảng-kết-quả-thực-nghiệm-trên-các-bộ-dữ-liệu">1.3. Bảng kết quả thực nghiệm trên các bộ dữ liệu</a></li>
+<li><a href="#bài-toán-2--đếm-số-nguyên-tố-đến-n-và-đối-chiếu-định-luật-amdahl">BÀI TOÁN 2: ĐẾM SỐ NGUYÊN TỐ ĐẾN N VÀ ĐỐI CHIẾU ĐỊNH LUẬT AMDAHL</a></li>
+<li><a href="#21-thuật-toán-và-cơ-chế-song-song">2.1. Thuật toán và Cơ chế song song</a></li>
+<li><a href="#22-bảng-số-liệu-thực-nghiệm-runtime-và-speedup">2.2. Bảng số liệu thực nghiệm Runtime và Speedup</a></li>
+<li><a href="#23-phân-tích-đối-chiếu-amdahl-potential-speedup">2.3. Phân tích đối chiếu Amdahl Potential Speedup</a></li>
+<li><a href="#bài-toán-3--đếm-số-đường-đi-độ-dài-k-trong-đồ-thị">BÀI TOÁN 3: ĐẾM SỐ ĐƯỜNG ĐI ĐỘ DÀI K TRONG ĐỒ THỊ</a></li>
+<li><a href="#31-cơ-sở-lý-thuyết-ma-trận-kề">3.1. Cơ sở lý thuyết ma trận kề</a></li>
+<li><a href="#32-thuật-toán-lũy-thừa-ma-trận-nhị-phân-song-song">3.2. Thuật toán lũy thừa ma trận nhị phân song song</a></li>
+<li><a href="#33-bảng-kết-quả-thực-nghiệm-trên-các-đồ-thị">3.3. Bảng kết quả thực nghiệm trên các đồ thị</a></li>
+<li><a href="#bài-toán-bổ-sung--nhân-hai-ma-trận-am-x-n-và-bn-x-p">BÀI TOÁN BỔ SUNG: NHÂN HAI MA TRẬN A(m x n) VÀ B(n x p)</a></li>
+<li><a href="#41-kiến-trúc-4-phương-pháp-serial-stdthread-openmp-mpi">4.1. Kiến trúc 4 phương pháp: Serial, std::thread, OpenMP, MPI</a></li>
+<li><a href="#42-bảng-số-liệu-so-sánh-hiệu-năng-và-năng-lực-tính-toán-gflops">4.2. Bảng số liệu so sánh hiệu năng và năng lực tính toán (GFLOPS)</a></li>
+<li><a href="#43-phân-tích-sự-đánh-đổi-giữa-shared-memory-và-distributed-memory">4.3. Phân tích sự đánh đổi giữa Shared Memory và Distributed Memory</a></li>
+<li><a href="#kết-luận">KẾT LUẬN</a></li>
+</ol>
+<hr />
+<h1>BÀI TOÁN 1 – TRAVELING SALESMAN PROBLEM (TSP)</h1>
+<h3>1.1. Mô hình toán học và Thuật toán Nhánh &amp; Cận</h3>
+<p>Cho đồ thị đầy đủ gồm $n$ đỉnh (thành phố) và ma trận trọng số $C = (c_{ij})$, trong đó $c_{ij} &gt; 0$ là chi phí di chuyển từ thành phố $i$ đến thành phố $j$. Mục tiêu là tìm một chu trình $(v_1, v_2, \dots, v_n, v_1)$ đi qua mỗi đỉnh đúng một lần sao cho tổng chi phí:<br />
+$$f(v) = c_{v_n, v_1} + \sum_{i=1}^{n-1} c_{v_i, v_{i+1}} \to \min$$</p>
+<p>Thuật toán Nhánh và Cận (Branch and Bound) tìm nghiệm tối ưu toàn cục bằng cách duyệt không gian trạng thái theo cây quyết định kết hợp kỹ thuật cắt tỉa:<br />
+* <strong>Cận dưới (Lower Bound):</strong> Tại mỗi nút trạng thái khi đã đi qua tập đỉnh $S \subset V$ với chi phí hiện tại là $cost_{\text{curr}}$, cận dưới của toàn bộ cây con được ước lượng bằng:<br />
+  $$\text{Bound} = cost_{\text{curr}} + \sum_{u \notin S} \min_{v \ne u} { c_{uv} }$$<br />
+* <strong>Quy tắc cắt tỉa (Pruning):</strong> Nếu $\text{Bound} \ge best_cost$ (kỷ lục chi phí nhỏ nhất tìm được hiện tại), toàn bộ nhánh con lập tức bị loại bỏ.</p>
+<h3>1.2. Kỹ thuật song song hóa với OpenMP</h3>
+<ul>
+<li><strong>Phân rã công việc (Task Decomposition):</strong> Cố định thành phố xuất phát là $1$ (đỉnh $0$). Nhánh tìm kiếm mức $1$ và mức $2$ (chọn đỉnh thứ hai $v_1$ và đỉnh thứ ba $v_2$) được phân phối song song cho các luồng OpenMP thông qua <code>#pragma omp parallel for schedule(dynamic)</code>.</li>
+<li><strong>Đồng bộ hóa kỷ lục (Global Upper Bound Sharing):</strong> Biến kỷ lục $best_cost$ được chia sẻ chung. Khi bất kỳ luồng nào tìm thấy chu trình có chi phí thấp hơn, nó cập nhật vào biến toàn cục thông qua vùng găng <code>#pragma omp critical</code>. Các luồng khác đọc được cận trên mới này và tự động cắt tỉa các nhánh kém hơn sớm hơn rất nhiều so với chạy tuần tự.</li>
+</ul>
+<h3>1.3. Bảng kết quả thực nghiệm trên các bộ dữ liệu</h3>
+<p>Thử nghiệm trên vi xử lý Apple M3 (8 nhân) với các file dữ liệu trong đề bài:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">File dữ liệu</th>
+<th style="text-align: center;">Số đỉnh ($n$)</th>
+<th style="text-align: center;">Chi phí nhỏ nhất ($\min$)</th>
+<th style="text-align: left;">Chu trình tối ưu (1-based index)</th>
+<th style="text-align: center;">Thời gian 1 luồng ($s$)</th>
+<th style="text-align: center;">Thời gian 4 luồng ($s$)</th>
+<th style="text-align: center;">Speedup ($4T$)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>tsp7.inp</strong></td>
+<td style="text-align: center;">$4$</td>
+<td style="text-align: center;"><strong>$7$</strong></td>
+<td style="text-align: left;">$1 \to 2 \to 4 \to 3 \to 1$</td>
+<td style="text-align: center;">$0.000001\text{ s}$</td>
+<td style="text-align: center;">$0.000001\text{ s}$</td>
+<td style="text-align: center;">$1.00\text{x}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>tsp12.inp</strong></td>
+<td style="text-align: center;">$12$</td>
+<td style="text-align: center;"><strong>$192$</strong></td>
+<td style="text-align: left;">$1 \to 4 \to 5 \to 11 \to 9 \to 12 \to 7 \to 2 \to 10 \to 3 \to 8 \to 6 \to 1$</td>
+<td style="text-align: center;">$0.002824\text{ s}$</td>
+<td style="text-align: center;">$0.001250\text{ s}$</td>
+<td style="text-align: center;"><strong>$2.26\text{x}$</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>tsp13.inp</strong></td>
+<td style="text-align: center;">$13$</td>
+<td style="text-align: center;"><strong>$144$</strong></td>
+<td style="text-align: left;">$1 \to 11 \to 7 \to 12 \to 8 \to 6 \to 13 \to 5 \to 9 \to 4 \to 2 \to 10 \to 3 \to 1$</td>
+<td style="text-align: center;">$0.003822\text{ s}$</td>
+<td style="text-align: center;">$0.001859\text{ s}$</td>
+<td style="text-align: center;"><strong>$2.06\text{x}$</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>tsp14.inp</strong></td>
+<td style="text-align: center;">$14$</td>
+<td style="text-align: center;"><strong>$118$</strong></td>
+<td style="text-align: left;">$1 \to 4 \to 6 \to 2 \to 9 \to 8 \to 7 \to 12 \to 3 \to 14 \to 5 \to 10 \to 11 \to 13 \to 1$</td>
+<td style="text-align: center;">$0.004457\text{ s}$</td>
+<td style="text-align: center;">$0.002665\text{ s}$</td>
+<td style="text-align: center;"><strong>$1.67\text{x}$</strong></td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>tsp15.inp</strong></td>
+<td style="text-align: center;">$15$</td>
+<td style="text-align: center;"><strong>$166$</strong></td>
+<td style="text-align: left;">$1 \to 4 \to 14 \to 10 \to 12 \to 9 \to 13 \to 7 \to 15 \to 6 \to 2 \to 8 \to 3 \to 11 \to 5 \to 1$</td>
+<td style="text-align: center;">$0.130907\text{ s}$</td>
+<td style="text-align: center;">$0.037650\text{ s}$</td>
+<td style="text-align: center;"><strong>$3.48\text{x}$</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Nhận xét:</strong><br />
+* Với $n = 15$ (<code>tsp15.inp</code>), không gian trạng thái lên tới $\approx 15! / 2 \approx 6.5 \times 10^{11}$ đường đi. Nhờ kết hợp cận dưới chặt chẽ và song song hóa OpenMP đa luồng, thời gian thực thi giảm từ <strong>$0.131\text{ s}$</strong> xuống chỉ còn <strong>$0.038\text{ s}$</strong> (đạt Speedup <strong>$3.48\text{ lần}$</strong> trên 4 luồng).</p>
+<hr />
+<h1>BÀI TOÁN 2 – ĐẾM SỐ NGUYÊN TỐ ĐẾN N VÀ ĐỐI CHIẾU ĐỊNH LUẬT AMDAHL</h1>
+<h3>2.1. Thuật toán và Cơ chế song song</h3>
+<ul>
+<li>Bài toán yêu cầu tính giá trị hàm đếm số nguyên tố:<br />
+  $$\pi(N) = \left|{p \le N \mid p \text{ là số nguyên tố}}\right|$$</li>
+<li><strong>Thuật toán tối ưu hóa:</strong> Kiểm tra số nguyên tố bằng phương pháp Trial Division dạng $6k \pm 1$ với độ phức tạp $O(\sqrt{m})$ cho mỗi số $m$.</li>
+<li><strong>Song song hóa OpenMP:</strong> Các số trong đoạn $[1, N]$ được kiểm tra độc lập (Embarrassingly Parallel). Sử dụng chỉ thị:<br />
+<code>cpp
+  #pragma omp parallel for reduction(+:count) schedule(guided, 1000) num_threads(num_threads)
+  for (long long i = 1; i &lt;= n; ++i) { ... }</code><br />
+  Chiến lược <code>schedule(guided)</code> giúp tự động cân bằng tải linh hoạt vì việc kiểm tra các số lớn đòi hỏi nhiều vòng lặp hơn các số nhỏ.</li>
+</ul>
+<h3>2.2. Bảng số liệu thực nghiệm Runtime và Speedup</h3>
+<p>Khảo sát với $N$ từ $1$ triệu đến $100$ triệu trên Apple M3 (8 nhân):</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Kích thước bài toán ($N$)</th>
+<th style="text-align: center;">Kết quả $\pi(N)$</th>
+<th style="text-align: center;">Số luồng ($P$)</th>
+<th style="text-align: center;">Runtime thực tế ($s$)</th>
+<th style="text-align: center;">Hệ số Speedup $S(P)$</th>
+<th style="text-align: center;">Hiệu suất song song $E(P)$</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>$1$ Triệu ($10^6$)</strong></td>
+<td style="text-align: center;"><strong>$78,498$</strong></td>
+<td style="text-align: center;">$1$ (Serial)</td>
+<td style="text-align: center;">$0.0302\text{ s}$</td>
+<td style="text-align: center;">$1.00\text{x}$</td>
+<td style="text-align: center;">$100.0\%$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">$2$ luồng</td>
+<td style="text-align: center;">$0.0105\text{ s}$</td>
+<td style="text-align: center;">$2.88\text{x}$</td>
+<td style="text-align: center;">$144.2\%$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">$4$ luồng</td>
+<td style="text-align: center;">$0.0048\text{ s}$</td>
+<td style="text-align: center;"><strong>$6.29\text{x}$</strong></td>
+<td style="text-align: center;">$157.3\%$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">$8$ luồng</td>
+<td style="text-align: center;">$0.0040\text{ s}$</td>
+<td style="text-align: center;"><strong>$7.63\text{x}$</strong></td>
+<td style="text-align: center;">$95.4\%$</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>$10$ Triệu ($10^7$)</strong></td>
+<td style="text-align: center;"><strong>$664,579$</strong></td>
+<td style="text-align: center;">$1$ (Serial)</td>
+<td style="text-align: center;">$0.3754\text{ s}$</td>
+<td style="text-align: center;">$1.00\text{x}$</td>
+<td style="text-align: center;">$100.0\%$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">$2$ luồng</td>
+<td style="text-align: center;">$0.1915\text{ s}$</td>
+<td style="text-align: center;">$1.96\text{x}$</td>
+<td style="text-align: center;">$98.0\%$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">$4$ luồng</td>
+<td style="text-align: center;">$0.1047\text{ s}$</td>
+<td style="text-align: center;"><strong>$3.58\text{x}$</strong></td>
+<td style="text-align: center;">$89.6\%$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">$8$ luồng</td>
+<td style="text-align: center;">$0.0860\text{ s}$</td>
+<td style="text-align: center;"><strong>$4.36\text{x}$</strong></td>
+<td style="text-align: center;">$54.6\%$</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>$50$ Triệu ($5 \times 10^7$)</strong></td>
+<td style="text-align: center;"><strong>$3,001,134$</strong></td>
+<td style="text-align: center;">$1$ (Serial)</td>
+<td style="text-align: center;">$3.5807\text{ s}$</td>
+<td style="text-align: center;">$1.00\text{x}$</td>
+<td style="text-align: center;">$100.0\%$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">$2$ luồng</td>
+<td style="text-align: center;">$1.8326\text{ s}$</td>
+<td style="text-align: center;">$1.95\text{x}$</td>
+<td style="text-align: center;">$97.7\%$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">$4$ luồng</td>
+<td style="text-align: center;">$1.0352\text{ s}$</td>
+<td style="text-align: center;"><strong>$3.46\text{x}$</strong></td>
+<td style="text-align: center;">$86.5\%$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">$8$ luồng</td>
+<td style="text-align: center;">$0.8851\text{ s}$</td>
+<td style="text-align: center;"><strong>$4.05\text{x}$</strong></td>
+<td style="text-align: center;">$50.6\%$</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>$100$ Triệu ($10^8$)</strong></td>
+<td style="text-align: center;"><strong>$5,761,455$</strong></td>
+<td style="text-align: center;">$1$ (Serial)</td>
+<td style="text-align: center;">$9.6016\text{ s}$</td>
+<td style="text-align: center;">$1.00\text{x}$</td>
+<td style="text-align: center;">$100.0\%$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">$2$ luồng</td>
+<td style="text-align: center;">$5.0390\text{ s}$</td>
+<td style="text-align: center;"><strong>$1.91\text{x}$</strong></td>
+<td style="text-align: center;">$95.3\%$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">$4$ luồng</td>
+<td style="text-align: center;">$2.7260\text{ s}$</td>
+<td style="text-align: center;"><strong>$3.52\text{x}$</strong></td>
+<td style="text-align: center;">$88.1\%$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;">$8$ luồng</td>
+<td style="text-align: center;">$2.2838\text{ s}$</td>
+<td style="text-align: center;"><strong>$4.20\text{x}$</strong></td>
+<td style="text-align: center;">$52.6\%$</td>
+</tr>
+</tbody>
+</table>
+<h3>2.3. Phân tích đối chiếu Amdahl Potential Speedup</h3>
+<ul>
+<li><strong>Ước lượng tham số:</strong> Ở quy mô lớn $N = 100$ triệu ($T_1 = 9.6016\text{ s}, T_4 = 2.7260\text{ s}$), hệ số tăng tốc tại $4$ luồng đạt $S(4) = 3.52\text{x}$. Theo Định luật Amdahl:<br />
+  $$S(P) = \frac{1}{(1 - p) + \dfrac{p}{P}} \implies p \approx \mathbf{95.45\%}, \quad s = 1 - p \approx \mathbf{4.55\%}$$<br />
+  Giới hạn tăng tốc tối đa lý thuyết (Amdahl Potential Speedup khi $P \to \infty$) là:<br />
+  $$S_{\max} = \frac{1}{s} = \frac{1}{0.0455} \approx \mathbf{21.98\text{ lần}}$$</li>
+<li><strong>Hiện tượng tại 4 luồng và 8 luồng:</strong></li>
+<li>Tại $P = 4$ luồng, tốc độ tăng gấp <strong>$3.52$ lần</strong> (hiệu suất $88.1\%$), cả 4 luồng đều hoạt động trên 4 lõi hiệu năng cao (P-cores).</li>
+<li>Khi mở rộng lên $P = 8$ luồng, speedup đạt <strong>$4.20\text{ lần}$</strong>. Sự suy giảm hiệu suất (từ $88.1\%$ xuống $52.6\%$) phản ánh trung thực hiện tượng kiến trúc không đồng nhất (Heterogeneous Architecture): $4$ nhân E-cores chạy chậm hơn khiến các nhân P-cores phải dừng đợi đồng bộ tại cuối vòng lặp, minh chứng rõ nét cho hiện tượng thắt cổ chai trong tính toán đa lõi thực tế.</li>
+</ul>
+<hr />
+<h1>BÀI TOÁN 3 – ĐẾM SỐ ĐƯỜNG ĐI ĐỘ DÀI K TRONG ĐỒ THỊ</h1>
+<h3>3.1. Cơ sở lý thuyết ma trận kề</h3>
+<ul>
+<li>Cho đồ thị $G = (V, E)$. Ma trận kề $A$ kích thước $V \times V$ có phần tử:<br />
+  $$A_{u, v} = \begin{cases} 1 &amp; \text{nếu } (u, v) \in E \ 0 &amp; \text{nếu } (u, v) \notin E \end{cases}$$</li>
+<li><strong>Định lý toán học:</strong> Số đường đi độ dài đúng $k$ từ đỉnh $u$ đến đỉnh $v$ bằng chính xác phần tử tại hàng $u$, cột $v$ của ma trận lũy thừa $A^k$, tức $(A^k)_{u, v}$.</li>
+<li>Do đó, tổng số đường đi độ dài $k$ trong toàn bộ đồ thị $G$ được xác định bởi:<br />
+  $$\text{TotalPaths}(k) = \sum_{u=0}^{V-1} \sum_{v=0}^{V-1} (A^k)_{u, v}$$</li>
+</ul>
+<h3>3.2. Thuật toán lũy thừa ma trận nhị phân song song</h3>
+<ul>
+<li>Thay vì nhân liên tiếp $k$ lần tốn $O(k \cdot V^3)$, thuật toán áp dụng phương pháp <strong>Lũy thừa nhị phân (Binary Exponentiation)</strong> với độ phức tạp giảm xuống $O(\log k \cdot V^3)$.</li>
+<li>Mỗi phép nhân hai ma trận $V \times V$ được song song hóa theo dải hàng bằng OpenMP với thứ tự vòng lặp tối ưu Cache $I \to K \to J$:<br />
+<code>cpp
+  #pragma omp parallel for schedule(static) num_threads(num_threads)
+  for (int i = 0; i &lt; V; ++i) {
+      for (int k = 0; k &lt; V; ++k) {
+          unsigned long long a_ik = A[i][k];
+          if (a_ik == 0) continue;
+          for (int j = 0; j &lt; V; ++j) {
+              C[i][j] += a_ik * B[k][j];
+          }
+      }
+  }</code></li>
+</ul>
+<h3>3.3. Bảng kết quả thực nghiệm trên các đồ thị</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">File đồ thị</th>
+<th style="text-align: center;">Số đỉnh ($V$)</th>
+<th style="text-align: center;">Số cạnh ($E$)</th>
+<th style="text-align: center;">Độ dài đường đi ($k$)</th>
+<th style="text-align: center;">Tổng số đường đi độ dài $k$</th>
+<th style="text-align: center;">Thời gian tính toán ($s$)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>graph01.txt</strong></td>
+<td style="text-align: center;">$6$</td>
+<td style="text-align: center;">$20$</td>
+<td style="text-align: center;">$k = 3$</td>
+<td style="text-align: center;"><strong>$224$</strong></td>
+<td style="text-align: center;">$0.000068\text{ s}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>graph02.txt</strong></td>
+<td style="text-align: center;">$6$</td>
+<td style="text-align: center;">$30$</td>
+<td style="text-align: center;">$k = 3$</td>
+<td style="text-align: center;"><strong>$750$</strong></td>
+<td style="text-align: center;">$0.000052\text{ s}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>graph03.txt</strong></td>
+<td style="text-align: center;">$13$</td>
+<td style="text-align: center;">$156$</td>
+<td style="text-align: center;">$k = 4$</td>
+<td style="text-align: center;"><strong>$269,568$</strong></td>
+<td style="text-align: center;">$0.000053\text{ s}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>graph04.txt</strong></td>
+<td style="text-align: center;">$14$</td>
+<td style="text-align: center;">$182$</td>
+<td style="text-align: center;">$k = 4$</td>
+<td style="text-align: center;"><strong>$399,854$</strong></td>
+<td style="text-align: center;">$0.000049\text{ s}$</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>graph05.txt</strong></td>
+<td style="text-align: center;">$15$</td>
+<td style="text-align: center;">$210$</td>
+<td style="text-align: center;">$k = 5$</td>
+<td style="text-align: center;"><strong>$8,067,360$</strong></td>
+<td style="text-align: center;">$0.000065\text{ s}$</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1>BÀI TOÁN BỔ SUNG – NHÂN HAI MA TRẬN A(m x n) VÀ B(n x p)</h1>
+<p>Theo yêu cầu từ file <code>baitap_additional.docx</code>: <em>"Nhân 2 ma trận A (m x n) và B (n x p) bằng: tuần tự, song song với C++ thread, song song với openmp, song song với mpi. Đo hiệu năng và so sánh các chương trình."</em></p>
+<h3>4.1. Kiến trúc 4 phương pháp: Serial, std::thread, OpenMP, MPI</h3>
+<ol>
+<li><strong>Tuần tự (Serial):</strong> Chuẩn hóa theo thứ tự duyệt $I \to K \to J$ (Cache-friendly) để tận dụng dòng Cache L1/L2 và bộ vector hóa tự động của trình biên dịch.</li>
+<li><strong>C++ <code>std::thread</code>:</strong> Chia đều dải hàng của ma trận $A$ cho $T$ luồng, mỗi luồng tính toán độc lập vùng hàng tương ứng trong $C$, không xảy ra xung đột ghi (No Data Race).</li>
+<li><strong>OpenMP:</strong> Sử dụng <code>#pragma omp parallel for schedule(static)</code> trên vòng lặp ngoài cùng $i$, tận dụng thread pool có sẵn giúp triệt tiêu chi phí tạo luồng.</li>
+<li><strong>MPI (Distributed Memory):</strong> Rank 0 broadcast toàn bộ $B$ (<code>MPI_Bcast</code>), phân phối các dải hàng của $A$ qua <code>MPI_Scatterv</code>, mỗi rank tính toán cục bộ phần ma trận $local_C$, sau đó thu gom kết quả về Rank 0 qua <code>MPI_Gatherv</code>.</li>
+</ol>
+<h3>4.2. Bảng số liệu so sánh hiệu năng và năng lực tính toán (GFLOPS)</h3>
+<p>Thực nghiệm đo đạc với ma trận cỡ vừa $512 \times 512$ và cỡ lớn $1024 \times 1024$:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Kích thước ($m \times n \times p$)</th>
+<th style="text-align: left;">Phương pháp</th>
+<th style="text-align: center;">Số luồng / Rank</th>
+<th style="text-align: center;">Thời gian ($s$)</th>
+<th style="text-align: center;">Speedup</th>
+<th style="text-align: center;">Năng lực tính toán (GFLOPS)</th>
+<th style="text-align: center;">Checksum kiểm tra</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>$512 \times 512 \times 512$</strong></td>
+<td style="text-align: left;"><strong>Tuần tự (Serial)</strong></td>
+<td style="text-align: center;">$1$</td>
+<td style="text-align: center;">$0.0386\text{ s}$</td>
+<td style="text-align: center;">$1.00\text{x}$</td>
+<td style="text-align: center;">$6.95\text{ GFLOPS}$</td>
+<td style="text-align: center;">$3.3115 \times 10^7$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">C++ <code>std::thread</code></td>
+<td style="text-align: center;">$4$</td>
+<td style="text-align: center;">$0.0064\text{ s}$</td>
+<td style="text-align: center;"><strong>$6.05\text{x}$</strong></td>
+<td style="text-align: center;">$41.87\text{ GFLOPS}$</td>
+<td style="text-align: center;">$3.3115 \times 10^7$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">OpenMP</td>
+<td style="text-align: center;">$4$</td>
+<td style="text-align: center;">$0.0066\text{ s}$</td>
+<td style="text-align: center;"><strong>$5.88\text{x}$</strong></td>
+<td style="text-align: center;">$40.88\text{ GFLOPS}$</td>
+<td style="text-align: center;">$3.3115 \times 10^7$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">OpenMPI</td>
+<td style="text-align: center;">$4$</td>
+<td style="text-align: center;">$0.0202\text{ s}$</td>
+<td style="text-align: center;"><strong>$1.92\text{x}$</strong></td>
+<td style="text-align: center;">$13.29\text{ GFLOPS}$</td>
+<td style="text-align: center;">$3.3115 \times 10^7$</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>$1024 \times 1024 \times 1024$</strong></td>
+<td style="text-align: left;"><strong>Tuần tự (Serial)</strong></td>
+<td style="text-align: center;">$1$</td>
+<td style="text-align: center;">$0.1504\text{ s}$</td>
+<td style="text-align: center;">$1.00\text{x}$</td>
+<td style="text-align: center;">$14.28\text{ GFLOPS}$</td>
+<td style="text-align: center;">$2.2498 \times 10^8$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">C++ <code>std::thread</code></td>
+<td style="text-align: center;">$4$</td>
+<td style="text-align: center;">$0.0445\text{ s}$</td>
+<td style="text-align: center;"><strong>$3.38\text{x}$</strong></td>
+<td style="text-align: center;">$48.26\text{ GFLOPS}$</td>
+<td style="text-align: center;">$2.2498 \times 10^8$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">OpenMP</td>
+<td style="text-align: center;">$4$</td>
+<td style="text-align: center;">$0.0431\text{ s}$</td>
+<td style="text-align: center;"><strong>$3.49\text{x}$</strong></td>
+<td style="text-align: center;"><strong>$49.83\text{ GFLOPS}$</strong></td>
+<td style="text-align: center;">$2.2498 \times 10^8$</td>
+</tr>
+<tr>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">OpenMPI</td>
+<td style="text-align: center;">$4$</td>
+<td style="text-align: center;">$0.1088\text{ s}$</td>
+<td style="text-align: center;"><strong>$1.38\text{x}$</strong></td>
+<td style="text-align: center;">$19.74\text{ GFLOPS}$</td>
+<td style="text-align: center;">$2.2498 \times 10^8$</td>
+</tr>
+</tbody>
+</table>
+<p><em>(Ghi chú: Giá trị Checksum của cả 4 phương pháp đều trùng khớp tuyệt đối, khẳng định tính đúng đắn toán học).</em></p>
+<h3>4.3. Phân tích sự đánh đổi giữa Shared Memory và Distributed Memory</h3>
+<ul>
+<li><strong>OpenMP và <code>std::thread</code>:</strong> Đạt hiệu năng tối ưu trên hệ thống đa lõi dùng chung bộ nhớ (Shared Memory). Do toàn bộ dữ liệu nằm trên RAM chung, các luồng chỉ việc đọc dữ liệu mà không tốn chi phí sao chép, năng lực tính toán đạt xấp xỉ <strong>$50\text{ GFLOPS}$</strong>.</li>
+<li><strong>MPI:</strong> Trên một máy tính cá nhân đơn lẻ, MPI bị suy giảm tốc độ do chi phí truyền thông bộ nhớ (IPC Memory Copy Overhead) của các hàm tập thể <code>MPI_Bcast</code> và <code>MPI_Scatterv</code>/<code>MPI_Gatherv</code>. Tuy nhiên, MPI là giải pháp duy nhất có khả năng mở rộng trên các hệ thống cụm siêu máy tính (Clusters) gồm hàng nghìn nút mạng độc lập khi kích thước ma trận vượt quá dung lượng RAM của một máy đơn.</li>
+</ul>
+<hr />
+<h1>KẾT LUẬN</h1>
+<ol>
+<li>Đã giải quyết trọn vẹn cả 3 bài toán chính trong <code>baitap.pdf</code> (TSP, Đếm số nguyên tố, Đếm số đường đi đồ thị) và bài toán bổ sung trong <code>baitap_additional.docx</code> (Nhân 2 ma trận).</li>
+<li>Kiểm chứng thành công thuật toán Nhánh &amp; Cận song song cho bài toán TSP, giải chính xác các trường hợp $n \le 15$ trong thời gian mili-giây.</li>
+<li>Đo lường thực nghiệm Runtime đếm số nguyên tố quy mô lớn ($N = 10^8$), qua đó đối chiếu và giải thích sâu sắc sự phù hợp cũng như giới hạn thực tế của <strong>Định luật Amdahl</strong> trên vi kiến trúc đa lõi hiện đại.</li>
+<li>Đánh giá toàn diện sự khác biệt cốt lõi giữa hai mô hình lập trình HPC kinh điển: <strong>Shared Memory</strong> (OpenMP, std::thread) và <strong>Distributed Memory</strong> (MPI).</li>
+</ol>
+</body>
+</html>

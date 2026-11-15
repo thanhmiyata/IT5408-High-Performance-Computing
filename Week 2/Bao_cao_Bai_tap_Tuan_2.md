@@ -7,7 +7,7 @@
 ## HỌC PHẦN: IT5408 – TÍNH TOÁN HIỆU NĂNG CAO (HPC)
 **Chủ đề:** Lập trình song song với OpenMP, Giải thuật Nhánh & Cận (TSP), Đếm số nguyên tố, Phân tích đồ thị và Nhân ma trận
 
-* **Giảng viên hướng dẫn:** TS. Vũ Văn Thiệu, TS. Nguyễn Quốc Tuấn
+* **Giảng viên hướng dẫn:** TS. Nguyễn Quốc Tuấn
 * **Học viên thực hiện:** Phạm Tiến Thành
 * **Mã số học viên (MSSV):** 20242422M
 * **Khóa đào tạo:** Cao học Công nghệ Thông tin

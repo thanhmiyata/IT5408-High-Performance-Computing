@@ -2,7 +2,7 @@
 ## Môn học: IT5408 – Tính toán hiệu năng cao (HPC)
 * **Học viên:** Phạm Tiến Thành
 * **MSSV:** 20242422M
-* **Giảng viên hướng dẫn:** TS. Vũ Văn Thiệu, TS. Nguyễn Quốc Tuấn
+* **Giảng viên hướng dẫn:** TS. Nguyễn Quốc Tuấn
 
 ---
 
