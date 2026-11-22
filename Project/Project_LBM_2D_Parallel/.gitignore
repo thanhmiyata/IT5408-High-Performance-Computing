@@ -1,0 +1,18 @@
+# Binary executables
+lbm_serial
+lbm_mpi
+*.o
+
+# Simulation large data files
+lbm_result.dat
+*.dat
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Virtual environments
+.venv/
+venv/
+__pycache__/
+*.pyc

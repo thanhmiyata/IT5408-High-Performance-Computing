@@ -1,0 +1,203 @@
+HPC
+I. Multiple Choice Questions (6 points)
+Q1. Which of the following is not the type of Flynn's Classification of computer?
+A. SISD
+B. SIDD
+C. MISD
+D. MIMD
+Q2. In shared Memory
+A. Changes in a memory location effected by one processor do not affect all other processors.
+B. Changes in a memory location effected by one processor are visible to all other processors.
+C. Changes in a memory location effected by one processor are randomly visible to all other processors.
+D. None of these
+Q3. In distributed Memory
+A. A computer architecture where all processors have direct access to common physical memory
+B. It refers to network-based memory access for physical memory that is not common
+C. Parallel tasks typically need to exchange data. There are several ways this can be accomplished, such as through, a shared memory bus or over a network, however the actual event of data exchange is commonly referred to as communications regardless of the method employ
+D. None of these
+Q4. Synchronous communication operations referred to?
+A. Involves only those tasks executing a communication operation
+B. It exists between program statements when the order of statement execution affects the results of the program.
+C. It refers to the practice of distributing work among tasks so that all tasks are kept busy all of the time. It can be considered as minimization of task idle time.
+D. None of these
+Q5. Granularity is?
+A. In parallel computing, it is a qualitative measure of the ratio of computation to communication
+B. Here relatively small amounts of computational work are done between communication events
+C. Relatively large amounts of computational work are done between communication / synchronization events
+D. None of these
+Q6. Parallel Overhead is?
+A. Observed speedup of a code which has been parallelized, defined as: wall-clock time of serial execution and wall-clock time of parallel execution
+B. The amount of time required to coordinate parallel tasks. It includes factors such as: Task start-up time, Synchronizations, Data communications.
+C. Refers to the hardware that comprises a given parallel system - having many processors
+D. None of these
+Q7. Scalability refers to a parallel system’s (hardware and/or software) ability
+A. To demonstrate a proportionate increase in parallel speedup with the removal of some processors
+B. To demonstrate a proportionate increase in parallel speedup with the addition of more processors
+C. To demonstrate a proportionate decrease in parallel speedup with the addition of more processors
+D. None of these
+Q8. Non-Uniform Memory Access (NUMA) is?
+A. Here all processors have equal access and access times to memory
+B. Here if one processor updates a location in shared memory, all the other processors know about the update.
+C. Here one SMP can directly access memory of another SMP and not all processors have equal access time to all memories
+D. None of these
+Q9. Task dependency graph is?
+A. directed
+B. undirected
+C. acyclic directed
+D. acyclic undirected
+Q10. In the threads model of parallel programming
+A. A single process can have multiple, concurrent execution paths
+B. A single process can have single, concurrent execution paths.
+C. A multiple process can have single concurrent execution paths.
+D. None of these
+Q11. Data dependence is?
+A. Involves only those tasks executing a communication operation
+B. It exists between program statements when the order of statement execution affects the results of the program.
+C. It refers to the practice of distributing work among tasks so that all tasks are kept busy all of the time. It can be considered as minimization of task idle time.
+D. None of these
+Q12. Which of followings is an example of domain decomposition?
+A. Matrix multiplication
+B. merge sort
+C. quick sort
+D. 15 puzzle
+Q13. In designing a parallel program, one has to break the problem into discreet chunks of work that can be distributed to multiple tasks. This is known as
+A. Decomposition
+B. Splitting
+C. Compounding
+D. Computing
+Q14. Functional Decomposition is?
+A. Partitioning in that the data associated with a problem is decompose(D) Each parallel task then works on a portion of the dat(A)
+B. Partitioning in that, the focus is on the computation that is to be performed rather than on the data manipulated by the computation. The problem is decomposed according to the work that must be done. Each task then performs a portion of the overall work.
+C. It is the time it takes to send a minimal (0 byte) message from point A to point (B)
+D. None of these
+Q15. Which value has the speedup of a parallel program that achieves an efficiency of 75% on 32 processors?
+A. 18
+B. 24
+C. 16
+D. 20
+Q16. The type of parallelism supported by CUDA is best described as
+A. MISD (Multiple instruction single data)
+B. MIMT (Multiple instruction multiple thread)
+C. SISD (Single instruction single data)
+D. MIMD (Multiple instruction multiple data)
+Q17. Within a parallel region, declared variables are by default
+A. Private
+B. Local
+C. Public
+D. Shared
+Q18. Collective communication
+A. It involves data sharing between more than two tasks, which are often specified as being members in a common group, or collective.
+B. It involves two tasks with one task acting as the sender/producer of data, and the other acting as the receiver/consumer.
+C. It allows tasks to transfer data independently from one another.
+D. None of these
+Q19. ________ is an object that holds information about the received message, including, for example, it’s actually count
+A. buff
+B. count
+C. tag
+D. status
+Q20. In a CUDA program, calling a kernel is typically referred to as?
+A. Kernel invocation
+B. Thread invocation
+C. Block invocation
+D. Grid invocation
+Q21. If both export OMP_NUM_THREADS and omp_set_num_threads both are used in a program then the threads will be set to launch the parallel section in accordance with?
+A. OMP_NUM_THREADS
+B. Whichever sets minimum number of threads
+C. Whichever sets maximum number of threads
+D. Omp_set_num_threads
+ Q22. Which of the following correctly describes a GPU kernel?
+A kemel is part of the GPU’s internal micro-operating system, allowing it to act as an independent host.
+A kemel may contain a mix of host and GPU code
+All thread blocks involved in the same computation use the same kernel
+All of the options are correct
+Tự luận
+Bài 1:
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#define X1 -10.0
+#define X2 10.0
+#define N 1024
+#define h ((X2-X1)/(N-1))
+float fx(float x) {
+    return 8*x/(x*x+1);
+}
+int main() {
+    float *X, *FX;
+    float *DX, *DFX;
+    int i;
+    X  = (float*) malloc(N * sizeof(float));
+    FX = (float*) malloc(N * sizeof(float));
+    for (i = 0; i < N; i++) {
+        X[i]  = X1 + i*h;
+        FX[i] = fx(X[i]);
+    }
+    /* Code A: Allocate memory on GPU */
+    cudaMalloc((void**)&DX,  N * sizeof(float));
+    cudaMalloc((void**)&DFX, N * sizeof(float));
+    /* Code B: Copy input from CPU to GPU */
+    cudaMemcpy(DX, FX, N * sizeof(float), cudaMemcpyHostToDevice);
+    /* Define grid and block */
+    dim3 blocksize(256);
+    dim3 gridsize((N + blocksize.x - 1) / blocksize.x);
+    /* Code C: Invoke kernel */
+    CentralDifference<<<gridsize, blocksize>>>(DFX, DX);
+    /* Code D: Copy output from GPU to CPU */
+    cudaMemcpy(FX, DFX, N * sizeof(float), cudaMemcpyDeviceToHost);
+    /* Code E: Free memory on CPU and GPU */
+    free(X);
+    free(FX);
+    cudaFree(DX);
+    cudaFree(DFX);
+    return 0;
+}
+Bài 2:
+#include <stdio.h>
+#include <stdlib.h>
+#include <mpi.h>
+#define M 5
+int main(int argc, char *argv[]) {
+    int i, rank, size;
+    int *A, *Ac;
+    MPI_Status status;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    Ac = (int*) malloc(M * sizeof(int));
+    for (i = 0; i < M; i++)
+        Ac[i] = i;
+    /* Code E: All processes send its Ac to process 1 */
+    MPI_Send(Ac, M, MPI_INT, 1, 0, MPI_COMM_WORLD);
+/* Code F: Process 1 receive and print A */
+    if (rank == 1) printf("%d\n", (MPI_Recv(Ac, M, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status), Ac[0]));
+    MPI_Finalize();
+    return 0;
+}
+Chatgpt2
+//Code E
+if (rank != 1)
+{
+    MPI_Send(Ac, m, MPI_INT, 1, 0, MPI_COMM_WORLD);
+}
+//code F
+if (rank == 1)
+{
+    // copy dữ liệu của chính nó
+    for (i = 0; i < m; i++)
+        A[1*m + i] = Ac[i];
+    for (int src = 0; src < size; src++)
+    {
+        if (src != 1)
+        {
+            MPI_Recv(A + src*m, m, MPI_INT,
+                     src, 0, MPI_COMM_WORLD,
+                     MPI_STATUS_IGNORE);
+        }
+    }
+    // In LIỀN chuỗi theo thứ tự rank
+    for (int src = 0; src < size; src++)
+    {
+        for (i = 0; i < m; i++)
+            printf("%d ", A[src*m + i]);
+    }
+}

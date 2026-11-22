@@ -1,0 +1,6 @@
+# Cau hinh test lon (High resolution / Strong scaling)
+nx=512
+ny=128
+nsteps=10000
+omega=1.0
+u0=0.1

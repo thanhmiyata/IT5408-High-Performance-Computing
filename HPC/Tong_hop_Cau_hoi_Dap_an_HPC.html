@@ -1,0 +1,1876 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tổng hợp Câu hỏi, Đáp án & Giải thích - IT5408 Tính toán hiệu năng cao</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #eff6ff;
+      --success: #16a34a;
+      --success-light: #f0fdf4;
+      --warning: #d97706;
+      --warning-light: #fffbeb;
+      --danger: #dc2626;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1e293b;
+      --gray-900: #0f172a;
+      --border-radius: 12px;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: var(--gray-800);
+      background-color: var(--gray-50);
+      padding: 24px 16px;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: white;
+      padding: 36px 32px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-lg);
+      margin-bottom: 28px;
+    }
+
+    .header-badge {
+      display: inline-block;
+      background: rgba(37, 99, 235, 0.35);
+      color: #93c5fd;
+      border: 1px solid rgba(147, 197, 253, 0.3);
+      padding: 4px 14px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      font-size: 1.05rem;
+      max-width: 800px;
+    }
+
+    /* Control Panel */
+    .controls {
+      background: white;
+      padding: 18px 24px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 28px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid var(--gray-200);
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 260px;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 16px 10px 38px;
+      border-radius: 8px;
+      border: 1px solid var(--gray-300);
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+
+    .search-box input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .search-box::before {
+      content: "🔍";
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.9rem;
+      opacity: 0.6;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button.btn {
+      padding: 9px 18px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button.btn-primary {
+      background-color: var(--primary);
+      color: white;
+    }
+
+    button.btn-primary:hover {
+      background-color: var(--primary-dark);
+    }
+
+    button.btn-outline {
+      background-color: white;
+      color: var(--gray-700);
+      border: 1px solid var(--gray-300);
+    }
+
+    button.btn-outline:hover {
+      background-color: var(--gray-100);
+      border-color: var(--gray-400);
+    }
+
+    /* Filter Pills */
+    .filter-pills {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      margin-bottom: 24px;
+    }
+
+    .pill {
+      padding: 6px 16px;
+      border-radius: 20px;
+      background: white;
+      border: 1px solid var(--gray-300);
+      color: var(--gray-700);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .pill.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* Section Headings */
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin: 36px 0 18px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--gray-200);
+    }
+
+    .section-title .badge {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 12px;
+      background: var(--gray-200);
+      color: var(--gray-700);
+    }
+
+    /* Question Card */
+    .card {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-200);
+      margin-bottom: 18px;
+      overflow: hidden;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow);
+    }
+
+    .card-header {
+      padding: 16px 20px;
+      background: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      border-bottom: 1px solid var(--gray-100);
+    }
+
+    .q-number {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    .q-tags {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: var(--gray-100);
+      color: var(--gray-600);
+      text-transform: uppercase;
+    }
+
+    .card-body {
+      padding: 20px;
+    }
+
+    .question-en {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--gray-900);
+      margin-bottom: 6px;
+    }
+
+    .question-vi {
+      font-size: 0.92rem;
+      color: var(--gray-600);
+      font-style: italic;
+      margin-bottom: 16px;
+    }
+
+    /* Options */
+    .options-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .option-item {
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--gray-200);
+      background: var(--gray-50);
+      font-size: 0.95rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+
+    .option-item.correct {
+      background-color: var(--success-light);
+      border-color: #86efac;
+      color: #14532d;
+      font-weight: 600;
+    }
+
+    .option-key {
+      font-weight: 700;
+      color: var(--gray-700);
+      min-width: 22px;
+    }
+
+    .option-item.correct .option-key {
+      color: var(--success);
+    }
+
+    /* Answer and Explanation Box */
+    .explanation-box {
+      margin-top: 14px;
+      background: #f8fafc;
+      border-left: 4px solid var(--primary);
+      border-radius: 0 8px 8px 0;
+      padding: 14px 16px;
+      font-size: 0.93rem;
+      border: 1px solid var(--gray-200);
+      border-left-width: 4px;
+    }
+
+    .explanation-box.hidden {
+      display: none;
+    }
+
+    .ans-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+      color: var(--success);
+      margin-bottom: 6px;
+    }
+
+    .exp-title {
+      font-weight: 700;
+      color: var(--gray-800);
+      margin-bottom: 4px;
+    }
+
+    .exp-content {
+      color: var(--gray-700);
+      line-height: 1.55;
+    }
+
+    /* Code styling */
+    pre {
+      background: #1e293b;
+      color: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      margin: 12px 0;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: rgba(0, 0, 0, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.88em;
+    }
+
+    pre code {
+      background: transparent;
+      padding: 0;
+    }
+
+    .code-highlight {
+      color: #38bdf8;
+      font-weight: bold;
+    }
+
+    .code-comment {
+      color: #94a3b8;
+      font-style: italic;
+    }
+
+    .code-keyword {
+      color: #f472b6;
+      font-weight: bold;
+    }
+
+    /* Quick stats bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 16px 20px;
+      border-radius: var(--border-radius);
+      border: 1px solid var(--gray-200);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .stat-icon {
+      font-size: 2rem;
+      background: var(--primary-light);
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      color: var(--primary);
+    }
+
+    .stat-info h4 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--gray-900);
+      line-height: 1.1;
+    }
+
+    .stat-info p {
+      font-size: 0.82rem;
+      color: var(--gray-600);
+      font-weight: 500;
+    }
+
+    /* Toggle per question */
+    .toggle-single {
+      background: none;
+      border: none;
+      color: var(--primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .toggle-single:hover {
+      background: var(--primary-light);
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 30px 0;
+      color: var(--gray-600);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--gray-200);
+      margin-top: 40px;
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      .controls, .filter-pills, .btn-group, .toggle-single {
+        display: none !important;
+      }
+      .explanation-box {
+        display: block !important;
+      }
+      .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        page-break-inside: avoid;
+      }
+      header {
+        background: #1e293b !important;
+        color: white !important;
+        -webkit-print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="header-badge">Tài liệu học tập & Ôn thi Cuối kỳ</div>
+      <h1>IT5408 / IT4130E: Tính toán hiệu năng cao</h1>
+      <p class="subtitle">Ngân hàng câu hỏi trắc nghiệm chính thức, câu hỏi bổ sung và bài tập tự luận lập trình (OpenMP, MPI, CUDA) kèm đáp án chính xác và giải thích ngắn gọn, dễ hiểu.</p>
+    </header>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-icon">📝</div>
+        <div class="stat-info">
+          <h4>23 Câu</h4>
+          <p>Trắc nghiệm Đề chính thức 20222</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">📚</div>
+        <div class="stat-info">
+          <h4>13 Câu</h4>
+          <p>Trắc nghiệm Mở rộng (HPC.1)</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💻</div>
+        <div class="stat-info">
+          <h4>3 Bài</h4>
+          <p>Tự luận Code (CUDA, MPI, OpenMP)</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🎯</div>
+        <div class="stat-info">
+          <h4>100%</h4>
+          <p>Có đáp án & Giải thích chi tiết</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Tìm kiếm câu hỏi, từ khóa (Flynn, MPI, CUDA, OpenMP, NUMA...)..." onkeyup="filterQuestions()">
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="toggleAllBtn" onclick="toggleAllAnswers()">👁️ Ẩn tất cả đáp án</button>
+        <button class="btn btn-outline" onclick="window.print()">🖨️ In / Lưu PDF</button>
+      </div>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="filter-pills">
+      <div class="pill active" onclick="setCategory('all', this)">Tất cả nội dung</div>
+      <div class="pill" onclick="setCategory('exam20222', this)">Đề thi chính thức (23 câu)</div>
+      <div class="pill" onclick="setCategory('hpc1', this)">Trắc nghiệm bổ sung (13 câu)</div>
+      <div class="pill" onclick="setCategory('code', this)">Tự luận điền Code</div>
+      <div class="pill" onclick="setCategory('cuda', this)">CUDA GPU</div>
+      <div class="pill" onclick="setCategory('mpi', this)">MPI</div>
+      <div class="pill" onclick="setCategory('omp', this)">OpenMP</div>
+    </div>
+
+    <!-- SECTION 1: ĐỀ THI CUỐI KỲ CHÍNH THỨC 20222 -->
+    <div class="section-group" data-section="exam20222">
+      <div class="section-title">
+        <span>Phần I: Đề thi Cuối kỳ Chính thức (IT4130E / IT5408)</span>
+        <span class="badge">23 câu trắc nghiệm</span>
+      </div>
+
+      <!-- Q1 -->
+      <div class="card" data-category="exam20222 arch" data-keywords="flynn classification sisd sidd misd mimd">
+        <div class="card-header">
+          <span class="q-number">Câu 1 (Q1)</span>
+          <div class="q-tags">
+            <span class="tag">Kiến trúc Flynn</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Which of the following is not the type of Flynn's Classification of computer?</div>
+          <div class="question-vi">Đâu không phải là một kiểu trong phân loại máy tính của Flynn?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> SISD</li>
+            <li class="option-item correct"><span class="option-key">B.</span> SIDD</li>
+            <li class="option-item"><span class="option-key">C.</span> MISD</li>
+            <li class="option-item"><span class="option-key">D.</span> MIMD</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: B. SIDD</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Phân loại của Flynn (Flynn's Taxonomy) gồm 4 mô hình kinh điển: <b>SISD</b> (Single Instruction, Single Data), <b>SIMD</b> (Single Instruction, Multiple Data), <b>MISD</b> (Multiple Instruction, Single Data), và <b>MIMD</b> (Multiple Instruction, Multiple Data). Thuật ngữ <i>SIDD</i> không tồn tại trong phân loại này.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="card" data-category="exam20222 memory" data-keywords="shared memory visible processors">
+        <div class="card-header">
+          <span class="q-number">Câu 2 (Q2)</span>
+          <div class="q-tags">
+            <span class="tag">Shared Memory</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">In shared Memory:</div>
+          <div class="question-vi">Trong kiến trúc bộ nhớ chia sẻ (Shared Memory):</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> Changes in a memory location effected by one processor do not affect all other processors.</li>
+            <li class="option-item correct"><span class="option-key">B.</span> Changes in a memory location effected by one processor are visible to all other processors.</li>
+            <li class="option-item"><span class="option-key">C.</span> Changes in a memory location effected by one processor are randomly visible to all other processors.</li>
+            <li class="option-item"><span class="option-key">D.</span> None of these</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: B. Changes in a memory location effected by one processor are visible to all other processors.</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Trong hệ thống bộ nhớ chia sẻ, tất cả các bộ xử lý (CPU/cores) cùng truy cập chung một không gian địa chỉ bộ nhớ vật lý. Vì vậy, khi một bộ xử lý ghi dữ liệu vào một ô nhớ, các bộ xử lý khác đều có thể nhìn thấy (visible) sự thay đổi này.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="card" data-category="exam20222 memory mpi" data-keywords="distributed memory exchange data network communications">
+        <div class="card-header">
+          <span class="q-number">Câu 3 (Q3)</span>
+          <div class="q-tags">
+            <span class="tag">Distributed Memory</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">In distributed Memory:</div>
+          <div class="question-vi">Trong kiến trúc bộ nhớ phân tán (Distributed Memory):</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> A computer architecture where all processors have direct access to common physical memory</li>
+            <li class="option-item"><span class="option-key">B.</span> It refers to network-based memory access for physical memory that is not common</li>
+            <li class="option-item correct"><span class="option-key">C.</span> Parallel tasks typically need to exchange data. There are several ways this can be accomplished, such as through, a shared memory bus or over a network, however the actual event of data exchange is commonly referred to as communications regardless of the method employ</li>
+            <li class="option-item"><span class="option-key">D.</span> None of these</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: C. Parallel tasks typically need to exchange data...</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Ở bộ nhớ phân tán, mỗi bộ xử lý có bộ nhớ vật lý riêng biệt và không có không gian địa chỉ chung. Để phối hợp, các tác vụ song song bắt buộc phải trao đổi dữ liệu qua mạng truyền thông (gọi chung là <b>communications / message passing</b>).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q4 -->
+      <div class="card" data-category="exam20222 communication" data-keywords="synchronous communication operations handshake">
+        <div class="card-header">
+          <span class="q-number">Câu 4 (Q4)</span>
+          <div class="q-tags">
+            <span class="tag">Truyền thông đồng bộ</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Synchronous communication operations referred to?</div>
+          <div class="question-vi">Các thao tác truyền thông đồng bộ (Synchronous communication) đề cập đến điều gì?</div>
+          <ul class="options-list">
+            <li class="option-item correct"><span class="option-key">A.</span> Involves only those tasks executing a communication operation</li>
+            <li class="option-item"><span class="option-key">B.</span> It exists between program statements when the order of statement execution affects the results of the program.</li>
+            <li class="option-item"><span class="option-key">C.</span> It refers to the practice of distributing work among tasks so that all tasks are kept busy all of the time. It can be considered as minimization of task idle time.</li>
+            <li class="option-item"><span class="option-key">D.</span> None of these</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: A. Involves only those tasks executing a communication operation</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Truyền thông đồng bộ yêu cầu sự tham gia và bắt tay trực tiếp giữa các tác vụ thực hiện truyền thông (bên gửi và bên nhận phải gặp nhau tại điểm hẹn). <i>Lưu ý:</i> Phương án B là định nghĩa của <i>Data dependence</i>; phương án C là định nghĩa của <i>Load balancing</i>.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q5 -->
+      <div class="card" data-category="exam20222 metrics" data-keywords="granularity computation communication ratio">
+        <div class="card-header">
+          <span class="q-number">Câu 5 (Q5)</span>
+          <div class="q-tags">
+            <span class="tag">Granularity</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Granularity is?</div>
+          <div class="question-vi">Độ mịn (Granularity) trong tính toán song song là gì?</div>
+          <ul class="options-list">
+            <li class="option-item correct"><span class="option-key">A.</span> In parallel computing, it is a qualitative measure of the ratio of computation to communication</li>
+            <li class="option-item"><span class="option-key">B.</span> Here relatively small amounts of computational work are done between communication events</li>
+            <li class="option-item"><span class="option-key">C.</span> Relatively large amounts of computational work are done between communication / synchronization events</li>
+            <li class="option-item"><span class="option-key">D.</span> None of these</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: A. In parallel computing, it is a qualitative measure of the ratio of computation to communication</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Granularity là tỷ số định tính giữa khối lượng tính toán (computation) so với truyền thông/đồng bộ (communication). B là định nghĩa cụ thể của <i>Fine-grained</i>, C là <i>Coarse-grained</i>. Khái niệm chung nhất là A.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q6 -->
+      <div class="card" data-category="exam20222 metrics" data-keywords="parallel overhead coordinate tasks start-up synchronizations">
+        <div class="card-header">
+          <span class="q-number">Câu 6 (Q6)</span>
+          <div class="q-tags">
+            <span class="tag">Hiệu năng</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Parallel Overhead is?</div>
+          <div class="question-vi">Chi phí phụ trội song song (Parallel Overhead) là gì?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> Observed speedup of a code which has been parallelized, defined as: wall-clock time of serial execution and wall-clock time of parallel execution</li>
+            <li class="option-item correct"><span class="option-key">B.</span> The amount of time required to coordinate parallel tasks. It includes factors such as: Task start-up time, Synchronizations, Data communications.</li>
+            <li class="option-item"><span class="option-key">C.</span> Refers to the hardware that comprises a given parallel system - having many processors</li>
+            <li class="option-item"><span class="option-key">D.</span> None of these</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: B. The amount of time required to coordinate parallel tasks...</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Parallel Overhead là tổng thời gian phát sinh mà giải thuật tuần tự không có, dùng để: khởi tạo luồng/tiến trình (start-up), truyền nhận dữ liệu (communications), và chờ đồng bộ (synchronization).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q7 -->
+      <div class="card" data-category="exam20222 metrics" data-keywords="scalability proportionate increase speedup addition processors">
+        <div class="card-header">
+          <span class="q-number">Câu 7 (Q7)</span>
+          <div class="q-tags">
+            <span class="tag">Scalability</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Scalability refers to a parallel system’s (hardware and/or software) ability:</div>
+          <div class="question-vi">Khả năng mở rộng (Scalability) đề cập đến năng lực của hệ thống:</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> To demonstrate a proportionate increase in parallel speedup with the removal of some processors</li>
+            <li class="option-item correct"><span class="option-key">B.</span> To demonstrate a proportionate increase in parallel speedup with the addition of more processors</li>
+            <li class="option-item"><span class="option-key">C.</span> To demonstrate a proportionate decrease in parallel speedup with the addition of more processors</li>
+            <li class="option-item"><span class="option-key">D.</span> None of these</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: B. To demonstrate a proportionate increase in parallel speedup with the addition of more processors</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Một hệ thống có tính mở rộng tốt nếu tốc độ tăng tốc song song (speedup) tăng lên một cách tỷ lệ thuận khi ta trang bị thêm các bộ vi xử lý (processors).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q8 -->
+      <div class="card" data-category="exam20222 memory" data-keywords="numa non-uniform memory access smp equal access time">
+        <div class="card-header">
+          <span class="q-number">Câu 8 (Q8)</span>
+          <div class="q-tags">
+            <span class="tag">Kiến trúc NUMA</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Non-Uniform Memory Access (NUMA) is?</div>
+          <div class="question-vi">Kiến trúc truy cập bộ nhớ không đồng nhất (NUMA) là gì?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> Here all processors have equal access and access times to memory</li>
+            <li class="option-item"><span class="option-key">B.</span> Here if one processor updates a location in shared memory, all the other processors know about the update.</li>
+            <li class="option-item correct"><span class="option-key">C.</span> Here one SMP can directly access memory of another SMP and not all processors have equal access time to all memories</li>
+            <li class="option-item"><span class="option-key">D.</span> None of these</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: C. Here one SMP can directly access memory of another SMP and not all processors have equal access time to all memories</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Trong NUMA, bộ nhớ được gắn cục bộ theo từng cụm SMP/CPU. Một bộ xử lý có thể truy cập ô nhớ của cụm khác nhưng thời gian truy cập (access time) sẽ lâu hơn so với khi đọc bộ nhớ cục bộ của chính mình. (A là kiến trúc UMA).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q9 -->
+      <div class="card" data-category="exam20222 algo" data-keywords="task dependency graph acyclic directed dag">
+        <div class="card-header">
+          <span class="q-number">Câu 9 (Q9)</span>
+          <div class="q-tags">
+            <span class="tag">Thuật toán song song</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Task dependency graph is?</div>
+          <div class="question-vi">Đồ thị phụ thuộc tác vụ (Task dependency graph) có dạng:</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> directed</li>
+            <li class="option-item"><span class="option-key">B.</span> undirected</li>
+            <li class="option-item correct"><span class="option-key">C.</span> acyclic directed</li>
+            <li class="option-item"><span class="option-key">D.</span> acyclic undirected</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: C. acyclic directed (Đồ thị có hướng không chu trình - DAG)</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Mô hình phụ thuộc công việc bắt buộc phải là đồ thị <b>có hướng và không có chu trình (Directed Acyclic Graph - DAG)</b>. Có hướng để chỉ rõ thứ tự công việc nào làm trước/làm sau; không chu trình để tránh bế tắc (deadlock) vòng lặp vô hạn. <i>(Ghi chú: Nếu đề trắc nghiệm thi có đáp án chỉ ghi A. directed thì cũng là phương án đúng nếu không có C)</i>.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q10 -->
+      <div class="card" data-category="exam20222 omp" data-keywords="threads model single process multiple concurrent paths">
+        <div class="card-header">
+          <span class="q-number">Câu 10 (Q10)</span>
+          <div class="q-tags">
+            <span class="tag">Mô hình Luồng</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">In the threads model of parallel programming:</div>
+          <div class="question-vi">Trong mô hình lập trình đa luồng (Threads model):</div>
+          <ul class="options-list">
+            <li class="option-item correct"><span class="option-key">A.</span> A single process can have multiple, concurrent execution paths</li>
+            <li class="option-item"><span class="option-key">B.</span> A single process can have single, concurrent execution paths.</li>
+            <li class="option-item"><span class="option-key">C.</span> A multiple process can have single concurrent execution paths.</li>
+            <li class="option-item"><span class="option-key">D.</span> None of these</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: A. A single process can have multiple, concurrent execution paths</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Một tiến trình đơn (single process) có thể chứa nhiều luồng thực thi chạy đồng thời (multiple concurrent execution paths), các luồng này cùng chia sẻ tài nguyên và không gian bộ nhớ của tiến trình mẹ.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q11 -->
+      <div class="card" data-category="exam20222 algo" data-keywords="data dependence statements execution affects results">
+        <div class="card-header">
+          <span class="q-number">Câu 11 (Q11)</span>
+          <div class="q-tags">
+            <span class="tag">Phụ thuộc dữ liệu</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Data dependence is?</div>
+          <div class="question-vi">Phụ thuộc dữ liệu (Data dependence) là gì?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> Involves only those tasks executing a communication operation</li>
+            <li class="option-item correct"><span class="option-key">B.</span> It exists between program statements when the order of statement execution affects the results of the program.</li>
+            <li class="option-item"><span class="option-key">C.</span> It refers to the practice of distributing work among tasks so that all tasks are kept busy all of the time. It can be considered as minimization of task idle time.</li>
+            <li class="option-item"><span class="option-key">D.</span> None of these</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: B. It exists between program statements when the order of statement execution affects the results of the program.</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Phụ thuộc dữ liệu tồn tại giữa các câu lệnh khi việc thay đổi thứ tự thực thi của chúng dẫn đến kết quả chương trình bị sai lệch (như RAW - Read after Write, WAR, WAW).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q12 -->
+      <div class="card" data-category="exam20222 algo" data-keywords="domain decomposition matrix multiplication merge quick sort">
+        <div class="card-header">
+          <span class="q-number">Câu 12 (Q12)</span>
+          <div class="q-tags">
+            <span class="tag">Domain Decomposition</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Which of followings is an example of domain decomposition?</div>
+          <div class="question-vi">Đâu là một ví dụ về phân rã miền dữ liệu (Domain decomposition)?</div>
+          <ul class="options-list">
+            <li class="option-item correct"><span class="option-key">A.</span> Matrix multiplication</li>
+            <li class="option-item"><span class="option-key">B.</span> merge sort</li>
+            <li class="option-item"><span class="option-key">C.</span> quick sort</li>
+            <li class="option-item"><span class="option-key">D.</span> 15 puzzle</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: A. Matrix multiplication</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content"><b>Nhân ma trận (Matrix multiplication)</b> là ví dụ kinh điển của phân rã miền: ma trận dữ liệu được chia thành các dải (stripes) hoặc khối con (blocks) phân phối cho các tiến trình xử lý độc lập. (Merge sort / Quick sort chia theo đệ quy tác vụ; 15 puzzle là phân rã thăm dò không gian trạng thái).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q13 -->
+      <div class="card" data-category="exam20222 algo" data-keywords="break problem discreet chunks decomposition">
+        <div class="card-header">
+          <span class="q-number">Câu 13 (Q13)</span>
+          <div class="q-tags">
+            <span class="tag">Thiết kế song song</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">In designing a parallel program, one has to break the problem into discreet chunks of work that can be distributed to multiple tasks. This is known as:</div>
+          <div class="question-vi">Khi thiết kế giải thuật song song, việc chia nhỏ bài toán thành các phần công việc riêng biệt để phân phối cho các tác vụ gọi là:</div>
+          <ul class="options-list">
+            <li class="option-item correct"><span class="option-key">A.</span> Decomposition</li>
+            <li class="option-item"><span class="option-key">B.</span> Splitting</li>
+            <li class="option-item"><span class="option-key">C.</span> Compounding</li>
+            <li class="option-item"><span class="option-key">D.</span> Computing</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: A. Decomposition</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Thuật ngữ chính thức trong phương pháp luận thiết kế chương trình tính toán song song của Ian Foster (PCAM: Partitioning/Decomposition, Communication, Agglomeration, Mapping) là <b>Decomposition</b> (Sự phân rã bài toán).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q14 -->
+      <div class="card" data-category="exam20222 algo" data-keywords="functional decomposition computation work portion">
+        <div class="card-header">
+          <span class="q-number">Câu 14 (Q14)</span>
+          <div class="q-tags">
+            <span class="tag">Functional Decomposition</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Functional Decomposition is?</div>
+          <div class="question-vi">Phân rã chức năng (Functional Decomposition) là gì?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> Partitioning in that the data associated with a problem is decomposed. Each parallel task then works on a portion of the data.</li>
+            <li class="option-item correct"><span class="option-key">B.</span> Partitioning in that, the focus is on the computation that is to be performed rather than on the data manipulated by the computation. The problem is decomposed according to the work that must be done. Each task then performs a portion of the overall work.</li>
+            <li class="option-item"><span class="option-key">C.</span> It is the time it takes to send a minimal (0 byte) message from point A to point B</li>
+            <li class="option-item"><span class="option-key">D.</span> None of these</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: B. Partitioning in that, the focus is on the computation that is to be performed rather than on the data...</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Phân rã chức năng là kỹ thuật tập trung vào các phép tính toán cần làm (computation/functions) thay vì tập trung vào dữ liệu. Mỗi tác vụ nhận một chức năng/bước tính toán riêng (ví dụ: mô hình pipeline).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q15 -->
+      <div class="card" data-category="exam20222 metrics" data-keywords="speedup efficiency 75% 32 processors 24">
+        <div class="card-header">
+          <span class="q-number">Câu 15 (Q15)</span>
+          <div class="q-tags">
+            <span class="tag">Tính toán Speedup</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Which value has the speedup of a parallel program that achieves an efficiency of 75% on 32 processors?</div>
+          <div class="question-vi">Giá trị Speedup của chương trình song song đạt hiệu suất (Efficiency) 75% trên 32 bộ xử lý là bao nhiêu?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> 18</li>
+            <li class="option-item correct"><span class="option-key">B.</span> 24</li>
+            <li class="option-item"><span class="option-key">C.</span> 16</li>
+            <li class="option-item"><span class="option-key">D.</span> 20</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: B. 24</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Công thức liên hệ giữa Hiệu suất (Efficiency $E$), Hệ số tăng tốc (Speedup $S$) và số bộ xử lý ($P$):<br>
+            <code>E = S / P &rArr; S = E &times; P = 0.75 &times; 32 = 24</code>.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q16 -->
+      <div class="card" data-category="exam20222 cuda" data-keywords="cuda gpu parallelism mimd simt">
+        <div class="card-header">
+          <span class="q-number">Câu 16 (Q16)</span>
+          <div class="q-tags">
+            <span class="tag">CUDA GPU</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">The type of parallelism supported by GPU CUDA is best described as:</div>
+          <div class="question-vi">Kiểu tính toán song song được hỗ trợ bởi GPU CUDA trong các phương án sau được mô tả tốt nhất là:</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> MISD (Multiple instruction single data)</li>
+            <li class="option-item"><span class="option-key">B.</span> MIMT (Multiple instruction multiple thread)</li>
+            <li class="option-item"><span class="option-key">C.</span> SISD (Single instruction single data)</li>
+            <li class="option-item correct"><span class="option-key">D.</span> MIMD (Multiple instruction multiple data)</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: D. MIMD (Multiple instruction multiple data)</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Trong phân loại Flynn, GPU bao gồm nhiều Streaming Multiprocessors (SMs) có thể thực thi đồng thời các khối/lệnh khác nhau trên các luồng dữ liệu độc lập, do đó thuộc phân loại <b>MIMD</b> (kết hợp SIMD/SIMT ở cấp warp). Trong 4 phương án đề thi đưa ra, <b>D là đáp án chính xác theo giáo trình môn học</b>.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q17 -->
+      <div class="card" data-category="exam20222 omp" data-keywords="openmp parallel region declared variables private local shared">
+        <div class="card-header">
+          <span class="q-number">Câu 17 (Q17)</span>
+          <div class="q-tags">
+            <span class="tag">OpenMP Biến số</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Within a parallel region, declared variables are by default:</div>
+          <div class="question-vi">Các biến được khai báo bên trong một vùng song song (parallel region) mặc định là:</div>
+          <ul class="options-list">
+            <li class="option-item correct"><span class="option-key">A.</span> Private (hoặc Local)</li>
+            <li class="option-item"><span class="option-key">B.</span> Local</li>
+            <li class="option-item"><span class="option-key">C.</span> Public</li>
+            <li class="option-item"><span class="option-key">D.</span> Shared</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: A. Private (hoặc B. Local)</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">
+              <b>Phân biệt cực kỳ quan trọng:</b><br>
+              - Biến khai báo <i>TRƯỚC</i> vùng song song (`before parallel region`): Mặc định là <b>Shared</b>.<br>
+              - Biến khai báo <i>BÊN TRONG</i> vùng song song (<i>"Within a parallel region, declared variables..."</i>): Mặc định nằm trên ngăn xếp stack riêng của mỗi luồng, tức là <b>Private / Local</b> đối với luồng đó.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q18 -->
+      <div class="card" data-category="exam20222 mpi communication" data-keywords="collective communication group collective broadcast gather">
+        <div class="card-header">
+          <span class="q-number">Câu 18 (Q18)</span>
+          <div class="q-tags">
+            <span class="tag">MPI Collective</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Collective communication:</div>
+          <div class="question-vi">Truyền thông tập thể (Collective communication) có đặc điểm gì?</div>
+          <ul class="options-list">
+            <li class="option-item correct"><span class="option-key">A.</span> It involves data sharing between more than two tasks, which are often specified as being members in a common group, or collective.</li>
+            <li class="option-item"><span class="option-key">B.</span> It involves two tasks with one task acting as the sender/producer of data, and the other acting as the receiver/consumer.</li>
+            <li class="option-item"><span class="option-key">C.</span> It allows tasks to transfer data independently from one another.</li>
+            <li class="option-item"><span class="option-key">D.</span> None of these</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: A. It involves data sharing between more than two tasks...</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Liên lạc tập thể (Collective communication như `MPI_Bcast`, `MPI_Scatter`, `MPI_Gather`, `MPI_Reduce`) là thao tác chia sẻ hoặc thu thập dữ liệu giữa toàn bộ các thành viên trong một nhóm/communicator. (B là Point-to-Point communication 1-1).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q19 -->
+      <div class="card" data-category="exam20222 mpi" data-keywords="mpi status object received message count tag">
+        <div class="card-header">
+          <span class="q-number">Câu 19 (Q19)</span>
+          <div class="q-tags">
+            <span class="tag">MPI_Status</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">________ is an object that holds information about the received message, including, for example, it’s actually count</div>
+          <div class="question-vi">Đối tượng nào lưu giữ thông tin về tin nhắn nhận được (chẳng hạn như số lượng phần tử thực tế, nguồn gửi, tag)?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> buff</li>
+            <li class="option-item"><span class="option-key">B.</span> count</li>
+            <li class="option-item"><span class="option-key">C.</span> tag</li>
+            <li class="option-item correct"><span class="option-key">D.</span> status</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: D. status</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Trong MPI, biến kiểu <code>MPI_Status</code> chứa metadata của thông điệp nhận được (`MPI_SOURCE`, `MPI_TAG`, mã lỗi), và dùng hàm <code>MPI_Get_count(&status, datatype, &count)</code> để truy vấn số lượng dữ liệu nhận được thực tế.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q20 -->
+      <div class="card" data-category="exam20222 cuda" data-keywords="cuda calling kernel invocation launch">
+        <div class="card-header">
+          <span class="q-number">Câu 20 (Q20)</span>
+          <div class="q-tags">
+            <span class="tag">CUDA Kernel</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">In a CUDA program, calling a kernel is typically referred to as?</div>
+          <div class="question-vi">Trong chương trình CUDA, hành động gọi một kernel được gọi là:</div>
+          <ul class="options-list">
+            <li class="option-item correct"><span class="option-key">A.</span> Kernel invocation</li>
+            <li class="option-item"><span class="option-key">B.</span> Thread invocation</li>
+            <li class="option-item"><span class="option-key">C.</span> Block invocation</li>
+            <li class="option-item"><span class="option-key">D.</span> Grid invocation</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: A. Kernel invocation (hoặc Kernel Launch)</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Cú pháp cấu hình thực thi ba dấu ngoặc nhọn <code>kernelName&lt;&lt;&lt;grid, block&gt;&gt;&gt;(...)</code> trong CUDA được gọi là <b>Kernel invocation</b> (khởi gọi kernel) từ phía Host sang Device.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q21 -->
+      <div class="card" data-category="exam20222 omp" data-keywords="openmp omp_set_num_threads 10 loop 100 1000 times print">
+        <div class="card-header">
+          <span class="q-number">Câu 21 (Q21)</span>
+          <div class="q-tags">
+            <span class="tag">OpenMP Vòng lặp</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Consider the following piece of code:
+<pre><code>int main(void) {
+    omp_set_num_threads(10);
+    #pragma omp parallel
+    {
+        for (i = 0; i &lt; 100; i++)
+            printf("Parallel Processing\n");
+    }
+    return 0;
+}</code></pre>
+          How many times "Parallel Processing" will get printed?</div>
+          <div class="question-vi">Đoạn code trên sẽ in dòng chữ "Parallel Processing" bao nhiêu lần?</div>
+          <ul class="options-list">
+            <li class="option-item correct"><span class="option-key">A.</span> 1000</li>
+            <li class="option-item"><span class="option-key">B.</span> 100</li>
+            <li class="option-item"><span class="option-key">C.</span> 10</li>
+            <li class="option-item"><span class="option-key">D.</span> 0</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: A. 1000</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Chỉ thị <code>#pragma omp parallel</code> (không có từ khóa <code>for</code>) sẽ nhân bản toàn bộ khối lệnh cho tất cả 10 luồng. Mỗi luồng độc lập chạy vòng lặp từ 0 đến 99 (100 lần in). Vì vậy tổng số lần in ra màn hình là: <code>10 luồng &times; 100 lần = 1000 lần</code>.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q22 -->
+      <div class="card" data-category="exam20222 omp" data-keywords="omp_set_num_threads omp_num_threads priority precedence">
+        <div class="card-header">
+          <span class="q-number">Câu 22 (Q22)</span>
+          <div class="q-tags">
+            <span class="tag">OpenMP Ưu tiên</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">If both export OMP_NUM_THREADS and omp_set_num_threads both are used in a program then the threads will be set to launch the parallel section in accordance with?</div>
+          <div class="question-vi">Nếu cả biến môi trường OMP_NUM_THREADS và hàm omp_set_num_threads đều được dùng, số luồng thực thi vùng song song sẽ tuân theo cái nào?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> OMP_NUM_THREADS</li>
+            <li class="option-item"><span class="option-key">B.</span> Whichever sets minimum number of threads</li>
+            <li class="option-item"><span class="option-key">C.</span> Whichever sets maximum number of threads</li>
+            <li class="option-item correct"><span class="option-key">D.</span> omp_set_num_threads</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: D. omp_set_num_threads</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Theo quy tắc thứ tự ưu tiên của OpenMP: <code>Clause num_threads(...) &gt; Hàm API omp_set_num_threads(...) &gt; Biến môi trường OMP_NUM_THREADS &gt; Giá trị mặc định của hệ thống</code>. Do đó hàm trong code luôn ghi đè (override) biến môi trường.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q23 -->
+      <div class="card" data-category="exam20222 cuda" data-keywords="gpu kernel thread blocks computation same kernel">
+        <div class="card-header">
+          <span class="q-number">Câu 23 (Q23)</span>
+          <div class="q-tags">
+            <span class="tag">CUDA GPU Kernel</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Which of the following correctly describes a GPU kernel?</div>
+          <div class="question-vi">Phát biểu nào sau đây mô tả chính xác về một GPU kernel?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> A kernel is part of the GPU’s internal micro-operating system, allowing it to act as an independent host.</li>
+            <li class="option-item"><span class="option-key">B.</span> A kernel may contain a mix of host and GPU code</li>
+            <li class="option-item correct"><span class="option-key">C.</span> All thread blocks involved in the same computation use the same kernel</li>
+            <li class="option-item"><span class="option-key">D.</span> All of the options are correct</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: C. All thread blocks involved in the same computation use the same kernel</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Một GPU kernel là hàm <code>__global__</code> chạy trên GPU. Khi kích hoạt tính toán song song, tất cả các block và thread trong grid đều thực thi cùng một mã kernel đó trên các phần dữ liệu khác nhau (mô hình SPMD/SIMT). (A sai vì GPU không phải OS độc lập; B sai vì code host và device tách biệt).</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: BỘ CÂU HỎI TRẮC NGHIỆM MỞ RỘNG (HPC.1) -->
+    <div class="section-group" data-section="hpc1">
+      <div class="section-title">
+        <span>Phần II: Bộ Câu hỏi Trắc nghiệm Mở rộng (Tài liệu HPC.1)</span>
+        <span class="badge">13 câu hỏi ôn tập chuyên sâu</span>
+      </div>
+
+      <!-- HQ1 -->
+      <div class="card" data-category="hpc1 arch" data-keywords="simd same instruction different data">
+        <div class="card-header">
+          <span class="q-number">HPC.1 - Câu 1</span>
+          <div class="q-tags">
+            <span class="tag">SIMD Architecture</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Which of the following best describes a SIMD architecture?</div>
+          <div class="question-vi">Phát biểu nào mô tả đúng nhất về kiến trúc SIMD?</div>
+          <ul class="options-list">
+            <li class="option-item correct"><span class="option-key">A.</span> Multiple processors executing the same instruction on different pieces of data.</li>
+            <li class="option-item"><span class="option-key">B.</span> A single processor executing multiple instruction streams.</li>
+            <li class="option-item"><span class="option-key">C.</span> Multiple processors each executing a different instruction stream on different data.</li>
+            <li class="option-item"><span class="option-key">D.</span> A single processor executing a single instruction stream on a single data stream.</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: A. Multiple processors executing the same instruction on different pieces of data.</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">SIMD = <b>Single Instruction, Multiple Data</b>: Một dòng lệnh duy nhất được phát đi và thực thi đồng thời trên nhiều phần tử dữ liệu khác nhau (tiêu biểu như tập lệnh AVX/SSE trên CPU hoặc Vector processor).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HQ2 -->
+      <div class="card" data-category="hpc1 memory" data-keywords="shared memory challenge interference shared data race condition">
+        <div class="card-header">
+          <span class="q-number">HPC.1 - Câu 2</span>
+          <div class="q-tags">
+            <span class="tag">Shared Memory Challenge</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">What is a primary challenge in designing shared memory parallel programs?</div>
+          <div class="question-vi">Thách thức chính khi thiết kế chương trình song song trên bộ nhớ chia sẻ là gì?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> Load balancing is impossible.</li>
+            <li class="option-item correct"><span class="option-key">B.</span> Ensuring that processors do not interfere with each other when accessing shared data.</li>
+            <li class="option-item"><span class="option-key">C.</span> Memory is not accessible by any other processor.</li>
+            <li class="option-item"><span class="option-key">D.</span> Each processor must use message passing to communicate.</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: B. Ensuring that processors do not interfere with each other when accessing shared data.</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Vì các luồng cùng đọc/ghi vào một vùng nhớ chung nên nguy cơ xảy ra tranh chấp dữ liệu (race conditions, data hazard) là rất cao, đòi hỏi lập trình viên phải quản lý đồng bộ (synchronization, locks, critical sections) chặt chẽ.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HQ3 -->
+      <div class="card" data-category="hpc1 memory" data-keywords="advantage distributed memory scalability large number processors">
+        <div class="card-header">
+          <span class="q-number">HPC.1 - Câu 3</span>
+          <div class="q-tags">
+            <span class="tag">Distributed Memory Advantage</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">What is a significant advantage of distributed memory systems compared to shared memory systems?</div>
+          <div class="question-vi">Ưu điểm nổi bật nhất của hệ thống bộ nhớ phân tán so với bộ nhớ chia sẻ là gì?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> Lower communication latency between processors</li>
+            <li class="option-item correct"><span class="option-key">B.</span> Scalability to a very large number of processors</li>
+            <li class="option-item"><span class="option-key">C.</span> Simplified data sharing using global variables</li>
+            <li class="option-item"><span class="option-key">D.</span> No need for message passing between processors</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: B. Scalability to a very large number of processors</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Shared memory bị nghẽn phần cứng (bus bộ nhớ) khi số lượng CPU tăng lên (thường chỉ scale tốt dưới 64-128 core). Trong khi đó, Distributed memory (cụm cluster/supercomputer) có khả năng mở rộng lên hàng nghìn, hàng triệu core bằng cách gắn thêm các node mạng độc lập.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HQ4 -->
+      <div class="card" data-category="hpc1 communication" data-keywords="synchronous communication operations execution">
+        <div class="card-header">
+          <span class="q-number">HPC.1 - Câu 4</span>
+          <div class="q-tags">
+            <span class="tag">Truyền thông đồng bộ</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Synchronous communication operations refer to:</div>
+          <div class="question-vi">Thao tác truyền thông đồng bộ đề cập đến:</div>
+          <ul class="options-list">
+            <li class="option-item correct"><span class="option-key">A.</span> Involves only those tasks executing a communication operation</li>
+            <li class="option-item"><span class="option-key">B.</span> It exists between program statements when the order of statement execution affects the results of the program.</li>
+            <li class="option-item"><span class="option-key">C.</span> It refers to the practice of distributing work among tasks so that all tasks are kept busy all of the time. It can be considered as minimization of task idle time.</li>
+            <li class="option-item"><span class="option-key">D.</span> None of the option</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: A. Involves only those tasks executing a communication operation</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Chỉ những tác vụ trực tiếp tham gia vào phiên liên lạc mới bị ảnh hưởng và phải đồng bộ hóa bắt tay với nhau.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HQ5 -->
+      <div class="card" data-category="hpc1 communication" data-keywords="asynchronous communication proceeds computation non-blocking">
+        <div class="card-header">
+          <span class="q-number">HPC.1 - Câu 5</span>
+          <div class="q-tags">
+            <span class="tag">Asynchronous Communication</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Which of the following best describes asynchronous communication in parallel programming?</div>
+          <div class="question-vi">Mô tả nào đúng nhất về truyền thông bất đồng bộ (non-blocking) trong tính toán song song?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> The sending process waits until the receiving process acknowledges the message.</li>
+            <li class="option-item correct"><span class="option-key">B.</span> The sending process proceeds with computation immediately after initiating communication.</li>
+            <li class="option-item"><span class="option-key">C.</span> All processes are forced to synchronize before communication begins.</li>
+            <li class="option-item"><span class="option-key">D.</span> Communication happens implicitly without programmer control.</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: B. The sending process proceeds with computation immediately after initiating communication.</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Trong truyền thông bất đồng bộ (như <code>MPI_Isend</code>, <code>MPI_Irecv</code>), tiến trình gửi khởi tạo việc gửi tin nhắn vào buffer rồi quay lại tiếp tục tính toán ngay lập tức mà không phải đứng chờ bên nhận hoàn tất nhận dữ liệu.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HQ6 -->
+      <div class="card" data-category="hpc1 algo" data-keywords="fine-grained parallelism matrix multiply synchronizing operation">
+        <div class="card-header">
+          <span class="q-number">HPC.1 - Câu 6</span>
+          <div class="q-tags">
+            <span class="tag">Fine-grained Parallelism</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Which of the following is an example of fine-grained parallelism?</div>
+          <div class="question-vi">Ví dụ nào sau đây thể hiện tính song song hạt mịn (Fine-grained)?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> Each processor solves an entire independent simulation.</li>
+            <li class="option-item correct"><span class="option-key">B.</span> Each processor handles a single element computation in a matrix multiply, synchronizing after every operation.</li>
+            <li class="option-item"><span class="option-key">C.</span> Each server processes a different user request in a web server farm.</li>
+            <li class="option-item"><span class="option-key">D.</span> Each processor processes a separate file in a batch processing system.</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: B. Each processor handles a single element computation in a matrix multiply, synchronizing after every operation.</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Song song hạt mịn có khối lượng tính toán trên mỗi bước cực kỳ nhỏ (chỉ tính 1 phần tử) và tần suất truyền thông/đồng bộ hóa cực kỳ dày đặc. Các phương án A, C, D đều có khối lượng tính toán lớn, độc lập (Coarse-grained).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HQ7 -->
+      <div class="card" data-category="hpc1 metrics" data-keywords="parallel overhead time coordinate tasks">
+        <div class="card-header">
+          <span class="q-number">HPC.1 - Câu 7</span>
+          <div class="q-tags">
+            <span class="tag">Parallel Overhead</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Parallel Overhead is:</div>
+          <div class="question-vi">Chi phí phụ trội song song (Parallel Overhead) là:</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> Observed speedup of a code which has been parallelized, defined as: wall-clock time of serial execution and wall-clock time of parallel execution</li>
+            <li class="option-item correct"><span class="option-key">B.</span> The amount of time required to coordinate parallel tasks. It includes factors such as: Task start-up time, Synchronizations, Data communications.</li>
+            <li class="option-item"><span class="option-key">C.</span> Refers to the hardware that comprises a given parallel system - having many processors</li>
+            <li class="option-item"><span class="option-key">D.</span> None of the option</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: B. The amount of time required to coordinate parallel tasks...</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Thời gian cần thiết để điều phối tác vụ song song, gồm: chi phí khởi tạo tiến trình, đồng bộ hóa rào chắn (barriers/locks) và thời gian truyền tải thông điệp qua mạng.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HQ8 -->
+      <div class="card" data-category="hpc1 metrics communication" data-keywords="latency send minimal 0 byte message">
+        <div class="card-header">
+          <span class="q-number">HPC.1 - Câu 8</span>
+          <div class="q-tags">
+            <span class="tag">Độ trễ Latency</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Latency is:</div>
+          <div class="question-vi">Độ trễ truyền thông (Latency) được định nghĩa là:</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> Partitioning in that the data associated with a problem is decompose.</li>
+            <li class="option-item"><span class="option-key">B.</span> Partitioning in that, the focus is on the computation that is to be performed rather than on the data manipulated by the computation.</li>
+            <li class="option-item correct"><span class="option-key">C.</span> It is the time it takes to send a minimal (0 byte) message from one point to other point</li>
+            <li class="option-item"><span class="option-key">D.</span> None of the option</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: C. It is the time it takes to send a minimal (0 byte) message from one point to other point</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Trong mạng truyền thông song song, tổng thời gian truyền một thông điệp kích thước $k$ byte là: <code>Time = Latency + (k / Bandwidth)</code>. Khi $k = 0$, thời gian truyền chính là <b>Latency</b> (thời gian khởi tạo kết nối vật lý).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HQ9 -->
+      <div class="card" data-category="hpc1 metrics" data-keywords="poor scalability adding processors little no performance gain">
+        <div class="card-header">
+          <span class="q-number">HPC.1 - Câu 9</span>
+          <div class="q-tags">
+            <span class="tag">Scalability Kém</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">What does it mean if a parallel program has “poor scalability”?</div>
+          <div class="question-vi">Điều gì chứng tỏ một chương trình song song có “khả năng mở rộng kém” (poor scalability)?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> Its performance improves almost linearly with more processors.</li>
+            <li class="option-item correct"><span class="option-key">B.</span> Adding more processors results in little or no performance gain.</li>
+            <li class="option-item"><span class="option-key">C.</span> The program runs slower with more processors.</li>
+            <li class="option-item"><span class="option-key">D.</span> The program does not use parallelism at all.</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: B. Adding more processors results in little or no performance gain.</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Khả năng mở rộng kém tức là khi tăng số lượng vi xử lý lên nhiều lần nhưng thời gian thực thi không giảm đáng kể (hiệu năng thu được thêm rất ít hoặc bằng 0), thường do nghẽn cổ chai tuần tự (Amdahl's law) hoặc overhead giao tiếp quá lớn.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HQ10 -->
+      <div class="card" data-category="hpc1 memory" data-keywords="uma uniform memory access same latency any location">
+        <div class="card-header">
+          <span class="q-number">HPC.1 - Câu 10</span>
+          <div class="q-tags">
+            <span class="tag">Kiến trúc UMA</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Which of the following is a characteristic of a UMA system?</div>
+          <div class="question-vi">Đặc điểm nào là đặc trưng của hệ thống UMA (Uniform Memory Access)?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> Memory access time depends on the processor's location.</li>
+            <li class="option-item"><span class="option-key">B.</span> Each processor has private memory, inaccessible to others.</li>
+            <li class="option-item correct"><span class="option-key">C.</span> All processors have the same latency when accessing any memory location.</li>
+            <li class="option-item"><span class="option-key">D.</span> Processors communicate using message passing.</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: C. All processors have the same latency when accessing any memory location.</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">UMA (Uniform Memory Access - ví dụ hệ thống SMP đối xứng): Mọi CPU đều kết nối vào bộ nhớ chung qua bus hệ thống với độ trễ (latency) và tốc độ truy cập đồng đều như nhau. (A là đặc trưng của NUMA).</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HQ11 -->
+      <div class="card" data-category="hpc1 algo" data-keywords="dependency between tasks produces data needed">
+        <div class="card-header">
+          <span class="q-number">HPC.1 - Câu 11</span>
+          <div class="q-tags">
+            <span class="tag">Task Dependency</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Which of the following describes a dependency between two tasks?</div>
+          <div class="question-vi">Phát biểu nào mô tả đúng về sự phụ thuộc giữa hai tác vụ?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> Both tasks can execute simultaneously without issues.</li>
+            <li class="option-item correct"><span class="option-key">B.</span> One task produces data that the other task needs to start.</li>
+            <li class="option-item"><span class="option-key">C.</span> Both tasks operate on completely separate data.</li>
+            <li class="option-item"><span class="option-key">D.</span> Tasks are unrelated and have no communication.</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: B. One task produces data that the other task needs to start.</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Hai tác vụ phụ thuộc nhau khi tác vụ này tạo ra đầu ra (dữ liệu/kết quả) mà tác vụ kia bắt buộc phải có mới có thể tiến hành thực hiện.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HQ12 -->
+      <div class="card" data-category="hpc1 mpi memory" data-keywords="message passing outperform shared memory avoid bus contention">
+        <div class="card-header">
+          <span class="q-number">HPC.1 - Câu 12</span>
+          <div class="q-tags">
+            <span class="tag">MPI vs Shared Memory</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">Why might the message passing model outperform shared memory for large-scale clusters?</div>
+          <div class="question-vi">Vì sao mô hình Message Passing (truyền thông điệp) lại vượt trội hơn Shared Memory trên các cụm máy tính quy mô lớn?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> Because shared memory systems have unlimited scalability.</li>
+            <li class="option-item correct"><span class="option-key">B.</span> Because message passing avoids memory bus contention.</li>
+            <li class="option-item"><span class="option-key">C.</span> Because message passing requires less programmer effort.</li>
+            <li class="option-item"><span class="option-key">D.</span> Because all processors can freely access any memory location in message passing systems.</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: B. Because message passing avoids memory bus contention.</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Trong các hệ thống lớn, Shared Memory bị nghẽn bus bộ nhớ nghiêm trọng khi hàng trăm core cùng tranh chấp đường truyền. Message Passing sử dụng bộ nhớ độc lập cho từng node và chỉ gửi dữ liệu khi cần qua mạng, loại bỏ hiện tượng nghẽn bus bộ nhớ dùng chung.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HQ13 -->
+      <div class="card" data-category="hpc1 algo" data-keywords="key challenge domain decomposition minimizing communication data consistency">
+        <div class="card-header">
+          <span class="q-number">HPC.1 - Câu 13</span>
+          <div class="q-tags">
+            <span class="tag">Thách thức Domain Decomposition</span>
+            <button class="toggle-single" onclick="toggleSingleAnswer(this)">Ẩn/Hiện đáp án</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="question-en">What is a key challenge of domain decomposition in parallel computing?</div>
+          <div class="question-vi">Thách thức cốt lõi khi phân rã miền dữ liệu (Domain decomposition) trong tính toán song song là gì?</div>
+          <ul class="options-list">
+            <li class="option-item"><span class="option-key">A.</span> Ensuring all subdomains have different programming languages</li>
+            <li class="option-item correct"><span class="option-key">B.</span> Minimizing communication between subdomains while maintaining data consistency</li>
+            <li class="option-item"><span class="option-key">C.</span> Using only shared memory architectures</li>
+            <li class="option-item"><span class="option-key">D.</span> Eliminating all boundary data between subdomains</li>
+          </ul>
+          <div class="explanation-box">
+            <div class="ans-badge">✓ Đáp án chính xác: B. Minimizing communication between subdomains while maintaining data consistency</div>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">Khi cắt nhỏ miền dữ liệu cho các tiến trình, các biên tiếp giáp (boundaries / halo regions) bắt buộc phải trao đổi thông điệp với nhau sau mỗi bước lặp. Thách thức lớn nhất là thiết kế sao cho giảm thiểu tối đa khối lượng truyền thông biên này mà vẫn giữ đúng tính nhất quán khoa học của bài toán.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: TỰ LUẬN ĐIỀN CODE -->
+    <div class="section-group" data-section="code">
+      <div class="section-title">
+        <span>Phần III: Bài tập Tự luận Điền Code (CUDA, MPI, OpenMP)</span>
+        <span class="badge">Đầy đủ code đề bài & giải thích chi tiết</span>
+      </div>
+
+      <!-- CODE 1: CUDA Central Difference -->
+      <div class="card" data-category="code cuda" data-keywords="cuda central difference first derivative dim3 blocksize gridsize">
+        <div class="card-header">
+          <span class="q-number">Bài 1 (Tự luận): Lập trình CUDA - Tính đạo hàm Central Difference</span>
+          <div class="q-tags">
+            <span class="tag">CUDA C/C++</span>
+            <span class="tag">Grid-Stride Loop</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p><b>Đề bài:</b> Viết chương trình CUDA tính đạo hàm bậc nhất của hàm số <code>f(x) = 8x / (x&sup2; + 1)</code> trên đoạn $[-10.0, 10.0]$ với $N = 1024$ điểm bằng phương pháp sai phân trung tâm (Central Difference Method):</p>
+          <p style="margin: 8px 0; color: #1e293b;">Công thức: $f'(x_i) = \frac{f(x_{i+1}) - f(x_{i-1})}{2h}$ với $i \in [1, N-2]$; tại biên $i=0$ và $i=N-1$ gán bằng $0$.</p>
+          
+          <p style="margin-top: 14px;"><b>Cấu trúc chương trình CUDA cần điền các vị trí Code A, B, C, D:</b></p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;malloc.h&gt;
+#include &lt;cuda.h&gt;
+#define X1 -10.0
+#define X2 10.0
+#define N 1024
+#define h ((X2-X1)/(N-1))
+#define GridSize 2
+#define BlockSize 8
+#define ThreadSize (N/(GridSize*BlockSize))
+
+float fx(float x) {
+    return 8*x/(x*x+1);
+}
+
+__global__ void CentralDifference(float *DF, float *F) {
+    int i, index = blockIdx.x * blockDim.x + threadIdx.x;
+    for (/* Fill code here (0.5 points): Code A */) {
+        if ((i == 0) || (i == N - 1))
+            *(DF + i) = 0;
+        else
+            *(DF + i) = (*(F + i + 1) - *(F + i - 1)) / (2 * h);
+    }
+    __syncthreads();
+}
+
+int main() {
+    int i;
+    float *FXcpu, *DFXcpu;
+    FXcpu  = (float*) malloc(N * sizeof(float));
+    DFXcpu = (float*) malloc(N * sizeof(float));
+    for (i = 0; i &lt; N; i++) *(FXcpu + i) = fx(X1 + i*h);
+
+    // 1. Declare and Allocate Mem on GPU
+    float *FXgpu, *DFXgpu;
+    cudaMalloc((void**)&amp;FXgpu, N * sizeof(float));
+    cudaMalloc((void**)&amp;DFXgpu, N * sizeof(float));
+
+    // 2. Copy Input from CPU to GPU
+    /* Fill code here (0.5 points): Code B */
+
+    // 3. Define Block and Thread Structure
+    dim3 dimGrid(GridSize);
+    dim3 dimBlock(BlockSize);
+
+    // 4. Invoke kernel
+    /* Fill code here (0.5 points): Code C */
+
+    // 5. Copy Output from GPU to CPU
+    /* Fill code here (0.5 points): Code D */
+
+    // 6. Free Mem on CPU and GPU
+    free(FXcpu); free(DFXcpu);
+    cudaFree(FXgpu); cudaFree(DFXgpu);
+    return 0;
+}</code></pre>
+
+          <div class="explanation-box" style="margin-top: 20px;">
+            <div class="ans-badge">✓ Đáp án chi tiết các đoạn mã cần điền:</div>
+            
+            <div style="margin-top: 10px;">
+              <p><b>1. Đoạn mã Code A (Vòng lặp trong Kernel):</b></p>
+<pre><code>// Cách 1 (Grid-stride loop chuẩn NVIDIA):
+i = index; i &lt; N; i += blockDim.x * gridDim.x
+
+// Cách 2 (Chia dải tuần tự theo ThreadSize đề bài khai báo):
+i = index * ThreadSize; i &lt; (index + 1) * ThreadSize; i++</code></pre>
+              <div class="exp-content"><i>Giải thích:</i> Tổng số thread thực thi là <code>GridSize &times; BlockSize = 2 &times; 8 = 16 luồng</code>. Vì $N = 1024$, mỗi luồng phải lặp để xử lý nhiều phần tử. Cả hai cách trên đều chính xác và giải quyết trọn vẹn số phần tử $N$.</div>
+            </div>
+
+            <div style="margin-top: 16px;">
+              <p><b>2. Đoạn mã Code B (Copy Input từ CPU sang GPU):</b></p>
+<pre><code>cudaMemcpy(FXgpu, FXcpu, N * sizeof(float), cudaMemcpyHostToDevice);</code></pre>
+              <div class="exp-content"><i>Giải thích:</i> Sao chép mảng giá trị $f(x)$ từ bộ nhớ máy chủ (Host) sang bộ nhớ thiết bị GPU (Device) để chuẩn bị cho kernel tính toán.</div>
+            </div>
+
+            <div style="margin-top: 16px;">
+              <p><b>3. Đoạn mã Code C (Khởi gọi GPU Kernel):</b></p>
+<pre><code>CentralDifference&lt;&lt;&lt;dimGrid, dimBlock&gt;&gt;&gt;(DFXgpu, FXgpu);</code></pre>
+              <div class="exp-content"><i>Giải thích:</i> Cú pháp Kernel launch với lưới <code>dimGrid</code> (2 blocks), mỗi block có <code>dimBlock</code> (8 threads), truyền vào 2 con trỏ GPU gồm mảng lưu kết quả đạo hàm <code>DFXgpu</code> và mảng dữ liệu <code>FXgpu</code>.</div>
+            </div>
+
+            <div style="margin-top: 16px;">
+              <p><b>4. Đoạn mã Code D (Copy Output từ GPU về CPU):</b></p>
+<pre><code>cudaMemcpy(DFXcpu, DFXgpu, N * sizeof(float), cudaMemcpyDeviceToHost);</code></pre>
+              <div class="exp-content"><i>Giải thích:</i> Sau khi GPU tính toán xong, sao chép kết quả đạo hàm từ bộ nhớ GPU (Device) về mảng trên RAM máy chủ (Host) bằng cờ <code>cudaMemcpyDeviceToHost</code>.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CODE 2: MPI Send/Recv and Gather -->
+      <div class="card" data-category="code mpi" data-keywords="mpi gather send recv rank 1 root process">
+        <div class="card-header">
+          <span class="q-number">Bài 2 (Tự luận): Lập trình MPI - Gửi dữ liệu về Process 1 và in ấn</span>
+          <div class="q-tags">
+            <span class="tag">MPI Point-to-Point</span>
+            <span class="tag">MPI Collective</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p><b>Đề bài:</b> Cho chương trình MPI, mỗi process có mảng <code>Ac</code> gồm $m = 5$ phần tử có giá trị <code>[0, 1, 2, 3, 4]</code>. Hoàn thiện code sao cho tất cả các process gửi mảng <code>Ac</code> về process 1. Tại process 1 nhận dữ liệu vào mảng <code>A</code> và in ra toàn bộ mảng. Khi chạy trên 4 CPUs, đầu ra màn hình là:</p>
+          <p style="background: #e2e8f0; padding: 8px 14px; border-radius: 6px; font-family: monospace; font-weight: bold; margin: 8px 0;">0 1 2 3 4 0 1 2 3 4 0 1 2 3 4 0 1 2 3 4</p>
+
+          <p style="margin-top: 14px;"><b>Khung chương trình đề bài:</b></p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;malloc.h&gt;
+#include &lt;mpi.h&gt;
+#define m 5
+
+int main(int argc, char *argv[]) {
+    int i, rank, size, M;
+    MPI_Status status;
+    int *A, *Ac;
+
+    Ac = (int *) malloc(m * sizeof(int));
+    MPI_Init(&amp;argc, &amp;argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &amp;size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &amp;rank);
+    M = m * size;
+    A = (int *) malloc(M * sizeof(int));
+
+    for (i = 0; i &lt; m; i++)
+        *(Ac + i) = i;
+
+    // All processes send its Ac to process 1
+    /* Fill code here (1 points): Code E */
+
+    // Print A at process 1
+    /* Fill code here (1 points): Code F */
+
+    MPI_Finalize();
+    return 0;
+}</code></pre>
+
+          <div class="explanation-box" style="margin-top: 20px;">
+            <div class="ans-badge">✓ Đáp án chi tiết các đoạn mã cần điền:</div>
+
+            <div style="margin-top: 10px;">
+              <p><b>Cách 1: Cài đặt chuẩn Point-to-Point (Khuyên dùng theo đúng chú thích đề bài):</b></p>
+<pre><code>// --- Code E (Các tiến trình khác 1 gửi Ac đến process 1) ---
+if (rank != 1) {
+    MPI_Send(Ac, m, MPI_INT, 1, 0, MPI_COMM_WORLD);
+}
+
+// --- Code F (Process 1 nhận dữ liệu từ các tiến trình và in ra A) ---
+if (rank == 1) {
+    // 1. Tự sao chép dữ liệu của chính rank 1 vào vị trí tương ứng trong A
+    for (i = 0; i &lt; m; i++) {
+        *(A + 1 * m + i) = *(Ac + i);
+    }
+
+    // 2. Nhận từ các rank còn lại (rank 0, 2, 3...)
+    for (int src = 0; src &lt; size; src++) {
+        if (src != 1) {
+            MPI_Recv(A + src * m, m, MPI_INT, src, 0, MPI_COMM_WORLD, &amp;status);
+        }
+    }
+
+    // 3. In toàn bộ mảng A theo đúng thứ tự rank
+    for (i = 0; i &lt; M; i++) {
+        printf("%d ", *(A + i));
+    }
+    printf("\n");
+}</code></pre>
+              <div class="exp-content"><i>Giải thích:</i> Nếu <code>rank == 1</code> cũng tự gọi <code>MPI_Send</code> gửi cho chính mình bằng cơ chế blocking mà không có luồng nhận trước thì có thể gây ra hiện tượng nghẽn (deadlock). Do đó, giải pháp tốt nhất là các rank khác 1 thực hiện gửi, còn rank 1 chỉ nhận từ các rank khác và tự gán mảng cục bộ của nó vào <code>A + 1*m</code>.</div>
+            </div>
+
+            <div style="margin-top: 18px;">
+              <p><b>Cách 2: Cài đặt bằng Collective Communication (Gọn gàng nhất):</b></p>
+<pre><code>// --- Thay cả Code E và Code F bằng MPI_Gather (Root = 1) ---
+MPI_Gather(Ac, m, MPI_INT, A, m, MPI_INT, 1, MPI_COMM_WORLD);
+
+if (rank == 1) {
+    for (i = 0; i &lt; M; i++) {
+        printf("%d ", *(A + i));
+    }
+    printf("\n");
+}</code></pre>
+              <div class="exp-content"><i>Giải thích:</i> Hàm <code>MPI_Gather</code> gom tất cả dữ liệu mảng <code>Ac</code> từ mọi tiến trình về mảng <code>A</code> của tiến trình gốc (root process = 1). Sau đó tại process 1 chỉ cần duyệt và in ra màn hình.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CODE 3: OpenMP Trapezoidal Integration -->
+      <div class="card" data-category="code omp" data-keywords="openmp trapezoidal rule integration tich phan tong per thread">
+        <div class="card-header">
+          <span class="q-number">Bài 3 (Tự luận): Lập trình OpenMP - Tính tích phân theo công thức hình thang</span>
+          <div class="q-tags">
+            <span class="tag">OpenMP SPMD</span>
+            <span class="tag">Numerical Integration</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <p><b>Đề bài (Từ Image (2).jpg):</b> Hoàn thiện chương trình OpenMP tính xấp xỉ tích phân $\int_a^b f(x)dx$ theo công thức hình thang:</p>
+          <p style="margin: 6px 0; color: #1e293b;">Công thức: $T = \frac{h}{2} \left[ f(a) + f(b) + 2 \sum_{i=1}^{N-1} f(a + i \cdot h) \right]$</p>
+
+          <p style="margin-top: 14px;"><b>Đoạn mã trong vùng song song:</b></p>
+<pre><code>    id = omp_get_thread_num();
+    start = id * Ns;
+    end = start + Ns;
+    if (id == 0) start = 1;
+    tong = 0;
+
+    for (/* Fill code here (1 points): Code B */) {
+        tong = tong + fx(a + i * h);
+    }
+    tongPerThread[id] = tong;
+}
+for (int i = 0; i &lt; numThreads; i++) {
+    tong_global = tong_global + tongPerThread[i];
+}
+tichphan = (fa + fb + 2 * tong_global) * h / 2;
+printf("Tich phan: %f\n", tichphan);
+return 0;</code></pre>
+
+          <div class="explanation-box" style="margin-top: 20px;">
+            <div class="ans-badge">✓ Đáp án Code B cần điền:</div>
+<pre><code>i = start; i &lt; end; i++</code></pre>
+            <div class="exp-title">Giải thích ngắn gọn:</div>
+            <div class="exp-content">
+              - Mỗi luồng có mã số <code>id</code> chịu trách nhiệm tính toán một dải chỉ số từ <code>start = id * Ns</code> đến <code>end - 1</code>.<br>
+              - Riêng với luồng đầu tiên (<code>id == 0</code>), đề bài đã có lệnh tiền xử lý <code>if (id == 0) start = 1;</code> để bỏ qua $i = 0$ (vì $f(a)$ tương ứng với $i=0$ đã được cộng riêng ở biến <code>fa</code> ngoài công thức).<br>
+              - Do đó vòng lặp chỉ cần khởi tạo biến chạy từ <code>i = start</code> đến <code>i &lt; end</code> với bước tăng <code>i++</code>.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <p>Tài liệu tổng hợp ôn tập IT5408 / IT4130E - High Performance Computing (Tính toán hiệu năng cao)</p>
+      <p style="margin-top: 6px; color: var(--gray-400);">Hệ thống đã chuẩn hóa câu hỏi, đáp án chính thức và giải thích ngắn gọn, xúc tích.</p>
+    </footer>
+  </div>
+
+  <script>
+    // State of answers visibility
+    let answersVisible = true;
+
+    function toggleAllAnswers() {
+      answersVisible = !answersVisible;
+      const boxes = document.querySelectorAll('.explanation-box');
+      const btn = document.getElementById('toggleAllBtn');
+
+      boxes.forEach(box => {
+        if (answersVisible) {
+          box.classList.remove('hidden');
+        } else {
+          box.classList.add('hidden');
+        }
+      });
+
+      if (answersVisible) {
+        btn.innerHTML = '👁️ Ẩn tất cả đáp án';
+      } else {
+        btn.innerHTML = '👁️ Hiện tất cả đáp án';
+      }
+    }
+
+    function toggleSingleAnswer(btn) {
+      const card = btn.closest('.card');
+      const box = card.querySelector('.explanation-box');
+      box.classList.toggle('hidden');
+    }
+
+    function setCategory(cat, element) {
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      element.classList.add('active');
+
+      const cards = document.querySelectorAll('.card');
+      const sections = document.querySelectorAll('.section-group');
+
+      if (cat === 'all') {
+        cards.forEach(c => c.style.display = 'block');
+        sections.forEach(s => s.style.display = 'block');
+        return;
+      }
+
+      if (cat === 'exam20222' || cat === 'hpc1' || cat === 'code') {
+        sections.forEach(s => {
+          if (s.getAttribute('data-section') === cat) {
+            s.style.display = 'block';
+          } else {
+            s.style.display = 'none';
+          }
+        });
+        cards.forEach(c => {
+          const cats = c.getAttribute('data-category') || '';
+          if (cats.includes(cat)) {
+            c.style.display = 'block';
+          } else {
+            c.style.display = 'none';
+          }
+        });
+      } else {
+        // Tag filter (cuda, mpi, omp)
+        sections.forEach(s => s.style.display = 'block');
+        cards.forEach(c => {
+          const cats = c.getAttribute('data-category') || '';
+          if (cats.includes(cat)) {
+            c.style.display = 'block';
+          } else {
+            c.style.display = 'none';
+          }
+        });
+      }
+    }
+
+    function filterQuestions() {
+      const query = document.getElementById('searchInput').value.toLowerCase().trim();
+      const cards = document.querySelectorAll('.card');
+
+      cards.forEach(card => {
+        const text = card.innerText.toLowerCase();
+        const keywords = card.getAttribute('data-keywords') || '';
+        if (text.includes(query) || keywords.includes(query)) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+</html>

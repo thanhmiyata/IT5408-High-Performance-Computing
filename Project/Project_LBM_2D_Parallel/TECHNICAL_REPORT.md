@@ -1,8 +1,17 @@
 # BÁO CÁO KỸ THUẬT: MÔ PHỎNG DÒNG CHẢY 2D BẰNG LBM VÀ MPI
 
 **Môn học:** Tính toán hiệu năng cao (IT5408)  
-**Sinh viên:** Krizpham  
-**Ngày cập nhật:** 04/02/2026
+**Giảng viên hướng dẫn:** TS. Nguyễn Quốc Tuấn  
+**Nhóm thực hiện:** **Nhóm 1 (HPC_20261B_Group01_LBM_MPI)**  
+**Ngày cập nhật:** 22/11/2026  
+
+### Danh sách thành viên:
+1. **Phạm Tiến Thành** - 20242422M (Trưởng nhóm)
+2. **Trần Thị Hạnh** - 20242058M
+3. **Bùi Minh Đức** - 20242056M
+4. **Nguyễn Thị Huê** - 20252584M
+5. **Nguyễn Đình Hiếu** - 20261223M
+6. **Đỗ Minh Hiếu** - 20242031M
 
 ## 1. Mô tả Kỹ thuật và Cài đặt
 

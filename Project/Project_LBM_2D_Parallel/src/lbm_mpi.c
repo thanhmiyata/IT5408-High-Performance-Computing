@@ -159,6 +159,25 @@ void StreamingCucBo(double *f_new, double *f, int nx_local, int ny, double *ghos
 }
 
 /**
+ * Ghi kết quả mật độ và vận tốc ra file .dat để hậu xử lý.
+ */
+void GhiKetQua(double *rho, double *ux, double *uy, int nx, int ny, const char *filename) {
+  FILE *fp = fopen(filename, "w");
+  if (!fp) {
+    fprintf(stderr, "Loi: Khong the mo file %s de ghi ket qua!\n", filename);
+    return;
+  }
+  int x, y;
+  fprintf(fp, "# x y rho ux uy\n");
+  for (x = 0; x < nx; x++) {
+    for (y = 0; y < ny; y++) {
+      fprintf(fp, "%d %d %.6f %.6f %.6f\n", x, y, *(rho + x*ny + y), *(ux + x*ny + y), *(uy + x*ny + y));
+    }
+  }
+  fclose(fp);
+}
+
+/**
  * Trao đổi các cột biên (Ghost Columns) giữa các tiến trình lân cận.
  * Sử dụng giao tiếp không chặn (non-blocking) để tối ưu hiệu năng.
  */
@@ -300,6 +319,46 @@ int main(int argc, char **argv) {
     printf("Sum(rho): %.10f\n", global_sum_rho);
     printf("Sum(ux):  %.10f\n", global_sum_ux);
     printf("Sum(uy):  %.10f\n", global_sum_uy);
+  }
+
+  // Thu thap du lieu toan cuc ve Rank 0 de ghi file lbm_result.dat
+  int *recvcounts = NULL;
+  int *displs = NULL;
+  double *global_rho = NULL;
+  double *global_ux = NULL;
+  double *global_uy = NULL;
+  int local_count = nx_local * ny;
+
+  if (rank == 0) {
+    recvcounts = (int *)malloc(size * sizeof(int));
+    displs = (int *)malloc(size * sizeof(int));
+    global_rho = (double *)malloc(nx * ny * sizeof(double));
+    global_ux = (double *)malloc(nx * ny * sizeof(double));
+    global_uy = (double *)malloc(nx * ny * sizeof(double));
+  }
+
+  MPI_Gather(&local_count, 1, MPI_INT, recvcounts, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+  if (rank == 0) {
+    int offset = 0;
+    for (int i = 0; i < size; i++) {
+      displs[i] = offset;
+      offset += recvcounts[i];
+    }
+  }
+
+  MPI_Gatherv(rho, local_count, MPI_DOUBLE, global_rho, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Gatherv(ux, local_count, MPI_DOUBLE, global_ux, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+  MPI_Gatherv(uy, local_count, MPI_DOUBLE, global_uy, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+  if (rank == 0) {
+    GhiKetQua(global_rho, global_ux, global_uy, nx, ny, "lbm_result.dat");
+    printf("Da ghi ket qua MPI vao: lbm_result.dat\n");
+    free(recvcounts);
+    free(displs);
+    free(global_rho);
+    free(global_ux);
+    free(global_uy);
   }
 
   // Giải phóng bộ nhớ và kết thúc MPI

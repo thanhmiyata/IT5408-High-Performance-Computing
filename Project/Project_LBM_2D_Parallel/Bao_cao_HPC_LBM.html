@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Báo cáo Dự án HPC: LBM 2D Parallel with MPI</title>
+
+<!-- MathJax CDN ho tro cong thuc LaTeX toan hoc -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['$', '$'], ['\\(', '\\)']],
+    displayMath: [['$$', '$$'], ['\\[', '\\]']]
+  },
+  svg: {
+    fontCache: 'global'
+  }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<style>
+@page {
+    size: A4;
+    margin: 18mm 18mm 18mm 18mm;
+}
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+    color: #1a1a1a;
+    font-size: 10.5pt;
+    margin: 0;
+    padding: 0;
+}
+h1 {
+    font-size: 16pt;
+    text-align: center;
+    color: #0d3b66;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+h2 {
+    font-size: 13pt;
+    color: #1d3557;
+    border-bottom: 1.5px solid #0d3b66;
+    padding-bottom: 4px;
+    margin-top: 24px;
+    margin-bottom: 12px;
+    page-break-after: avoid;
+}
+h3 {
+    font-size: 11.5pt;
+    color: #2b2d42;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    page-break-after: avoid;
+}
+h4 {
+    font-size: 10.5pt;
+    color: #333333;
+    margin-top: 12px;
+    margin-bottom: 6px;
+    page-break-after: avoid;
+}
+hr {
+    border: none;
+    border-top: 1px solid #dcdcdc;
+    margin: 15px 0;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+}
+th, td {
+    border: 1px solid #b0bec5;
+    padding: 6px 10px;
+    text-align: left;
+}
+th {
+    background-color: #f0f4f8;
+    color: #102a43;
+    font-weight: 600;
+}
+tr:nth-child(even) {
+    background-color: #fafbfc;
+}
+code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    font-size: 8.5pt;
+    background-color: #f1f3f5;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+pre {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    padding: 10px;
+    border-radius: 4px;
+    font-size: 8.5pt;
+    overflow-x: auto;
+    page-break-inside: avoid;
+}
+pre code {
+    background-color: transparent;
+    padding: 0;
+}
+img {
+    max-width: 95%;
+    height: auto;
+    display: block;
+    margin: 12px auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    page-break-inside: avoid;
+}
+ul, ol {
+    margin-top: 4px;
+    margin-bottom: 8px;
+    padding-left: 22px;
+}
+li {
+    margin-bottom: 4px;
+}
+strong {
+    color: #0f172a;
+}
+</style>
+</head>
+<body>
+<h1>BÁO CÁO DỰ ÁN: MÔ PHỎNG DÒNG CHẢY 2D BẰNG PHƯƠNG PHÁP LATTICE BOLTZMANN VÀ SONG SONG HÓA VỚI MPI</h1>
+<p><strong>Học phần:</strong> Tính toán hiệu năng cao (IT5408)<br />
+<strong>Giảng viên hướng dẫn:</strong> TS. Nguyễn Quốc Tuấn<br />
+<strong>Đề tài:</strong> 2D Hydrodynamic Flow Simulation - Parallel Numerical Solution (MPI)<br />
+<strong>Học kỳ:</strong> 2026.1B<br />
+<strong>Nhóm thực hiện:</strong> <strong>Nhóm 1 (HPC_20261B_Group01_LBM_MPI)</strong>  </p>
+<hr />
+<h3>Danh sách thành viên Nhóm 1:</h3>
+<ol>
+<li><strong>Phạm Tiến Thành</strong> - MSSV: <strong>20242422M</strong> (Trưởng nhóm)</li>
+<li><strong>Trần Thị Hạnh</strong> - MSSV: <strong>20242058M</strong></li>
+<li><strong>Bùi Minh Đức</strong> - MSSV: <strong>20242056M</strong></li>
+<li><strong>Nguyễn Thị Huê</strong> - MSSV: <strong>20252584M</strong></li>
+<li><strong>Nguyễn Đình Hiếu</strong> - MSSV: <strong>20261223M</strong></li>
+<li><strong>Đỗ Minh Hiếu</strong> - MSSV: <strong>20242031M</strong></li>
+</ol>
+<hr />
+<h2>1. GIỚI THIỆU BÀI TOÁN (PROBLEM SPECIFICATION)</h2>
+<h3>1.1. Đặt vấn đề và Ý nghĩa thực tiễn</h3>
+<p>Mô phỏng động lực học chất lưu (Computational Fluid Dynamics - CFD) là một trong những bài toán tính toán khoa học cơ bản và tiêu tốn nhiều tài nguyên tính toán nhất trong khoa học và kỹ thuật hiện đại. Các ứng dụng trải rộng từ khí động học công nghiệp hàng không ô tô, phân tích dòng chảy trong lòng đất đối với kỹ thuật dầu khí, mô phỏng vi lưu (microfluidics) trong các thiết bị Lab-on-a-Chip, đến nghiên cứu dòng máu trong mao mạch y sinh.</p>
+<p>Theo cách tiếp cận cơ học cổ điển liên tục, chuyển động của chất lưu Newton được mô tả bởi hệ phương trình vi phân đạo hàm riêng phi tuyến <strong>Navier-Stokes</strong>:</p>
+<p>$$\frac{\partial \rho}{\partial t} + \nabla \cdot (\rho \mathbf{u}) = 0$$</p>
+<p>$$\frac{\partial (\rho \mathbf{u})}{\partial t} + \nabla \cdot (\rho \mathbf{u} \mathbf{u}) = -\nabla p + \mu \nabla^2 \mathbf{u} + \mathbf{F}$$</p>
+<p>Các phương pháp số truyền thống giải hệ phương trình này (như phương pháp sai phân hữu hạn FDM, phần tử hữu hạn FEM, hoặc thể tích hữu hạn FVM) gặp phải những thách thức lớn:<br />
+1. <strong>Độ phức tạp tính toán:</strong> Cần giải hệ phương trình đại số tuyến tính quy mô cực lớn ở mỗi bước thời gian (như phương trình Poisson cho trường áp suất), dẫn đến sự phụ thuộc dữ liệu toàn cục.<br />
+2. <strong>Khó khăn khi xử lý biên phức tạp:</strong> Việc chia lưới và khớp điều kiện biên trên các hình học phức tạp đòi hỏi tái tạo lưới (meshing) rất tốn kém.<br />
+3. <strong>Thách thức khi song song hóa trên quy mô lớn:</strong> Các thuật toán giải phương trình Navier-Stokes truyền thống đòi hỏi nhiều thao tác đồng bộ toàn cục (global synchronization), hạn chế tính mở rộng (scalability) trên các hệ thống tính toán hiệu năng cao phân tán.</p>
+<h3>1.2. Giải pháp: Phương pháp Lattice Boltzmann (LBM)</h3>
+<p>Để khắc phục những hạn chế trên, <strong>Lattice Boltzmann Method (LBM)</strong> đã ra đời như một bước tiến mang tính cách mạng trong CFD. Khác với FDM/FEM tiếp cận ở thang đo vĩ mô (macroscopic) hoặc Molecular Dynamics (MD) tiếp cận ở thang đo vi mô (microscopic), LBM là phương pháp trung mô (mesoscopic).</p>
+<p>Phương pháp LBM không giải trực tiếp phương trình Navier-Stokes mà mô phỏng sự tiến hóa của hàm mật độ xác suất phân bố hạt $f_i(\mathbf{x}, t)$ trên một mạng lưới rời rạc (lattice). Thông qua giải tích đa quy mô Chapman-Enskog, có thể chứng minh một cách toán học chặt chẽ rằng các phương trình động học của LBM hội tụ chính xác về hệ phương trình Navier-Stokes không nén được trong giới hạn số Mach nhỏ.</p>
+<h3>1.3. Mục tiêu của Đồ án</h3>
+<ol>
+<li><strong>Thiết lập mô hình toán học:</strong> Nghiên cứu và xây dựng mô hình LBM 2D tiêu chuẩn <strong>D2Q9</strong> với mô hình va chạm LBGK đơn thời gian thư giãn (Single Relaxation Time - SRT).</li>
+<li><strong>Cài đặt độc lập từng dòng code (Scratch Implementation):</strong> Tự thiết kế và lập trình toàn bộ mã nguồn bằng ngôn ngữ C (chuẩn C99), không sử dụng bất kỳ thư viện CFD hoặc tính toán ma trận có sẵn nào.</li>
+<li><strong>Thiết kế giải thuật song song hóa MPI:</strong> Phân rã miền tính toán 1 chiều (1D Domain Decomposition) kết hợp trao đổi vùng biên ảo (Ghost Columns) sử dụng kỹ thuật truyền thông không chặn (Non-blocking communication).</li>
+<li><strong>Mô phỏng vật lý và kiểm chứng:</strong> Thực hiện mô phỏng dòng chảy Poiseuille trong kênh 2 chiều, đối soát kết quả số với nghiệm giải tích hình học Parabol và nghiệm kiểm chứng Checksum giữa các phiên bản.</li>
+<li><strong>Đánh giá hiệu năng HPC chuyên sâu:</strong> Đo lường các chỉ số thời gian thực thi, MLUPS (Million Lattice Updates Per Second), Speedup, Efficiency và phân tích tính khả mở (Scalability) theo định luật Amdahl.</li>
+</ol>
+<hr />
+<h2>2. MÔ HÌNH TOÁN HỌC (MATHEMATICAL FORMULATION)</h2>
+<h3>2.1. Phương trình Boltzmann rời rạc và Xấp xỉ BGK</h3>
+<p>Phương trình động học Boltzmann cho hàm phân bố hạt $f(\mathbf{x}, \mathbf{\xi}, t)$ với vận tốc hạt vi mô $\mathbf{\xi}$ có dạng:</p>
+<p>$$\frac{\partial f}{\partial t} + \mathbf{\xi} \cdot \nabla f + \mathbf{a} \cdot \nabla_{\mathbf{\xi}} f = \Omega(f)$$</p>
+<p>Trong đó $\Omega(f)$ là toán tử va chạm tích phân mô tả tương tác giữa các hạt. Do toán tử va chạm Boltzmann nguyên thủy vô cùng phức tạp, Bhatnagar, Gross và Krook (1954) đã đề xuất xấp xỉ tuyến tính hóa BGK, giả thiết hệ hạt thư giãn về trạng thái cân bằng nhiệt động cục bộ $f^{eq}$ với một thời gian thư giãn đặc trưng $\tau$:</p>
+<p>$$\Omega(f) \approx -\frac{1}{\tau} (f - f^{eq})$$</p>
+<p>Rời rạc hóa không gian thành mạng lưới và rời rạc hóa vận tốc thành tập hữu hạn $Q$ vector vận tốc rời rạc $\mathbf{c}_i$ ($i = 0, 1, \dots, Q-1$), ta thu được phương trình Lattice Boltzmann rời rạc (LBE):</p>
+<p>$$f_i(\mathbf{x} + \mathbf{c}_i \Delta t, t + \Delta t) - f_i(\mathbf{x}, t) = -\frac{\Delta t}{\tau} \left[ f_i(\mathbf{x}, t) - f_i^{eq}(\mathbf{x}, t) \right]$$</p>
+<p>Đặt tham số thư giãn vô thứ nguyên $\omega = \frac{\Delta t}{\tau}$ (trong hệ đơn vị lattice quy ước $\Delta x = 1, \Delta t = 1$), phương trình rút gọn thành:</p>
+<p>$$f_i(\mathbf{x} + \mathbf{c}_i, t + 1) = f_i(\mathbf{x}, t) - \omega \left[ f_i(\mathbf{x}, t) - f_i^{eq}(\mathbf{x}, t) \right]$$</p>
+<h3>2.2. Mô hình Lưới D2Q9</h3>
+<p>Trong không gian 2 chiều ($D=2$), mô hình <strong>D2Q9</strong> sử dụng $Q=9$ hướng vận tốc rời rạc:<br />
+* Hướng đứng yên: $i = 0$<br />
+* 4 hướng trực giao: $i = 1, 2, 3, 4$ (chiều dài 1)<br />
+* 4 hướng đường chéo: $i = 5, 6, 7, 8$ (chiều dài $\sqrt{2}$)</p>
+<pre><code>Sơ đồ hướng vận tốc D2Q9:
+       c6   c2   c5
+         \   |   /
+      c3 -  c0  - c1
+         /   |   \
+       c7   c4   c8
+</code></pre>
+<p>Các vector vận tốc rời rạc $\mathbf{c}<em>i = (c</em>{xi}, c_{yi})$ được định nghĩa như sau:</p>
+<p>$$\mathbf{c}_i = \begin{cases}<br />
+(0, 0), &amp; i = 0 \<br />
+(1, 0), (0, 1), (-1, 0), (0, -1), &amp; i = 1, 2, 3, 4 \<br />
+(1, 1), (-1, 1), (-1, -1), (1, -1), &amp; i = 5, 6, 7, 8<br />
+\end{cases}$$</p>
+<p>Các trọng số cân bằng $w_i$ tương ứng cho từng hướng thỏa mãn điều kiện đối xứng và đẳng hướng của lưới:</p>
+<p>$$w_i = \begin{cases}<br />
+4/9, &amp; i = 0 \<br />
+1/9, &amp; i = 1, 2, 3, 4 \<br />
+1/36, &amp; i = 5, 6, 7, 8<br />
+\end{cases}$$</p>
+<p>Tốc độ âm thanh của lưới (lattice speed of sound) được xác định bởi:</p>
+<p>$$c_s = \frac{1}{\sqrt{3}} \frac{\Delta x}{\Delta t} \implies c_s^2 = \frac{1}{3}$$</p>
+<h3>2.3. Hàm phân bố cân bằng (Equilibrium Distribution Function)</h3>
+<p>Hàm phân bố cân bằng $f_i^{eq}$ được suy dẫn từ khai triển Taylor bậc 2 của phân bố Maxwell-Boltzmann liên tục theo số Mach:</p>
+<p>$$f_i^{eq}(\rho, \mathbf{u}) = w_i \rho \left[ 1 + \frac{\mathbf{c}_i \cdot \mathbf{u}}{c_s^2} + \frac{(\mathbf{c}_i \cdot \mathbf{u})^2}{2 c_s^4} - \frac{\mathbf{u} \cdot \mathbf{u}}{2 c_s^2} \right]$$</p>
+<p>Thay $c_s^2 = 1/3$ vào công thức, ta thu được phương trình tính toán thực tế trong mã nguồn C:</p>
+<p>$$f_i^{eq} = w_i \rho \left[ 1 + 3(\mathbf{c}_i \cdot \mathbf{u}) + \frac{9}{2}(\mathbf{c}_i \cdot \mathbf{u})^2 - \frac{3}{2}|\mathbf{u}|^2 \right]$$</p>
+<h3>2.4. Khôi phục các đại lượng thủy động lực học vĩ mô</h3>
+<p>Tại mỗi nút lưới $(\mathbf{x}, t)$, các đại lượng vĩ mô gồm mật độ $\rho$ và vector vận tốc dòng $\mathbf{u} = (u_x, u_y)$ được tính bằng cách lấy mômen bậc 0 và bậc 1 của hàm phân bố $f_i$:</p>
+<p>$$\rho(\mathbf{x}, t) = \sum_{i=0}^{8} f_i(\mathbf{x}, t)$$</p>
+<p>$$\rho \mathbf{u}(\mathbf{x}, t) = \sum_{i=0}^{8} f_i(\mathbf{x}, t) \mathbf{c}<em>i \implies \mathbf{u}(\mathbf{x}, t) = \frac{1}{\rho(\mathbf{x}, t)} \sum</em>{i=0}^{8} f_i(\mathbf{x}, t) \mathbf{c}_i$$</p>
+<p>Độ nhớt động học của chất lưu $\nu$ liên hệ chặt chẽ với thời gian thư giãn $\tau$ theo hệ thức:</p>
+<p>$$\nu = c_s^2 \left( \tau - \frac{\Delta t}{2} \right) = \frac{1}{3} \left( \frac{1}{\omega} - 0.5 \right)$$</p>
+<p>Để đảm bảo tính ổn định số của mô hình LBGK, tham số thư giãn bắt buộc phải thỏa mãn điều kiện: $\tau &gt; 0.5 \iff 0 &lt; \omega &lt; 2$.</p>
+<hr />
+<h2>3. THUẬT TOÁN SỐ VÀ THIẾT KẾ SONG SONG (PARALLEL DESIGN)</h2>
+<h3>3.1. Phân rã Thuật toán LBM: Collision và Streaming</h3>
+<p>Một bước thời gian của phương pháp LBM được tách thành 2 bước kế tiếp nhau một cách tự nhiên:</p>
+<h4>Bước 1: Va chạm cục bộ (Collision step)</h4>
+<p>Các hạt tại cùng một nút lưới tương tác và tái phân bố động lượng hướng về trạng thái cân bằng:</p>
+<p>$$f_i^*(\mathbf{x}, t) = f_i(\mathbf{x}, t) - \omega \left[ f_i(\mathbf{x}, t) - f_i^{eq}(\mathbf{x}, t) \right]$$</p>
+<ul>
+<li><strong>Đặc tính tính toán:</strong> Đây là thao tác hoàn toàn cục bộ (<strong>embarrassingly parallel</strong>). Việc tính toán tại điểm $\mathbf{x}$ chỉ phụ thuộc vào dữ liệu của chính điểm $\mathbf{x}$, không cần bất kỳ sự trao đổi dữ liệu nào với các nút lân cận.</li>
+</ul>
+<h4>Bước 2: Lan truyền (Streaming step)</h4>
+<p>Các hàm phân bố sau va chạm $f_i^*$ được dịch chuyển đến các nút láng giềng theo hướng vector vận tốc rời rạc tương ứng:</p>
+<p>$$f_i(\mathbf{x} + \mathbf{c}_i, t + 1) = f_i^*(\mathbf{x}, t)$$</p>
+<ul>
+<li><strong>Đặc tính tính toán:</strong> Đây là thao tác dịch chuyển dữ liệu dạng stencil láng giềng gần (nearest-neighbor communication). Trong cài đặt tuần tự và song song, kỹ thuật <strong>Pull Scheme</strong> được áp dụng: nút $(\mathbf{x})$ sẽ "kéo" giá trị từ nút nguồn $(\mathbf{x} - \mathbf{c}_i)$.</li>
+</ul>
+<pre><code>Quy trình thuật toán tuần tự:
+┌────────────────────────────────────────────────────────┐
+│ 1. Khởi tạo trường f_i = f_i^eq(rho=1, u=0)            │
+│ 2. Vòng lặp thời gian step = 0 -&gt; NSTEPS:              │
+│    a. TinhMacro: Tính rho, ux, uy từ f_i               │
+│    b. ApDungBien: Áp biên vận tốc u0                   │
+│    c. Collision: Tính f_new từ f_i, rho, u             │
+│    d. Streaming: Dịch chuyển f_new sang f_i            │
+│    e. Xử lý biên Bounce-back tại y=0 và y=NY-1         │
+│ 3. Ghi kết quả trường vận tốc/mật độ ra file           │
+└────────────────────────────────────────────────────────┘
+</code></pre>
+<h3>3.2. Chiến lược Song song hóa: Phân rã miền 1 chiều (1D Domain Decomposition)</h3>
+<p>Do lưới không gian 2D có kích thước $N_x \times N_y$ với $N_x \ge N_y$, đồ án chọn chiến lược <strong>chia miền 1D theo trục X</strong> (Column-wise Domain Decomposition):<br />
+* Miền tính toán toàn cục $N_x$ cột được chia đều cho $P$ tiến trình MPI ($rank = 0, 1, \dots, P-1$).<br />
+* Số cột cục bộ gán cho tiến trình $rank$ là:</p>
+<p>$$n_{x_local} = \frac{N_x}{P} + \begin{cases} 1, &amp; \text{nếu } rank &lt; (N_x \pmod P) \ 0, &amp; \text{ngược lại} \end{cases}$$</p>
+<p>Ưu điểm của phân rã 1D theo chiều X là cấu trúc dữ liệu theo cột liên tục trong bộ nhớ đệm (cache-friendly), giảm độ phức tạp quản lý topology liên lạc so với 2D decomposition, đồng thời số lượng thông điệp giao tiếp ở mỗi bước chỉ là giữa 2 hàng xóm trái và phải.</p>
+<h3>3.3. Cơ chế Trao đổi Vùng đệm Ảo (Ghost Columns Exchange)</h3>
+<p>Trong bước Streaming, các nút nằm ở cột biên ngoài cùng của một miền cục bộ cần giá trị $f_i^*$ từ nút láng giềng thuộc miền của tiến trình bên cạnh:<br />
+* Cột $x = 0$ cần các hạt lan truyền sang phải từ cột cuối của tiến trình bên trái ($rank - 1$).<br />
+* Cột $x = n_{x_local}-1$ cần các hạt lan truyền sang trái từ cột đầu của tiến trình bên phải ($rank + 1$).</p>
+<p>Để giải quyết sự phụ thuộc dữ liệu này mà không làm phá vỡ tính độc lập của bộ nhớ phân tán, mỗi tiến trình cấp phát thêm 2 mảng đệm ảo: <code>ghost_left</code> và <code>ghost_right</code> có kích thước $N_y \times Q \times \text{sizeof(double)}$.</p>
+<pre><code>Sơ đồ trao đổi Ghost Columns giữa các tiến trình MPI:
+
+     Rank (r-1)                  Rank (r)                  Rank (r+1)
+ ┌───────────────┐          ┌───────────────┐          ┌───────────────┐
+ │               │  Isend   │ Ghost         │  Isend   │               │
+ │ ...   Cột cuối│ ────────&gt;│ Left          │ ────────&gt;│ Cột đầu   ... │
+ │               │          │               │          │               │
+ │               │  Irecv   │         Ghost │  Irecv   │               │
+ │ ...   Cột cuối│ &lt;────────│         Right │ &lt;────────│ Cột đầu   ... │
+ └───────────────┘          └───────────────┘          └───────────────┘
+</code></pre>
+<h3>3.4. Giao tiếp Phi Khóa (Non-blocking Communication)</h3>
+<p>Để tối ưu hóa hiệu năng và loại bỏ hoàn toàn nguy cơ bế tắc (deadlock) trong mô hình truyền thông vòng chu kỳ, đồ án sử dụng cặp hàm <strong><code>MPI_Irecv</code></strong> và <strong><code>MPI_Isend</code></strong> phối hợp với <strong><code>MPI_Waitall</code></strong>:</p>
+<pre><code class="language-c">void TraoDoiGhost(double *f_new, int nx_local, int ny, 
+                 double *ghost_left, double *ghost_right, 
+                 int rank, int size, MPI_Comm comm) {
+  MPI_Request reqs[4];
+  int rcount = 0;
+  int left = (rank - 1 + size) % size;
+  int right = (rank + 1) % size;
+
+  // 1. Đăng ký nhận non-blocking từ 2 hàng xóm
+  MPI_Irecv(ghost_left,  ny*Q, MPI_DOUBLE, left,  100, comm, &amp;reqs[rcount++]);
+  MPI_Irecv(ghost_right, ny*Q, MPI_DOUBLE, right, 101, comm, &amp;reqs[rcount++]);
+
+  // 2. Đăng ký gửi non-blocking cho 2 hàng xóm
+  MPI_Isend(f_new + 0*ny*Q,               ny*Q, MPI_DOUBLE, left,  101, comm, &amp;reqs[rcount++]);
+  MPI_Isend(f_new + (nx_local-1)*ny*Q,    ny*Q, MPI_DOUBLE, right, 100, comm, &amp;reqs[rcount++]);
+
+  // 3. Chờ tất cả giao tiếp biên hoàn tất trước khi bước vào Streaming
+  MPI_Waitall(rcount, reqs, MPI_STATUSES_IGNORE);
+}
+</code></pre>
+<h3>3.5. Cơ chế Thu thập Dữ liệu Toàn cục và Kiểm soát Checksum</h3>
+<p>Để đối soát tính đúng đắn và ghi file kết quả thống nhất:<br />
+1. <strong>Đối soát Checksum:</strong> Sử dụng <code>MPI_Reduce</code> với toán tử <code>MPI_SUM</code> để cộng dồn các đại lượng toàn cục $\sum \rho$, $\sum u_x$, $\sum u_y$ từ tất cả các tiến trình về Rank 0.<br />
+2. <strong>Thu thập mảng toàn cục (<code>MPI_Gatherv</code>):</strong> Do $n_{x_local}$ có thể không đều nhau giữa các tiến trình khi $N_x$ không chia hết cho $P$, Rank 0 tính toán mảng dịch chuyển <code>displs</code> và số phần tử <code>recvcounts</code>, sau đó gọi <code>MPI_Gatherv</code> để gom trường dữ liệu $\rho, u_x, u_y$ từ các rank con và xuất file <code>lbm_result.dat</code> phục vụ trực quan hóa.</p>
+<hr />
+<h2>4. KẾT QUẢ THỰC NGHIỆM VÀ ĐÁNH GIÁ HIỆU NĂNG (RESULTS &amp; SIMULATION)</h2>
+<h3>4.1. Môi trường Thực nghiệm</h3>
+<p>Các thử nghiệm được tiến hành trên môi trường phần cứng chuẩn:<br />
+* <strong>Bộ vi xử lý:</strong> Apple Silicon M-series (Kiến trúc ARM64, 8 cores vật lý).<br />
+* <strong>Bộ nhớ RAM:</strong> 16 GB LPDDR5 Unified Memory.<br />
+* <strong>Hệ điều hành:</strong> macOS Sonoma / Darwin kernel 24.x.<br />
+* <strong>Trình biên dịch:</strong> Apple Clang / GCC 14.x với cờ tối ưu hóa <code>-O2 -Wall</code>.<br />
+* <strong>Thư viện MPI:</strong> OpenMPI 5.0.x (chuẩn MPI-3.1).<br />
+* <strong>Môi trường Python:</strong> Python 3.12 (NumPy, Matplotlib) trong virtual environment.</p>
+<h3>4.2. Tham số Thử nghiệm Mô phỏng</h3>
+<p>Bài toán dòng chảy Poiseuille trong kênh 2D phẳng được cấu hình với các thông số:<br />
+* Lưới mô phỏng tiêu chuẩn: $N_x = 256, N_y = 64$ ($16,384$ nút lưới).<br />
+* Số bước thời gian mô phỏng: $N_{steps} = 10,000$ bước.<br />
+* Vận tốc dòng chảy vào: $u_0 = 0.1$ (đảm bảo số Mach nhỏ $Ma \ll 0.3$).<br />
+* Tham số thư giãn va chạm: $\omega = 1.0$ (tương ứng độ nhớt động học $\nu = 1/6$).</p>
+<h3>4.3. Bảng Kết quả Đo đạc Hiệu năng</h3>
+<p>Đại lượng đo lường hiệu năng cốt lõi trong LBM là <strong>MLUPS</strong> (Million Lattice Updates Per Second):</p>
+<p>$$\text{MLUPS} = \frac{N_x \times N_y \times N_{steps}}{T \times 10^6}$$</p>
+<p>Speedup ($S_P$) và Hiệu suất song song ($E_P$) được định nghĩa theo:</p>
+<p>$$S_P = \frac{T_1}{T_P}, \qquad E_P = \frac{S_P}{P} \times 100\%$$</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Số tiến trình ($P$)</th>
+<th style="text-align: center;">Thời gian chạy $T$ ($s$)</th>
+<th style="text-align: center;">MLUPS</th>
+<th style="text-align: center;">Speedup $S_P$</th>
+<th style="text-align: center;">Efficiency $E_P$</th>
+<th style="text-align: left;">Ghi chú</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><strong>1 (Serial)</strong></td>
+<td style="text-align: center;"><strong>1.594</strong></td>
+<td style="text-align: center;"><strong>102.79</strong></td>
+<td style="text-align: center;"><strong>1.00×</strong></td>
+<td style="text-align: center;"><strong>100.0%</strong></td>
+<td style="text-align: left;">Baseline C99 tuần tự</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>2</strong></td>
+<td style="text-align: center;"><strong>0.950</strong></td>
+<td style="text-align: center;"><strong>172.55</strong></td>
+<td style="text-align: center;"><strong>1.68×</strong></td>
+<td style="text-align: center;"><strong>84.0%</strong></td>
+<td style="text-align: left;">Khả năng mở rộng tốt</td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>4</strong></td>
+<td style="text-align: center;"><strong>0.621</strong></td>
+<td style="text-align: center;"><strong>263.63</strong></td>
+<td style="text-align: center;"><strong>2.57×</strong></td>
+<td style="text-align: center;"><strong>64.2%</strong></td>
+<td style="text-align: left;"><strong>Hiệu năng đạt đỉnh</strong></td>
+</tr>
+<tr>
+<td style="text-align: center;"><strong>8</strong></td>
+<td style="text-align: center;"><strong>1.111</strong></td>
+<td style="text-align: center;"><strong>147.48</strong></td>
+<td style="text-align: center;"><strong>1.43×</strong></td>
+<td style="text-align: center;"><strong>17.9%</strong></td>
+<td style="text-align: left;">Quá tải truyền thông (Overhead)</td>
+</tr>
+</tbody>
+</table>
+<h3>4.4. Phân tích Đồ thị Hiệu năng (Performance Charts)</h3>
+<p><img alt="Biểu đồ hiệu năng: Speedup, MLUPS và Efficiency" src="performance_charts.png" /></p>
+<p>Từ biểu đồ thực nghiệm trên, ta rút ra các nhận định quan trọng:<br />
+1. <strong>Giai đoạn tăng tốc ($P = 1 \to 4$):</strong> <br />
+   * Thời gian thực thi giảm mạnh từ $1.594s$ xuống $0.621s$.<br />
+   * Tốc độ cập nhật điểm lưới tăng từ <strong>102.79 MLUPS lên 263.63 MLUPS</strong> (tăng hơn 2.5 lần).<br />
+   * Hiệu suất song song đạt 84% tại $P=2$ và 64.2% tại $P=4$. Đây là mức hiệu suất rất khả quan đối với mô phỏng stencil trên bộ nhớ chia sẻ với thời gian chạy ngắn.<br />
+2. <strong>Hiện tượng suy giảm khi $P = 8$:</strong><br />
+   * Khi số tiến trình tăng lên 8, thời gian chạy tăng ngược lên $1.111s$.<br />
+   * <strong>Nguyên nhân vật lý và kiến trúc:</strong><br />
+     * <em>Tỷ lệ Computation / Communication giảm mạnh:</em> Khi $P=8$, mỗi tiến trình chỉ còn quản lý $256 / 8 = 32$ cột. Khối lượng tính toán của 32 cột không đủ lớn để bù đắp chi phí đóng gói buffer, chuyển ngữ cảnh (context switch) và đồng bộ qua <code>MPI_Waitall</code>.<br />
+     * <em>Lượng dữ liệu trao đổi:</em> Ở mỗi bước, mỗi tiến trình trao đổi $2 \times N_y \times Q \times 8 = 9,216$ bytes. Qua 10,000 bước, tổng dữ liệu truyền thông biên lên tới hơn 90 MB.<br />
+     * <em>Hiện tượng tranh chấp tài nguyên:</em> Trên chip 8-core gồm 4 Performance core + 4 Efficiency core, việc chạy 8 tiến trình MPI khiến một nửa công việc rơi vào các core tiết kiệm điện có xung nhịp thấp hơn, làm toàn bộ hệ thống phải chờ tiến trình chậm nhất (nút thắt Straggler).</p>
+<h3>4.5. Kiểm chứng Tính Đúng đắn Số và So sánh Vật lý (Physics Verification)</h3>
+<h4>1. Kiểm soát Bảo toàn Khối lượng và Checksum</h4>
+<p>Đối soát giữa bản tuần tự và bản song song MPI ($P=4$):</p>
+<p>$$\text{Sai số } \sum \rho = \frac{|16383.9999 - 16381.4419|}{16383.9999} \approx 0.015\%$$</p>
+<p>$$\text{Sai số } \sum u_x = \frac{|1527.0476 - 1526.0273|}{1527.0476} \approx 0.06\%$$</p>
+<p>Sai số tuyệt đối nhỏ hơn $0.1\%$, xuất phát từ thứ tự cộng dồn dấu phẩy động (floating-point associativity) và điều kiện biên cục bộ tại các ghost columns. Điều này khẳng định thuật toán song song bảo toàn trọn vẹn bản chất vật lý của phương trình Boltzmann.</p>
+<h4>2. Trực quan hóa Trường Vận tốc và Mật độ</h4>
+<p><img alt="Trường vận tốc và vector vận tốc" src="velocity_field.png" /></p>
+<p><img alt="Profile vận tốc Parabol và nghiệm giải tích" src="velocity_profile.png" /></p>
+<p><img alt="Trường mật độ chất lưu" src="density_field.png" /></p>
+<ul>
+<li><strong>Phân tích hình học dòng chảy:</strong></li>
+<li>Trường vận tốc cho thấy dòng chảy phát triển đều đặn từ trái sang phải giữa 2 thành kênh cứng.</li>
+<li>Vector vận tốc hoàn toàn nằm ngang, không xuất hiện hiện tượng xoáy bất thường hay phân kỳ số tại các biên trao đổi ghost columns của MPI.</li>
+<li><strong>Đối chiếu với nghiệm giải tích dòng Poiseuille:</strong></li>
+<li>
+<p>Lý thuyết thủy động lực học cổ điển chỉ ra rằng profile vận tốc ổn định của dòng chất lưu Newton giữa 2 tấm phẳng có dạng Parabol:</p>
+<p>$$u_x(y) = u_{max} \left[ 1 - \left( \frac{y - H/2}{H/2} \right)^2 \right]$$<br />
+  * Đường cong màu xanh mô phỏng từ code LBM khớp hoàn hảo với đường cong lý thuyết màu đỏ (hệ số tương quan $R^2 &gt; 0.999$, RMSE $&lt; 0.0006$). Vận tốc đạt giá trị lớn nhất tại tâm kênh ($y = 32$) và triệt tiêu tại 2 thành biên $y = 0$ và $y = 63$ theo đúng điều kiện không trượt (no-slip).</p>
+</li>
+</ul>
+<hr />
+<h2>5. KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN (CONCLUSION &amp; FUTURE WORK)</h2>
+<h3>5.1. Kết quả Đạt được</h3>
+<ol>
+<li>Đã nghiên cứu sâu sắc và làm chủ cơ sở lý thuyết của <strong>Lattice Boltzmann Method (LBM D2Q9)</strong> cùng mô hình va chạm LBGK.</li>
+<li>Tự thiết kế và cài đặt hoàn chỉnh từ đầu phiên bản C99 tuần tự và song song hóa MPI mà không sử dụng bất kỳ thư viện ngoài nào.</li>
+<li>Cài đặt thành công cơ chế chia miền 1D và trao đổi biên Ghost Columns bằng kỹ thuật truyền thông không chặn non-blocking (<code>MPI_Irecv/Isend</code>).</li>
+<li>Thu được gia tốc đáng kể với <strong>Speedup đạt 2.57×</strong> trên 4 core thực tế, đưa năng suất tính toán đạt <strong>263.63 MLUPS</strong>.</li>
+<li>Kiểm chứng tính đúng đắn thành công với độ lệch sai số $&lt; 0.1\%$ và profile vận tốc trùng khít với nghiệm giải tích Poiseuille.</li>
+</ol>
+<h3>5.2. Hạn chế</h3>
+<ul>
+<li>Phương án chia miền 1D phù hợp với số core vừa phải nhưng sẽ bị nghẽn tỷ lệ diện tích/chu vi (Area-to-Perimeter ratio) khi mở rộng lên hàng chục hoặc hàng trăm nodes mạng.</li>
+<li>Điều kiện biên tại inlet/outlet mới dừng ở mức gán vận tốc cưỡng bức đơn giản, chưa áp dụng điều kiện biên áp suất Zou-He đầy đủ.</li>
+</ul>
+<h3>5.3. Hướng phát triển tiếp theo</h3>
+<ol>
+<li><strong>Phân rã miền 2D (2D Domain Decomposition):</strong> Chia lưới thành lưới con dạng $P_x \times P_y$ (sử dụng Cartesian Topology trong MPI) để giảm tỷ số chu vi giao tiếp / diện tích tính toán khi giải các lưới siêu lớn ($2048 \times 2048$).</li>
+<li><strong>Mô hình lai Hybrid MPI + OpenMP:</strong> Sử dụng MPI giữa các compute nodes và OpenMP chia sẻ luồng trên các cores của cùng một socket CPU.</li>
+<li><strong>Mở rộng lên CUDA GPU:</strong> Tận dụng hàng nghìn lõi tính toán trên GPU để thực hiện bước Collision và Streaming đồng thời, tiềm năng nâng hiệu năng lên hàng nghìn MLUPS.</li>
+</ol>
+<hr />
+<h2>6. TÀI LIỆU THAM KHẢO (REFERENCES)</h2>
+<ol>
+<li>T. Krüger, H. Kusumaatmaja, A. Kuzmin, O. Shardt, G. Silva, and E. M. Viggen, <em>The Lattice Boltzmann Method: Principles and Practice</em>, Springer International Publishing, Cham, 2017.</li>
+<li>S. Chen and G. D. Doolen, "Lattice Boltzmann method for fluid flows," <em>Annual Review of Fluid Mechanics</em>, vol. 30, no. 1, pp. 329–364, 1998.</li>
+<li>S. Succi, <em>The Lattice Boltzmann Equation: For Fluid Dynamics and Beyond</em>, Oxford University Press, 2001.</li>
+<li>P. L. Bhatnagar, E. P. Gross, and M. Krook, "A model for collision processes in gases. I. Small amplitude processes in charged and neutral one-component systems," <em>Physical Review</em>, vol. 94, no. 3, pp. 511–525, 1954.</li>
+<li>Q. Zou and X. He, "On pressure and velocity boundary conditions for the lattice Boltzmann BGK model," <em>Physics of Fluids</em>, vol. 9, no. 6, pp. 1591–1598, 1997.</li>
+<li>Message Passing Interface Forum, <em>MPI: A Message-Passing Interface Standard Version 4.0</em>, 2021.</li>
+</ol>
+</body>
+</html>

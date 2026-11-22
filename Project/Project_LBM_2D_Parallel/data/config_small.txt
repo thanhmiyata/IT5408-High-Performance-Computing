@@ -1,0 +1,6 @@
+# Cau hinh test nho (Quick test / Weak scaling)
+nx=128
+ny=32
+nsteps=5000
+omega=1.0
+u0=0.1

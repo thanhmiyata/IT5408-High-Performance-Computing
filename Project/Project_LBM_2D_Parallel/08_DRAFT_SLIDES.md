@@ -1,9 +1,18 @@
 # GIẢI THUẬT VÀ CÀI ĐẶT CHƯƠNG TRÌNH SONG SONG
 ## BÀI TOÁN CÓ SỰ PHỤ THUỘC DỮ LIỆU: LATTICE BOLTZMANN METHOD (D2Q9)
 
-**Sinh viên:** Krizpham  
 **Môn học:** IT5408 - Tính toán hiệu năng cao  
-**Năm:** 2026
+**Giảng viên hướng dẫn:** TS. Nguyễn Quốc Tuấn  
+**Thực hiện:** **Nhóm 1 (HPC_20261B_Group01_LBM_MPI)**  
+**Năm học:** 2026  
+
+### Danh sách thành viên:
+1. **Phạm Tiến Thành** - 20242422M (Trưởng nhóm)
+2. **Trần Thị Hạnh** - 20242058M
+3. **Bùi Minh Đức** - 20242056M
+4. **Nguyễn Thị Huê** - 20252584M
+5. **Nguyễn Đình Hiếu** - 20261223M
+6. **Đỗ Minh Hiếu** - 20242031M
 
 ---
 

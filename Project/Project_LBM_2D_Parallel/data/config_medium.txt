@@ -1,0 +1,6 @@
+# Cau hinh test trung binh (Baseline)
+nx=256
+ny=64
+nsteps=10000
+omega=1.0
+u0=0.1
