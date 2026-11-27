@@ -163,18 +163,18 @@ void TraoDoiGhost(...) {
 
 | P | Thời gian (s) | MLUPS | Speedup | Efficiency |
 |---|---------------|-------|---------|------------|
-| **1** | 1.594 | 102.79 | 1.00× | 100% |
-| **2** | 0.950 | 172.55 | **1.68×** | **84.0%** |
-| **4** | 0.691 | 236.96 | **2.31×** | **57.7%** |
-| **8** | 1.111 | 147.48 | **1.44×** | **17.9%** |
+| **1** | 1.584 | 103.45 | 1.00× | 100.0% |
+| **2** | 0.906 | 180.87 | **1.75×** | **87.4%** |
+| **4** | 0.507 | 323.26 | **3.12×** | **78.1%** |
+| **8** | 1.355 | 120.92 | **1.17×** | **14.6%** |
 
 *(Chèn ảnh: performance_charts.png)*
 
 ### Kiểm tra đúng đắn (Checksum)
-| Đại lượng | Serial | MPI (8P) | Sai lệch |
-|-----------|--------|----------|----------|
-| Sum(ρ) | 16383.99 | 16380.95 | 0.018% ✅ |
-| Avg(uₓ) | 0.096015 | 0.096032 | 0.017% ✅ |
+| Đại lượng | Serial | MPI (P=4) | Sai lệch |
+|-----------|--------|-----------|----------|
+| Sum(ρ) | 16383.9999999909 | 16383.9999999910 | < 10⁻¹²% ✅ |
+| Avg(uₓ) | 0.096015 | 0.096015 | 0.000% ✅ |
 
 *(Chèn ảnh: velocity_field.png, velocity_profile.png)*
 
@@ -184,9 +184,9 @@ void TraoDoiGhost(...) {
 
 ### ✅ Đã đạt được
 - Cài đặt LBM D2Q9 tuần tự và song song MPI
-- Speedup **2.56×** với 4 tiến trình
-- Kết quả khớp lý thuyết Poiseuille (sai số < 0.1%)
-- Đọc config từ file linh hoạt
+- Speedup **3.12×** với 4 tiến trình (hiệu suất 78.1%)
+- Kết quả khớp tuyệt đối với bản tuần tự và lý thuyết Poiseuille (sai số ~0%)
+- Đọc config từ file linh hoạt và có UI trực quan xem luồng nước chảy (`lbm_demo_ui.html`)
 
 ### ⚠️ Hạn chế
 - Efficiency giảm khi P > 4 (overhead MPI)

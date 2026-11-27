@@ -6,8 +6,8 @@ echo "======================================"
 
 echo ""
 echo "Dang bien dich..."
-gcc -O2 -o lbm_serial src/lbm_serial.c -lm
-mpicc -O2 -o lbm_mpi src/lbm_mpi.c -lm
+gcc -O2 -Wall -o lbm_serial src/lbm_serial.c -lm
+mpicc -O2 -Wall -o lbm_mpi src/lbm_mpi.c -lm
 
 if [ $? -ne 0 ]; then
     echo "❌ Loi bien dich!"
@@ -26,18 +26,23 @@ if [ ! -f "$CONFIG_FILE" ]; then
     echo "u0=0.1" >> "$CONFIG_FILE"
 fi
 
+RESULTS_LOG="benchmark_results.txt"
+: > "$RESULTS_LOG"
+
 echo ""
 echo "======================================"
 echo "CHAY SERIAL (P=1 baseline)"
 echo "======================================"
-./lbm_serial -c "$CONFIG_FILE"
+echo "--- BENCHMARK_P=1 ---" >> "$RESULTS_LOG"
+./lbm_serial -c "$CONFIG_FILE" | tee -a "$RESULTS_LOG"
 
 for np in 2 4 8; do
     echo ""
     echo "======================================"
     echo "CHAY MPI VOI $np TIEN TRINH"
     echo "======================================"
-    mpirun -np $np ./lbm_mpi -c "$CONFIG_FILE"
+    echo "--- BENCHMARK_P=$np ---" >> "$RESULTS_LOG"
+    mpirun -np $np ./lbm_mpi -c "$CONFIG_FILE" | tee -a "$RESULTS_LOG"
 done
 
 echo ""
@@ -45,7 +50,7 @@ echo "======================================"
 echo "DANG XU LY KET QUA VA VE BIEU DO..."
 echo "======================================"
 python3 visualize_results.py
-python3 plot_performance.py
+python3 plot_performance.py "$RESULTS_LOG"
 
 echo ""
 echo "======================================"

@@ -99,18 +99,18 @@ python3 plot_performance.py   # Cập nhật biểu đồ hiệu năng
 ### Hiệu năng (Lưới 256x64, 10,000 bước)
 | Số tiến trình (P) | Thời gian (s) | MLUPS | Speedup | Efficiency |
 |-------------------|---------------|-------|---------|------------|
-| 1 (Serial)        | 1.594         | 102.79| 1.00×   | 100%       |
-| 2                 | 0.950         | 172.55| 1.68×   | 84%        |
-| 4                 | 0.691         | 236.96| 2.31×   | 58%        |
-| 8                 | 1.111         | 147.48| 1.43×   | 18%        |
+| 1 (Serial)        | 1.584         | 103.45| 1.00×   | 100.0%     |
+| 2                 | 0.906         | 180.87| 1.75×   | 87.4%      |
+| 4                 | 0.507         | 323.26| 3.12×   | 78.1%      |
+| 8                 | 1.355         | 120.92| 1.17×   | 14.6%      |
 
-*Nhận xét: Hiệu năng đạt đỉnh tại 4 core thực. Tại 8 core, hiệu năng sụt giảm do tranh chấp CPU và overhead giao tiếp vượt quá khối lượng tính toán cục bộ.*
+*Nhận xét: Hiệu năng đạt đỉnh tại 4 tiến trình (`3.12×`, hiệu suất `78.1%`). Tại 8 tiến trình, hiệu năng sụt giảm do tranh chấp CPU và overhead giao tiếp vượt quá khối lượng tính toán cục bộ.*
 
 ### Tính đúng đắn phục vụ so sánh (Checksum)
-| Đại lượng | Serial (P=1) | MPI (P=8) | Sai lệch |
+| Đại lượng | Serial (P=1) | MPI (P=4) | Sai lệch |
 |-----------|--------------|-----------|----------|
-| Sum(rho)  | 16383.9999   | 16380.9514| ~0.018%  |
-| Sum(ux)   | 1527.0476    | 1527.1667 | ~0.007%  |
+| Sum(rho)  | 16383.9999999909 | 16383.9999999910 | < 1e-12% |
+| Sum(ux)   | 1527.0476269322  | 1527.0476269322  | ~0%      |
 
 ### Kết quả vật lý
 - **Profile vận tốc**: Trùng khớp tối ưu với đường cong lý thuyết Poiseuille (RMSE = 0.0006).

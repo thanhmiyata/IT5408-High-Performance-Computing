@@ -250,10 +250,10 @@ $$S_P = \frac{T_1}{T_P}, \qquad E_P = \frac{S_P}{P} \times 100\%$$
 
 | Số tiến trình ($P$) | Thời gian chạy $T$ ($s$) | MLUPS | Speedup $S_P$ | Efficiency $E_P$ | Ghi chú |
 |:---:|:---:|:---:|:---:|:---:|:---|
-| **1 (Serial)** | **1.594** | **102.79** | **1.00×** | **100.0%** | Baseline C99 tuần tự |
-| **2** | **0.950** | **172.55** | **1.68×** | **84.0%** | Khả năng mở rộng tốt |
-| **4** | **0.621** | **263.63** | **2.57×** | **64.2%** | **Hiệu năng đạt đỉnh** |
-| **8** | **1.111** | **147.48** | **1.43×** | **17.9%** | Quá tải truyền thông (Overhead) |
+| **1 (Serial)** | **1.584** | **103.45** | **1.00×** | **100.0%** | Baseline C99 tuần tự |
+| **2** | **0.906** | **180.87** | **1.75×** | **87.4%** | Khả năng mở rộng tốt |
+| **4** | **0.507** | **323.26** | **3.12×** | **78.1%** | **Hiệu năng đạt đỉnh** |
+| **8** | **1.355** | **120.92** | **1.17×** | **14.6%** | Quá tải truyền thông (Overhead) |
 
 ### 4.4. Phân tích Đồ thị Hiệu năng (Performance Charts)
 
@@ -261,26 +261,26 @@ $$S_P = \frac{T_1}{T_P}, \qquad E_P = \frac{S_P}{P} \times 100\%$$
 
 Từ biểu đồ thực nghiệm trên, ta rút ra các nhận định quan trọng:
 1. **Giai đoạn tăng tốc ($P = 1 \to 4$):** 
-   * Thời gian thực thi giảm mạnh từ $1.594s$ xuống $0.621s$.
-   * Tốc độ cập nhật điểm lưới tăng từ **102.79 MLUPS lên 263.63 MLUPS** (tăng hơn 2.5 lần).
-   * Hiệu suất song song đạt 84% tại $P=2$ và 64.2% tại $P=4$. Đây là mức hiệu suất rất khả quan đối với mô phỏng stencil trên bộ nhớ chia sẻ với thời gian chạy ngắn.
+   * Thời gian thực thi giảm mạnh từ $1.584s$ xuống $0.507s$.
+   * Tốc độ cập nhật điểm lưới tăng từ **103.45 MLUPS lên 323.26 MLUPS** (tăng hơn 3.1 lần).
+   * Hiệu suất song song đạt **87.4%** tại $P=2$ và **78.1%** tại $P=4$. Đây là mức hiệu suất rất cao đối với mô phỏng stencil trên bộ nhớ chia sẻ với thời gian chạy ngắn.
 2. **Hiện tượng suy giảm khi $P = 8$:**
-   * Khi số tiến trình tăng lên 8, thời gian chạy tăng ngược lên $1.111s$.
+   * Khi số tiến trình tăng lên 8, thời gian chạy tăng ngược lên $1.355s$.
    * **Nguyên nhân vật lý và kiến trúc:**
      * *Tỷ lệ Computation / Communication giảm mạnh:* Khi $P=8$, mỗi tiến trình chỉ còn quản lý $256 / 8 = 32$ cột. Khối lượng tính toán của 32 cột không đủ lớn để bù đắp chi phí đóng gói buffer, chuyển ngữ cảnh (context switch) và đồng bộ qua `MPI_Waitall`.
      * *Lượng dữ liệu trao đổi:* Ở mỗi bước, mỗi tiến trình trao đổi $2 \times N_y \times Q \times 8 = 9,216$ bytes. Qua 10,000 bước, tổng dữ liệu truyền thông biên lên tới hơn 90 MB.
-     * *Hiện tượng tranh chấp tài nguyên:* Trên chip 8-core gồm 4 Performance core + 4 Efficiency core, việc chạy 8 tiến trình MPI khiến một nửa công việc rơi vào các core tiết kiệm điện có xung nhịp thấp hơn, làm toàn bộ hệ thống phải chờ tiến trình chậm nhất (nút thắt Straggler).
+     * *Hiện tượng tranh chấp tài nguyên:* Trên chip 8-core gồm các nhân hiệu năng cao và nhân tiết kiệm điện, việc chạy 8 tiến trình MPI khiến một phần công việc rơi vào các core xung nhịp thấp hơn, làm toàn bộ hệ thống phải chờ tiến trình chậm nhất (nút thắt Straggler).
 
 ### 4.5. Kiểm chứng Tính Đúng đắn Số và So sánh Vật lý (Physics Verification)
 
 #### 1. Kiểm soát Bảo toàn Khối lượng và Checksum
 Đối soát giữa bản tuần tự và bản song song MPI ($P=4$):
 
-$$\text{Sai số } \sum \rho = \frac{|16383.9999 - 16381.4419|}{16383.9999} \approx 0.015\%$$
+$$\text{Sai số } \sum \rho = \frac{|16383.9999999909 - 16383.9999999910|}{16383.9999999909} < 10^{-14}$$
 
-$$\text{Sai số } \sum u_x = \frac{|1527.0476 - 1526.0273|}{1527.0476} \approx 0.06\%$$
+$$\text{Sai số } \sum u_x = \frac{|1527.0476269322 - 1527.0476269322|}{1527.0476269322} \approx 0$$
 
-Sai số tuyệt đối nhỏ hơn $0.1\%$, xuất phát từ thứ tự cộng dồn dấu phẩy động (floating-point associativity) và điều kiện biên cục bộ tại các ghost columns. Điều này khẳng định thuật toán song song bảo toàn trọn vẹn bản chất vật lý của phương trình Boltzmann.
+Kết quả giữa bản song song MPI và bản tuần tự khớp nhau tuyệt đối đến 10 chữ số thập phân, khẳng định cơ chế trao đổi ghost columns và điều kiện biên cục bộ bảo toàn trọn vẹn tính đúng đắn số và định luật bảo toàn khối lượng của phương trình Boltzmann.
 
 #### 2. Trực quan hóa Trường Vận tốc và Mật độ
 

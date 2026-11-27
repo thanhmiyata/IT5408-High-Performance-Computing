@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tổng kết Kiến thức & Hỏi đáp Bảo vệ - Nhóm 1 (LBM 2D + MPI)</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1e40af;
+      --primary-light: #eff6ff;
+      --teal: #0d9488;
+      --teal-light: #f0fdfa;
+      --amber: #d97706;
+      --amber-light: #fffbeb;
+      --rose: #e11d48;
+      --gray-50: #f8fafc;
+      --gray-100: #f1f5f9;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-600: #475569;
+      --gray-700: #334155;
+      --gray-800: #1e293b;
+      --gray-900: #0f172a;
+      --radius: 12px;
+      --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-800);
+      line-height: 1.65;
+      padding: 24px 16px;
+    }
+
+    .container {
+      max-width: 1040px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+      color: white;
+      padding: 34px 30px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .tag-pill {
+      display: inline-block;
+      background: rgba(56, 189, 248, 0.22);
+      color: #bae6fd;
+      border: 1px solid rgba(186, 230, 253, 0.35);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: 1.85rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+      letter-spacing: -0.3px;
+    }
+
+    .subtitle {
+      color: #cbd5e1;
+      font-size: 0.98rem;
+      max-width: 820px;
+    }
+
+    /* Nav / Toolbar */
+    .toolbar {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 0.04);
+      position: sticky;
+      top: 10px;
+      z-index: 20;
+    }
+
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: var(--gray-700);
+      background: var(--gray-100);
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.86rem;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+
+    .nav-links a:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button.btn {
+      padding: 7px 14px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    button.btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    button.btn-primary:hover { background: var(--primary-dark); }
+
+    button.btn-outline {
+      background: white;
+      color: var(--gray-700);
+      border: 1px solid var(--gray-300);
+    }
+    button.btn-outline:hover { background: var(--gray-100); }
+
+    /* Sections */
+    .section-header {
+      margin: 34px 0 16px 0;
+      padding-bottom: 8px;
+      border-bottom: 2px solid var(--gray-200);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .section-header h2 {
+      font-size: 1.38rem;
+      color: var(--gray-900);
+      font-weight: 800;
+    }
+
+    .section-badge {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+
+    /* Cards & Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+      margin-bottom: 16px;
+    }
+
+    .card h3 {
+      font-size: 1.06rem;
+      color: var(--gray-900);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    ul, ol {
+      padding-left: 20px;
+      margin-bottom: 8px;
+    }
+
+    li { margin-bottom: 6px; }
+
+    /* Math / Code / Callouts */
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: var(--gray-100);
+      color: #0f172a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.88em;
+    }
+
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 14px 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.84rem;
+      line-height: 1.5;
+      margin: 10px 0;
+    }
+
+    .formula-box {
+      background: var(--primary-light);
+      border-left: 4px solid var(--primary);
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      margin: 10px 0;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.9rem;
+      color: #1e3a8a;
+      font-weight: 600;
+    }
+
+    .callout-tip {
+      background: var(--teal-light);
+      border-left: 4px solid var(--teal);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+      font-size: 0.93rem;
+      color: #134e4a;
+    }
+
+    .callout-warn {
+      background: var(--amber-light);
+      border-left: 4px solid var(--amber);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 12px 0;
+      font-size: 0.93rem;
+      color: #78350f;
+    }
+
+    /* Tables */
+    .table-wrap { overflow-x: auto; margin: 12px 0; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      border: 1px solid var(--gray-200);
+      padding: 9px 12px;
+      text-align: left;
+    }
+
+    th {
+      background: var(--gray-100);
+      color: var(--gray-900);
+      font-weight: 700;
+      font-size: 0.85rem;
+    }
+
+    tr:nth-child(even) td { background: #fafbfc; }
+    tr.best-row td { background: #ecfdf5; font-weight: 600; color: #065f46; }
+
+    /* D2Q9 Diagram box */
+    .d2q9-box {
+      background: #0f172a;
+      color: #38bdf8;
+      padding: 14px;
+      border-radius: 8px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.85rem;
+      text-align: center;
+      white-space: pre;
+      line-height: 1.35;
+      margin: 10px 0;
+    }
+
+    /* Q&A Cards */
+    .qa-card {
+      background: white;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      margin-bottom: 14px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+    }
+
+    .qa-q {
+      padding: 16px 20px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      background: white;
+      transition: background 0.15s;
+    }
+
+    .qa-q:hover { background: var(--gray-50); }
+
+    .qa-title {
+      font-weight: 700;
+      color: var(--gray-900);
+      font-size: 1rem;
+    }
+
+    .qa-num {
+      color: var(--primary);
+      font-weight: 800;
+      margin-right: 6px;
+    }
+
+    .qa-tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: var(--gray-100);
+      color: var(--gray-600);
+      white-space: nowrap;
+    }
+
+    .qa-a {
+      padding: 16px 20px;
+      background: #f8fafc;
+      border-top: 1px solid var(--gray-200);
+      border-left: 4px solid var(--teal);
+      font-size: 0.94rem;
+      color: var(--gray-700);
+    }
+
+    .qa-a.hidden { display: none; }
+
+    .qa-a strong { color: var(--gray-900); }
+
+    footer {
+      text-align: center;
+      color: var(--gray-600);
+      font-size: 0.84rem;
+      margin-top: 36px;
+      padding-top: 20px;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    @media print {
+      body { background: white; padding: 0; }
+      .toolbar, button { display: none !important; }
+      .qa-a { display: block !important; }
+      .card, .qa-card { box-shadow: none; page-break-inside: avoid; }
+      header { background: #0f172a !important; -webkit-print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="tag-pill">Tài liệu ôn tập nội bộ — Nhóm 1 (IT5408)</div>
+      <h1>Tổng kết Kiến thức, Bài tập lớn LBM 2D (MPI) & Hỏi đáp Bảo vệ</h1>
+      <p class="subtitle">Tóm tắt ngắn gọn các khái niệm cốt lõi, luồng chạy thực tế của code Nhóm 1, bảng kết quả thực nghiệm và 12 câu hỏi vấn đáp thầy thường hỏi kèm đáp án chuẩn.</p>
+    </header>
+
+    <div class="toolbar">
+      <div class="nav-links">
+        <a href="#sec1">1. Khái niệm cốt lõi</a>
+        <a href="#sec2">2. Nội dung Bài tập lớn</a>
+        <a href="#sec3">3. Kết quả thực nghiệm</a>
+        <a href="#sec4">4. Câu hỏi thầy hay hỏi (12 câu)</a>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="toggleAllBtn" onclick="toggleAllQA()">👁️ Ẩn tất cả đáp án</button>
+        <button class="btn btn-outline" onclick="window.print()">🖨️ Lưu PDF gửi nhóm</button>
+      </div>
+    </div>
+
+    <!-- SECTION 1: KHÁI NIỆM CẦN NHỚ -->
+    <section id="sec1">
+      <div class="section-header">
+        <h2>Phần 1: Các Khái niệm Cốt lõi Cần Nhớ</h2>
+        <span class="section-badge">Lý thuyết LBM + MPI</span>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>1. Lattice Boltzmann Method (LBM) là gì?</h3>
+          <ul>
+            <li><b>Định nghĩa:</b> Phương pháp số mô phỏng dòng chảy chất lưu dựa trên <b>lý thuyết động học phân tử</b> (kinetic theory), thay vì giải trực tiếp hệ phương trình vi phân Navier-Stokes phi tuyến như FDM/FEM.</li>
+            <li><b>Biến chính:</b> Theo dõi <b>hàm phân bố mật độ hạt</b> <code>fᵢ(x, t)</code> theo từng hướng rời rạc, rồi cộng lại để suy ra đại lượng vĩ mô (mật độ <code>ρ</code>, vận tốc <code>u</code>, áp suất <code>p</code>).</li>
+            <li><b>Lý do cực hợp với Tính toán song song:</b> Mỗi bước lặp chỉ gồm 2 thao tác: <b>Collision</b> (tính tại chỗ, 100% độc lập) và <b>Streaming</b> (dịch chuyển sang ô kề cạnh).</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>2. Mô hình lưới D2Q9</h3>
+          <ul>
+            <li><b>D2:</b> Không gian 2 chiều <code>(x, y)</code>.</li>
+            <li><b>Q9:</b> 9 vector vận tốc rời rạc <code>c₀ ... c₈</code> tại mỗi nút lưới:</li>
+          </ul>
+          <div class="d2q9-box">  6 (-1,1)    2 (0,1)    5 (1,1)
+        ↖       ↑       ↗
+  3 (-1,0) ←  0 (0,0) → 1 (1,0)
+        ↙       ↓       ↘
+  7 (-1,-1)   4 (0,-1)   8 (1,-1)</div>
+          <ul>
+            <li><b>Trọng số <code>w[i]</code>:</b> <code>w₀ = 4/9</code> (đứng yên); <code>w₁..₄ = 1/9</code> (4 hướng thẳng); <code>w₅..₈ = 1/36</code> (4 hướng chéo). Tổng <code>Σ wᵢ = 1</code>.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>3. Các Công thức Toán học & Điều kiện Ổn định Quan trọng</h3>
+        <div class="grid-2" style="margin-bottom:0;">
+          <div>
+            <p><b>(a) Đại lượng vĩ mô từ <code>fᵢ</code>:</b></p>
+            <div class="formula-box">ρ = Σ fᵢ &nbsp;&nbsp;|&nbsp;&nbsp; uₓ = (Σ fᵢ·cᵢₓ) / ρ &nbsp;&nbsp;|&nbsp;&nbsp; uᵧ = (Σ fᵢ·cᵢᵧ) / ρ</div>
+            <p><b>(b) Hàm phân bố cân bằng (Maxwell-Boltzmann rời rạc):</b></p>
+            <div class="formula-box">fᵢᵉᑫ = wᵢ · ρ · [1 + 3(cᵢ·u) + 4.5(cᵢ·u)² - 1.5|u|²]</div>
+          </div>
+          <div>
+            <p><b>(c) Bước Va chạm (Collision - mô hình BGK):</b></p>
+            <div class="formula-box">f*ᵢ(x, t) = fᵢ(x, t) - ω · [fᵢ(x, t) - fᵢᵉᑫ(x, t)]</div>
+            <p><b>(d) Bước Lan truyền (Streaming):</b></p>
+            <div class="formula-box">fᵢ(x + cᵢ, t + 1) = f*ᵢ(x, t)</div>
+          </div>
+        </div>
+        <div class="callout-tip" style="margin-bottom:0;">
+          <b>Tham số vật lý & Điều kiện ổn định cần thuộc:</b><br>
+          • Độ nhớt động học: <code>ν = (τ - 0.5) / 3</code> với <code>τ = 1 / ω</code> (trong bài ta chọn <code>ω = 1.0 &rArr; τ = 1.0 &rArr; ν = 1/6</code>).<br>
+          • Điều kiện ổn định số: <code>τ &gt; 0.5</code> (tức <code>0 &lt; ω &lt; 2</code>) và vận tốc dòng nhỏ <code>u₀ ≤ 0.1</code> (để số Mach <code>Ma ≪ 0.3</code>, đảm bảo tính gần không nén).
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>4. Các Khái niệm Song song & MPI dùng trong Đồ án</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:24%;">Khái niệm</th>
+                <th>Ý nghĩa & Cách Nhóm 1 cài đặt thực tế</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><b>SPMD</b></td>
+                <td><i>Single Program, Multiple Data</i>: Tất cả tiến trình chạy cùng 1 file thực thi <code>lbm_mpi</code>, phân nhánh nhiệm vụ dựa trên <code>rank</code>.</td>
+              </tr>
+              <tr>
+                <td><b>1D Domain Decomposition</b></td>
+                <td>Chia lưới <code>nx × ny</code> theo các cột trục X: mỗi rank xử lý <code>nx_local = nx / size</code> cột (các rank có <code>rank &lt; nx % size</code> nhận thêm 1 cột để cân bằng tải).</td>
+              </tr>
+              <tr>
+                <td><b>Ghost Columns (Halo)</b></td>
+                <td>Mỗi rank cấp phát 2 cột đệm <code>ghost_left</code> và <code>ghost_right</code> (<code>ny × 9</code> số <code>double</code>) để lưu cột biên nhận từ rank láng giềng phục vụ bước Streaming.</td>
+              </tr>
+              <tr>
+                <td><b>Non-blocking MPI</b></td>
+                <td>Dùng <code>MPI_Irecv</code> + <code>MPI_Isend</code> + <code>MPI_Waitall</code> trong hàm <code>TraoDoiGhost</code> để gửi/nhận đồng thời 2 chiều và tránh <b>deadlock</b>.</td>
+              </tr>
+              <tr>
+                <td><b>Collective MPI</b></td>
+                <td><code>MPI_Bcast</code> (phát config từ Rank 0), <code>MPI_Reduce</code> (cộng Checksum), <code>MPI_Gather</code> &amp; <code>MPI_Gatherv</code> (gom kết quả không đều về Rank 0 ghi file).</td>
+              </tr>
+              <tr>
+                <td><b>MLUPS, Speedup, Efficiency</b></td>
+                <td>
+                  <code>MLUPS = (Nₓ × Nᵧ × N_steps) / (T × 10⁶)</code> (triệu điểm lưới cập nhật/giây).<br>
+                  <code>Speedup Sₚ = T₁ / Tₚ</code> &nbsp;|&nbsp; <code>Efficiency Eₚ = (Sₚ / P) × 100%</code>.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 2: NỘI DUNG BÀI TẬP LỚN -->
+    <section id="sec2">
+      <div class="section-header">
+        <h2>Phần 2: Tóm tắt Nội dung Bài tập lớn của Nhóm 1</h2>
+        <span class="section-badge">HPC_20261B_Group1_LBM2D_MPI</span>
+      </div>
+
+      <div class="card">
+        <h3>1. Bài toán & Thiết lập Vật lý (Poiseuille Flow 2D)</h3>
+        <ul>
+          <li><b>Bài toán:</b> Mô phỏng dòng chất lưu Newton chảy từ trái sang phải trong kênh dẫn phẳng 2D có chiều dài <code>Nₓ</code> và chiều cao <code>Nᵧ</code>.</li>
+          <li><b>Khởi tạo (Step 0):</b> Toàn kênh đứng yên (<code>ρ = 1.0</code>, <code>uₓ = 0</code>, <code>uᵧ = 0</code>), <code>fᵢ = fᵢᵉᑫ</code>.</li>
+          <li><b>Điều kiện biên:</b>
+            <ul>
+              <li><i>Thành tường trên &amp; dưới (<code>y = 0</code>, <code>y = Nᵧ - 1</code>):</i> <b>Bounce-back</b> (hạt đập tường bật ngược hướng <code>opposite[i]</code>) tạo điều kiện không trượt <i>no-slip</i> (<code>u = 0</code> sát tường).</li>
+              <li><i>Biên trái &amp; phải (<code>x = 0</code>, <code>x = Nₓ - 1</code>):</i> Cưỡng bức vận tốc ngang <code>uₓ = u₀ = 0.1</code> (áp dụng trên Rank 0 và Rank cuối) kết hợp lan truyền chu kỳ theo trục X.</li>
+            </ul>
+          </li>
+          <li><b>Hiện tượng thu được:</b> Xung lượng lan từ 2 đầu vào tâm kênh; do ma sát ở 2 thành trên/dưới, dòng chảy hội tụ về mặt cắt hình <b>Parabol Poiseuille</b> (tâm ống chảy nhanh nhất <code>~0.141</code>, sát tường bằng <code>0</code>).</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>2. Kiến trúc Code & Luồng Chạy 1 Bước Lặp trong <code>src/lbm_mpi.c</code></h3>
+        <pre>// Trong vòng lặp step = 0 .. nsteps-1:
+1. TinhMacroCucBo(...)   // Tính ρ, ux, uy cục bộ từ mảng f
+2. ApDungBienCucBo(...)  // Chỉ rank == 0 (biên trái) và rank == size-1 (biên phải) gán ux = u0
+3. CollisionCucBo(...)   // Tính f_new = f - omega*(f - feq) hoàn toàn độc lập
+4. TraoDoiGhost(...)     // Non-blocking: MPI_Irecv + MPI_Isend + MPI_Waitall trao đổi 2 cột biên
+5. StreamingCucBo(...)   // Dịch chuyển hạt: tường Y dùng bounce-back; vượt X dùng ghost_left/right tại hàng ys = y - cy[i]</pre>
+        <div class="callout-warn" style="margin-bottom:0;">
+          <b>Các file chính trong repo GitLab của nhóm</b> (<code>https://gitlab.nqtuan0192.me/thanhmiyata/hpc_20261b_group1_lbm2d_mpi</code>):<br>
+          • <code>src/lbm_serial.c</code> (tuần tự C99) &amp; <code>src/lbm_mpi.c</code> (song song MPI — tự viết 100%, hỗ trợ cờ <code>-c</code> chọn config và <code>-f</code> xuất frames).<br>
+          • <code>data/config_small.txt</code> (128×32), <code>config_medium.txt</code> (256×64), <code>config_large.txt</code> (512×128), <code>config_xlarge.txt</code> (1024×256).<br>
+          • <code>lbm_demo_ui.html</code> + <code>visualize_results.py</code> + <code>plot_performance.py</code> + <code>Bao_cao_HPC_LBM.md</code> + <code>slide_beamer/main.tex</code>.
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>3. Phân công Nhiệm vụ Thành viên (Để nhớ đúng phần mình khi thầy hỏi)</h3>
+        <div class="table-wrap" style="margin-bottom:0;">
+          <table>
+            <thead>
+              <tr>
+                <th>STT</th>
+                <th>Thành viên</th>
+                <th>MSSV</th>
+                <th>Phần phụ trách chính</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td><b>Phạm Tiến Thành</b></td><td>20242422M</td><td>Trưởng nhóm, Cài đặt song song MPI, Benchmark hiệu năng</td></tr>
+              <tr><td>2</td><td><b>Trần Thị Hạnh</b></td><td>20242058M</td><td>Phân tích mô hình toán D2Q9, Điều kiện biên vật lý</td></tr>
+              <tr><td>3</td><td><b>Bùi Minh Đức</b></td><td>20242056M</td><td>Cài đặt thuật toán tuần tự C99, Kiểm thử đối soát Checksum</td></tr>
+              <tr><td>4</td><td><b>Nguyễn Thị Huê</b></td><td>20252584M</td><td>Xử lý dữ liệu, Script trực quan hóa trường vận tốc &amp; UI Demo</td></tr>
+              <tr><td>5</td><td><b>Nguyễn Đình Hiếu</b></td><td>20261223M</td><td>Thiết kế Slide Beamer (LaTeX), Phân tích Scaling hiệu năng</td></tr>
+              <tr><td>6</td><td><b>Đỗ Minh Hiếu</b></td><td>20242031M</td><td>Biên soạn báo cáo kỹ thuật, Phân tích Overhead truyền thông</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 3: KẾT QUẢ THỰC NGHIỆM -->
+    <section id="sec3">
+      <div class="section-header">
+        <h2>Phần 3: Số liệu Thực nghiệm Cần Nắm Vững</h2>
+        <span class="section-badge">10,000 bước, ω=1.0, u₀=0.1</span>
+      </div>
+
+      <div class="card">
+        <h3>Bảng Tổng hợp Strong Scaling qua 3 Kích thước Lưới (Apple Silicon 8-Core)</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Kích thước lưới</th>
+                <th>Bộ nhớ (f + f_new)</th>
+                <th>P = 1 (Serial)</th>
+                <th>P = 2 (MPI)</th>
+                <th>P = 4 (MPI — Đỉnh)</th>
+                <th>P = 8 (MPI)</th>
+                <th>Checksum Σρ (Serial vs MPI)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="best-row">
+                <td>256 × 64 (16K nút)</td>
+                <td>2.36 MB (Cache)</td>
+                <td>1.584s (103.45 MLUPS)</td>
+                <td>0.906s (1.75× | 87.4%)</td>
+                <td><b>0.507s (3.12× | 78.1% | 323.26 MLUPS)</b></td>
+                <td>1.355s (1.17× | 14.6%)</td>
+                <td>16383.9999999909 vs ...9910</td>
+              </tr>
+              <tr>
+                <td>512 × 128 (65K nút)</td>
+                <td>9.44 MB (L3/RAM)</td>
+                <td>7.219s (90.78 MLUPS)</td>
+                <td>4.318s (1.67× | 83.6%)</td>
+                <td><b>3.248s (2.22× | 55.6% | 201.80 MLUPS)</b></td>
+                <td>10.990s (0.66× | 8.2%)</td>
+                <td>65535.9999999644 vs ...9642</td>
+              </tr>
+              <tr>
+                <td>1024 × 256 (262K nút)</td>
+                <td>37.75 MB (DRAM)</td>
+                <td>33.598s (78.02 MLUPS)</td>
+                <td>22.071s (1.52× | 76.1%)</td>
+                <td><b>21.092s (1.59× | 39.8% | 124.28 MLUPS)</b></td>
+                <td>26.258s (1.28× | 16.0%)</td>
+                <td>262143.9999998607 vs ...8595</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="font-size:0.92rem; color:var(--gray-700);">
+          <b>3 kết luận vàng khi thuyết trình:</b> (1) Độ chính xác tuyệt đối giữa Serial và MPI (sai lệch Checksum <code>&lt; 10⁻¹²%</code>); (2) Đạt tăng tốc tốt nhất tại <code>P = 4</code> (<b>3.12×</b> trên lưới vừa Cache); (3) Lưới càng lớn Speedup trên 1 máy đơn càng giảm do LBM là bài toán <b>Memory-Bound</b> (bão hòa băng thông RAM dùng chung), còn <code>P = 8</code> bị tụt hiệu năng do <b>overhead giao tiếp + Straggler</b> trên nhân P/E.
+        </p>
+      </div>
+    </section>
+
+    <!-- SECTION 4: CÂU HỎI VẤN ĐÁP -->
+    <section id="sec4">
+      <div class="section-header">
+        <h2>Phần 4: 12 Câu Hỏi Thầy Có Thể Hỏi & Gợi Ý Trả Lời</h2>
+        <span class="section-badge">Chuẩn bị bảo vệ Q&amp;A</span>
+      </div>
+
+      <!-- Q1 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num">Câu 1.</span> Tại sao bước Collision không cần giao tiếp MPI, còn bước Streaming lại bắt buộc phải trao đổi Ghost Columns?</div>
+          <span class="qa-tag">Thuật toán LBM</span>
+        </div>
+        <div class="qa-a">
+          <b>Trả lời:</b> Bước <b>Collision</b> tính <code>f*ᵢ = fᵢ - ω(fᵢ - fᵢᵉᑫ)</code> chỉ sử dụng dữ liệu tại chính nút lưới <code>(x, y)</code> đó — hoàn toàn cục bộ nên các tiến trình tính độc lập 100%. Ngược lại, bước <b>Streaming</b> kéo giá trị hạt từ 8 ô láng giềng <code>(x - cᵢₓ, y - cᵢᵧ)</code> về <code>(x, y)</code>. Tại hai cột biên <code>x = 0</code> và <code>x = nx_local - 1</code> của mỗi tiến trình, các ô láng giềng nằm ở bộ nhớ của tiến trình kề cạnh, nên bắt buộc phải trao đổi 1 lớp cột biên ảo (Ghost Columns) trước khi Streaming.
+        </div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num">Câu 2.</span> Tại sao nhóm dùng <code>MPI_Irecv</code> / <code>MPI_Isend</code> (Non-blocking) + <code>MPI_Waitall</code> thay vì <code>MPI_Send</code> / <code>MPI_Recv</code> (Blocking)?</div>
+          <span class="qa-tag">Giao tiếp MPI</span>
+        </div>
+        <div class="qa-a">
+          <b>Trả lời:</b> Nếu tất cả các rank đều gọi blocking <code>MPI_Send</code> sang hàng xóm trước rồi mới gọi <code>MPI_Recv</code>, khi kích thước cột biên đủ lớn (vượt eager buffer của MPI, ví dụ lưới <code>1024×256</code> truyền <code>256 × 9 × 8 = 18.4 KB</code> mỗi chiều), cả vòng tiến trình sẽ bị treo chờ nhau tạo thành <b>Deadlock</b>. Dùng <code>MPI_Irecv</code> và <code>MPI_Isend</code> (Non-blocking) kết hợp <code>MPI_Waitall</code> vừa loại bỏ hoàn toàn nguy cơ deadlock, vừa cho phép trao đổi song song hai chiều trái–phải đồng thời.
+        </div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num">Câu 3.</span> Nếu <code>nx</code> không chia hết cho số tiến trình <code>size</code> (vd chạy với 3 hoặc 5 CPU) thì code có lỗi không? Nhóm xử lý thế nào?</div>
+          <span class="qa-tag">Chia miền &amp; Load Balance</span>
+        </div>
+        <div class="qa-a">
+          <b>Trả lời:</b> Code chạy hoàn toàn bình thường. Khi chia miền trong <code>lbm_mpi.c</code>, nhóm tính: <code>nx_local = nx / size; if (rank &lt; nx % size) nx_local++;</code> để phân bổ phần dư cho các rank đầu (chênh lệch tải tối đa chỉ 1 cột). Vì kích thước mảng của các rank không còn bằng nhau nên lúc gom dữ liệu về Rank 0 để xuất file, nhóm dùng <b><code>MPI_Gatherv</code></b> (với mảng <code>recvcounts</code> và <code>displs</code>) thay cho <code>MPI_Gather</code> thông thường.
+        </div>
+      </div>
+
+      <!-- Q4 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num">Câu 4.</span> Tại sao nhóm chọn chia miền 1D theo cột (trục X) mà không chia theo hàng (trục Y) hay chia khối 2D?</div>
+          <span class="qa-tag">Thiết kế Song song</span>
+        </div>
+        <div class="qa-a">
+          <b>Trả lời:</b> Có 2 lý do kỹ thuật trực tiếp:
+          <ol style="margin-top:6px;">
+            <li><b>Tổ chức bộ nhớ liên tiếp (Memory Locality):</b> Trong C, mảng được cấp phát theo chỉ số <code>(x * ny + y) * Q + i</code>, nên toàn bộ một <b>cột <code>x</code></b> nằm <b>liên tiếp nhau trên RAM</b>. Khi truyền cột biên qua MPI, ta gửi thẳng 1 vùng nhớ liên tục (<code>ny * Q</code> phần tử) mà không tốn chi phí đóng gói hay dùng <code>MPI_Type_vector</code>.</li>
+            <li><b>Giảm lượng truyền thông biên:</b> Lưới kênh dẫn dài hơn rộng (<code>Nₓ = 256</code>, <code>Nᵧ = 64</code>, tỉ lệ 4:1), nên cắt theo trục dài X giúp mỗi lần trao đổi ghost chỉ dài <code>Nᵧ</code> thay vì <code>Nₓ</code> (nhỏ hơn 4 lần). <i>(Nếu mở rộng lên hàng trăm/nghìn CPU thì chia 2D sẽ giảm chu vi biên tốt hơn nữa).</i></li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Q5 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num">Câu 5.</span> Làm sao chứng minh kết quả song song MPI là ĐÚNG cả về số học lẫn vật lý?</div>
+          <span class="qa-tag">Kiểm chứng</span>
+        </div>
+        <div class="qa-a">
+          <b>Trả lời:</b> Nhóm đối chiếu qua 3 lớp:
+          <ul style="margin-top:6px;">
+            <li><b>Bảo toàn khối lượng &amp; Checksum:</b> Dùng <code>MPI_Reduce</code> tính tổng <code>Σρ</code>, <code>Σuₓ</code>, <code>Σuᵧ</code>. Giá trị của MPI trùng khớp với bản tuần tự Serial đến <b>10 chữ số thập phân</b> (sai lệch <code>&lt; 10⁻¹²%</code>).</li>
+            <li><b>Nghiệm giải tích Poiseuille:</b> Mặt cắt vận tốc <code>uₓ(y)</code> ở giữa ống khớp với đường Parabol lý thuyết <code>u_max · [1 - ((y - H/2)/(H/2))²]</code> (tại tường bằng 0, ở tâm đạt cực đại).</li>
+            <li><b>Kiểm tra trực quan trên UI:</b> Dòng chảy và mật độ qua các vạch chia Rank MPI hoàn toàn liên tục, không bị đứt gãy ở biên.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Q6 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num">Câu 6.</span> Vì sao máy có 8 nhân mà chạy <code>P = 8</code> lại chậm hơn <code>P = 4</code> (<code>1.355s</code> so với <code>0.507s</code>)?</div>
+          <span class="qa-tag">Phân tích Hiệu năng</span>
+        </div>
+        <div class="qa-a">
+          <b>Trả lời:</b> Do hai nguyên nhân kết hợp:
+          <ul style="margin-top:6px;">
+            <li><b>Overhead vượt quá tính toán cục bộ:</b> Ở lưới <code>256×64</code> khi <code>P = 8</code>, mỗi rank chỉ xử lý <code>32</code> cột, nhưng mỗi bước lặp vẫn phải truyền <code>2 × 64 × 9 × 8 = 9,216 bytes</code> (tổng ~<code>90 MB</code> qua 10,000 bước) và đồng bộ <code>MPI_Waitall</code> 10,000 lần.</li>
+            <li><b>Kiến trúc nhân lai (P+E cores) &amp; Hiệu ứng Straggler:</b> Chip 8-core trên máy thử nghiệm gồm nhân hiệu năng cao (Performance) và nhân tiết kiệm điện (Efficiency). Vì LBM đồng bộ ở mỗi bước thời gian, các rank chạy trên nhân mạnh luôn phải chờ rank chạy trên nhân yếu chậm nhất.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Q7 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num">Câu 7.</span> Tại sao khi tăng lưới lên <code>512×128</code> và <code>1024×256</code>, Speedup tại <code>P = 4</code> lại giảm từ <code>3.12×</code> xuống <code>2.22×</code> và <code>1.59×</code>?</div>
+          <span class="qa-tag">Memory-Bound / Roofline</span>
+        </div>
+        <div class="qa-a">
+          <b>Trả lời:</b> Vì <b>LBM là bài toán Memory-Bound</b> (mỗi nút tính toán tương đối ít phép toán số học nhưng phải đọc và ghi lại tới 18 biến <code>double</code> cho <code>f</code> và <code>f_new</code> ở mỗi bước).
+          <ul style="margin-top:6px;">
+            <li>Lưới <code>256×64</code> tốn ~<code>2.36 MB</code> → nằm gọn trong <b>CPU Cache</b> nên tăng core tăng tốc rất tốt (<code>3.12×</code>).</li>
+            <li>Lưới <code>512×128</code> (~<code>9.44 MB</code>) và <code>1024×256</code> (~<code>37.75 MB</code>) tràn khỏi Cache, buộc các tiến trình phải tranh chấp <b>băng thông RAM dùng chung</b> trên cùng một máy đơn. Khi 2–4 tiến trình đã làm bão hòa băng thông RAM thì thêm CPU cũng không đọc/ghi nhanh hơn được. Đây là lý do thực tế cần chạy MPI trên <b>Cluster nhiều node</b> (mỗi node có RAM controller riêng).</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Q8 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num">Câu 8.</span> Trong <code>StreamingCucBo</code>, tại sao đọc ghost column phải truy cập <code>ghost_left + ys*Q + i</code> (với <code>ys = y - cy[i]</code>) thay vì <code>y*Q + i</code>?</div>
+          <span class="qa-tag">Chi tiết Code</span>
+        </div>
+        <div class="qa-a">
+          <b>Trả lời:</b> Mô hình D2Q9 có 4 hướng vận tốc chéo (<code>i = 5, 6, 7, 8</code> với <code>cᵧ = ±1</code>). Một hạt bay chéo từ cột biên của rank bên trái sang điểm <code>(0, y)</code> của rank hiện tại không xuất phát từ hàng <code>y</code> mà xuất phát từ hàng <code>ys = y - cy[i]</code>! Nếu truy cập nhầm thành <code>y*Q + i</code>, hạt đi chéo ở các biên rank sẽ bị lấy sai hàng dẫn đến thất thoát khối lượng <code>Sum(ρ)</code> qua các bước lặp.
+        </div>
+      </div>
+
+      <!-- Q9 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num">Câu 9.</span> Nếu đặt vận tốc vào <code>u₀ = 0.5</code> hoặc chọn <code>ω = 1.99</code> thì chuyện gì xảy ra?</div>
+          <span class="qa-tag">Ổn định số</span>
+        </div>
+        <div class="qa-a">
+          <b>Trả lời:</b> Mô phỏng sẽ bị <b>nổ số (Numerical Instability)</b>, các giá trị mật độ/vận tốc vọt lên <code>NaN</code> hoặc <code>Inf</code>. Lý do: LBM chuẩn chỉ chính xác ở giới hạn số Mach nhỏ (<code>Ma = u₀ / cₛ ≪ 0.3</code> với <code>cₛ = 1/√3 ≈ 0.577</code> nên <code>u₀</code> cần <code>≤ 0.1</code>) và độ nhớt <code>ν = (1/ω - 0.5)/3</code> phải dương (<code>ω &lt; 2.0</code>; khi <code>ω</code> tiến sát 2.0 thì <code>ν → 0</code>, số Reynolds quá lớn gây bất ổn định).
+        </div>
+      </div>
+
+      <!-- Q10 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num">Câu 10.</span> Trong <code>TraoDoiGhost</code>, tại sao phải dùng 2 tag khác nhau (<code>100</code> và <code>101</code>) cho trái và phải?</div>
+          <span class="qa-tag">MPI Tag</span>
+        </div>
+        <div class="qa-a">
+          <b>Trả lời:</b> Mỗi tiến trình đồng thời nhận 2 cột biên khác nhau: nhận vào <code>ghost_left</code> (cột cuối của hàng xóm bên trái) và nhận vào <code>ghost_right</code> (cột đầu của hàng xóm bên phải). Đặc biệt khi chạy với <code>size = 2</code>, tiến trình <code>left</code> và <code>right</code> đều trỏ tới <b>cùng một rank duy nhất</b> (Rank 0 và Rank 1). Nếu dùng chung 1 tag, <code>ghost_left</code> và <code>ghost_right</code> có thể nhận nhầm gói tin của nhau. Dùng 2 tag <code>100</code> và <code>101</code> giúp phân tách chính xác hai luồng dữ liệu.
+        </div>
+      </div>
+
+      <!-- Q11 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num">Câu 11.</span> Vì sao trong công thức tính <code>MLUPS</code> của C lại phải ép kiểu <code>(double)nx * (double)ny * (double)nsteps</code>?</div>
+          <span class="qa-tag">Thực nghiệm Lưới lớn</span>
+        </div>
+        <div class="qa-a">
+          <b>Trả lời:</b> Trên lưới rất lớn <code>1024 × 256</code> với <code>10,000</code> bước, tích ba số nguyên <code>1024 × 256 × 10000 = 2,621,440,000</code> vượt quá giá trị cực đại của kiểu <code>int</code> 32-bit có dấu (<code>2,147,483,647</code>). Nếu nhân trước khi ép kiểu sang <code>double</code>, kết quả bị <b>tràn số nguyên (Integer Overflow)</b> thành số âm. Ép kiểu từng biến sang <code>double</code> trước khi nhân đảm bảo tính MLUPS chính xác trên mọi kích thước lưới.
+        </div>
+      </div>
+
+      <!-- Q12 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num">Câu 12.</span> Nếu muốn tối ưu hoặc mở rộng bài toán này chạy nhanh hơn nữa (lên 50×–100×) thì hướng đi tiếp theo là gì?</div>
+          <span class="qa-tag">Mở rộng</span>
+        </div>
+        <div class="qa-a">
+          <b>Trả lời:</b> Có 3 hướng tối ưu chính:
+          <ul style="margin-top:6px;">
+            <li><b>Chuyển sang GPU (CUDA):</b> LBM là bài toán <i>Memory-Bound</i> có tính song song dữ liệu cực cao trên từng điểm lưới; GPU có hàng nghìn nhân và băng thông bộ nhớ VRAM cao gấp hàng chục lần RAM CPU nên tăng tốc rất mạnh.</li>
+            <li><b>Đổi bố cục dữ liệu sang SoA (Structure of Arrays):</b> Tách riêng mảng <code>f[0], f[1], ..., f[8]</code> thay vì AoS <code>(x*ny+y)*9 + i</code> giúp truy xuất bộ nhớ liên kết (coalesced / vectorization AVX/NEON) hiệu quả hơn.</li>
+            <li><b>Hybrid MPI + OpenMP hoặc Chia miền 2D:</b> Khi chạy trên cụm nhiều máy chủ đa nhân, dùng MPI giữa các node và OpenMP trong mỗi node để giảm số lượng giao tiếp qua mạng và tránh straggler.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      Tài liệu tổng hợp nội bộ Nhóm 1 — IT5408 Tính toán hiệu năng cao | Dự án: <code>HPC_20261B_Group1_LBM2D_MPI</code>
+    </footer>
+  </div>
+
+  <script>
+    let allShown = true;
+
+    function toggleAllQA() {
+      allShown = !allShown;
+      document.querySelectorAll('.qa-a').forEach(el => {
+        el.classList.toggle('hidden', !allShown);
+      });
+      document.getElementById('toggleAllBtn').textContent = allShown ? '👁️ Ẩn tất cả đáp án' : '👁️ Hiện tất cả đáp án';
+    }
+
+    function toggleSingle(headerEl) {
+      const ans = headerEl.nextElementSibling;
+      ans.classList.toggle('hidden');
+    }
+  </script>
+</body>
+</html>

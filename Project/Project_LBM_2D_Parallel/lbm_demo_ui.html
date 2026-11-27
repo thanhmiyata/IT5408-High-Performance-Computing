@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mô phỏng Dòng chảy 2D LBM D2Q9 (MPI) - Multi-Grid & Benchmark Viewer</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --panel: #111827;
+      --panel-border: #1e293b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-dark: #0284c7;
+      --success: #34d399;
+      --warn: #fbbf24;
+      --purple: #a78bfa;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 20px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .badge-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      background: rgba(56, 189, 248, 0.12);
+      color: var(--accent);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    /* Grid selector pills */
+    .grid-switcher {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 18px;
+    }
+
+    .switcher-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .grid-pill {
+      background: #0f172a;
+      color: #cbd5e1;
+      border: 1px solid #334155;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .grid-pill:hover {
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .grid-pill.active {
+      background: var(--accent-dark);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .grid-pill .sub {
+      font-size: 0.75rem;
+      opacity: 0.8;
+      font-family: ui-monospace, monospace;
+    }
+
+    .load-status {
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-family: ui-monospace, monospace;
+    }
+
+    .grid-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 18px;
+    }
+
+    @media (max-width: 1020px) {
+      .grid-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--panel-border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      background: #020617;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    canvas#flowCanvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 4 / 1;
+    }
+
+    .wall-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 6px;
+      font-family: ui-monospace, monospace;
+    }
+
+    .colorbar {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-family: ui-monospace, monospace;
+    }
+
+    .colorbar-bar {
+      flex: 1;
+      height: 10px;
+      border-radius: 5px;
+      background: linear-gradient(90deg, #0f172a, #1d4ed8, #06b6d4, #22c55e, #eab308, #ef4444);
+    }
+
+    .controls-bar {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      background: #0f172a;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--panel-border);
+    }
+
+    button.btn {
+      background: var(--accent-dark);
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 7px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    button.btn:hover { background: var(--accent); color: #0b1120; }
+
+    button.btn-secondary {
+      background: #1e293b;
+      color: #e2e8f0;
+    }
+    button.btn-secondary:hover { background: #334155; color: white; }
+
+    .slider-wrap {
+      flex: 1;
+      min-width: 180px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .step-readout {
+      font-family: ui-monospace, monospace;
+      font-size: 0.85rem;
+      color: var(--accent);
+      min-width: 125px;
+      text-align: right;
+    }
+
+    .options-grid {
+      margin-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      font-size: 0.85rem;
+      color: #cbd5e1;
+    }
+
+    select {
+      background: #0f172a;
+      color: var(--text);
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 0.85rem;
+    }
+
+    label.check {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .telemetry {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .metric {
+      background: #0f172a;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .metric-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .metric-val {
+      font-size: 1.05rem;
+      font-weight: 700;
+      font-family: ui-monospace, monospace;
+      color: var(--text);
+      margin-top: 2px;
+    }
+
+    canvas#profileCanvas {
+      width: 100%;
+      height: 220px;
+      background: #0f172a;
+      border: 1px solid var(--panel-border);
+      border-radius: 8px;
+      display: block;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Benchmark Comparison Section */
+    .benchmark-section {
+      margin-top: 22px;
+    }
+
+    .charts-3col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    @media (max-width: 950px) {
+      .charts-3col {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .chart-box {
+      background: #0f172a;
+      border: 1px solid var(--panel-border);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .chart-box h4 {
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+
+    .chart-box canvas {
+      width: 100%;
+      height: 210px;
+      display: block;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    th, td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--panel-border);
+      text-align: center;
+    }
+
+    th {
+      background: #0f172a;
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+    }
+
+    tr.highlight-row {
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      background: var(--panel);
+      border: 1px dashed #475569;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    code {
+      background: #1e293b;
+      padding: 3px 8px;
+      border-radius: 5px;
+      color: var(--accent);
+      font-family: ui-monospace, monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Mô phỏng Dòng chảy 2D Poiseuille (LBM D2Q9 + MPI)</h1>
+        <p class="subtitle">Quan sát luồng nước chảy theo từng bước lặp và so sánh Strong Scaling qua 3 kích thước lưới (256×64, 512×128, 1024×256)</p>
+      </div>
+      <div class="badge-row" id="headerBadges">
+        <span class="badge" id="badgeGrid">Lưới: --</span>
+        <span class="badge" id="badgeRanks">MPI Ranks: --</span>
+        <span class="badge" id="badgeParams">ω=--, u₀=--</span>
+      </div>
+    </header>
+
+    <!-- Multi-Grid Switcher -->
+    <div class="grid-switcher">
+      <div class="switcher-pills">
+        <span style="font-size:0.85rem; font-weight:700; color:#e2e8f0; margin-right:4px;">Chọn kích thước lưới xem dòng chảy:</span>
+        <button class="grid-pill active" data-grid="256x64" onclick="switchGrid('256x64', this)">
+          256 × 64 <span class="sub">(16K nút)</span>
+        </button>
+        <button class="grid-pill" data-grid="512x128" onclick="switchGrid('512x128', this)">
+          512 × 128 <span class="sub">(65K nút)</span>
+        </button>
+        <button class="grid-pill" data-grid="1024x256" onclick="switchGrid('1024x256', this)">
+          1024 × 256 <span class="sub">(262K nút)</span>
+        </button>
+      </div>
+      <span class="load-status" id="loadStatus">Đang tải dữ liệu...</span>
+    </div>
+
+    <div id="noDataBox" class="empty-state" style="display:none;">
+      <h2 style="margin-bottom:10px;">Chưa có dữ liệu frame cho lưới <span id="missingGridName"></span></h2>
+      <p style="color:#94a3b8; margin-bottom:14px;">Chạy lệnh sau trong thư mục dự án để sinh chuỗi frame cho cả 3 lưới:</p>
+      <p><code>make demo_all NP=4</code></p>
+    </div>
+
+    <div id="mainApp" class="grid-layout" style="display:none;">
+      <!-- Left: Flow Canvas + Controls -->
+      <div class="panel">
+        <div class="panel-title">
+          <span>Kênh dẫn chất lưu 2D (Dòng chảy từ Trái → Phải)</span>
+          <span id="frameInfo" style="font-size:0.82rem; color:var(--accent); font-family:monospace;">Frame 1 / 1</span>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="flowCanvas" width="1024" height="256"></canvas>
+        </div>
+        <div class="wall-label">
+          <span>Inlet (x = 0, u₀ đẩy vào) | Thành trên/dưới: No-slip (u = 0)</span>
+          <span id="outletLabel">Outlet (x = Nx-1)</span>
+        </div>
+
+        <div class="colorbar">
+          <span id="cbMin">0.000</span>
+          <div class="colorbar-bar"></div>
+          <span id="cbMax">0.150</span>
+        </div>
+
+        <div class="controls-bar">
+          <button class="btn" id="playBtn" onclick="togglePlay()">⏸ Tạm dừng</button>
+          <button class="btn btn-secondary" onclick="stepBy(-1)">⏮</button>
+          <button class="btn btn-secondary" onclick="stepBy(1)">⏭</button>
+          <button class="btn btn-secondary" onclick="resetSim()">↺ Về Step 0</button>
+          <div class="slider-wrap">
+            <input type="range" id="stepSlider" min="0" max="0" value="0" oninput="onSliderInput(this.value)">
+          </div>
+          <span class="step-readout" id="stepReadout">Step: 0 / 10000</span>
+        </div>
+
+        <div class="options-grid">
+          <label>
+            Trường hiển thị:
+            <select id="fieldSelect" onchange="render()">
+              <option value="umag">Độ lớn vận tốc |u|</option>
+              <option value="ux">Vận tốc dọc u_x</option>
+              <option value="rho">Mật độ ρ (Áp suất)</option>
+            </select>
+          </label>
+          <label>
+            Tốc độ phát:
+            <select id="speedSelect">
+              <option value="260">0.5× (Chậm)</option>
+              <option value="130" selected>1× (Chuẩn)</option>
+              <option value="65">2× (Nhanh)</option>
+              <option value="32">4× (Rất nhanh)</option>
+            </select>
+          </label>
+          <label class="check">
+            <input type="checkbox" id="chkParticles" checked> Hạt nước chuyển động
+          </label>
+          <label class="check">
+            <input type="checkbox" id="chkVectors" onchange="render()"> Mũi tên vector
+          </label>
+          <label class="check">
+            <input type="checkbox" id="chkRanks" checked onchange="render()"> Ranh giới MPI Ranks
+          </label>
+        </div>
+      </div>
+
+      <!-- Right: Telemetry & Profile Chart -->
+      <div class="panel">
+        <div class="panel-title">Thông số tại Step hiện tại</div>
+        <div class="telemetry">
+          <div class="metric">
+            <div class="metric-label">Vận tốc lớn nhất |u|</div>
+            <div class="metric-val" id="mMaxU" style="color:var(--accent);">0.0000</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Vận tốc tâm ống</div>
+            <div class="metric-val" id="mCenterU" style="color:var(--success);">0.0000</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Mật độ TB (ρ)</div>
+            <div class="metric-val" id="mAvgRho">1.00000</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Trạng thái dòng</div>
+            <div class="metric-val" id="mState" style="font-size:0.85rem; color:var(--warn);">Khởi tạo</div>
+          </div>
+        </div>
+
+        <div class="panel-title" style="margin-top:6px;">Mặt cắt Parabol u_x(y) tại x = Nx/2</div>
+        <canvas id="profileCanvas" width="320" height="220"></canvas>
+        <div class="legend">
+          <span><i class="dot" style="background:#38bdf8;"></i> Mô phỏng LBM</span>
+          <span><i class="dot" style="background:#f43f5e;"></i> Parabol Poiseuille lý thuyết</span>
+        </div>
+
+        <div style="margin-top:14px; padding:12px; background:#0f172a; border-radius:8px; border:1px solid var(--panel-border); font-size:0.81rem; color:#94a3b8;">
+          <b style="color:#e2e8f0;">Quan sát trên lưới lớn:</b><br>
+          • Ở lưới <code>512×128</code> và <code>1024×256</code>, thành kênh dày/rộng hơn nên thời gian xung lượng lan vào tâm ống lâu hơn lưới <code>256×64</code>.<br>
+          • Dù chạy qua 4 Rank MPI, mặt cắt vận tốc và mật độ xuyên qua ranh giới Ghost Column vẫn <b>liền mạch tuyệt đối</b> (sai số Checksum &lt; 10⁻¹²%).
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: BENCHMARK COMPARISON ACROSS 3 GRIDS -->
+    <div class="panel benchmark-section">
+      <div class="panel-title" style="flex-wrap:wrap;">
+        <span>Kết quả Thực nghiệm Hiệu năng & Strong Scaling (10,000 bước trên Apple Silicon 8-Core)</span>
+        <div class="legend" style="margin-top:0;">
+          <span><i class="dot" style="background:#38bdf8;"></i> 256×64 (16K nút)</span>
+          <span><i class="dot" style="background:#fbbf24;"></i> 512×128 (65K nút)</span>
+          <span><i class="dot" style="background:#a78bfa;"></i> 1024×256 (262K nút)</span>
+          <span><i class="dot" style="background:#64748b;"></i> Lý tưởng</span>
+        </div>
+      </div>
+
+      <div class="charts-3col">
+        <div class="chart-box">
+          <h4>Speedup vs Số tiến trình (P)</h4>
+          <canvas id="chartSpeedup" width="380" height="210"></canvas>
+        </div>
+        <div class="chart-box">
+          <h4>MLUPS vs Số tiến trình (P)</h4>
+          <canvas id="chartMlups" width="380" height="210"></canvas>
+        </div>
+        <div class="chart-box">
+          <h4>Efficiency (%) vs Số tiến trình (P)</h4>
+          <canvas id="chartEff" width="380" height="210"></canvas>
+        </div>
+      </div>
+
+      <div class="switcher-pills" style="margin-bottom:12px;">
+        <span style="font-size:0.84rem; color:var(--muted); margin-right:6px;">Xem bảng số liệu chi tiết:</span>
+        <button class="grid-pill active" onclick="renderBenchmarkTable('all', this)">Tất cả 3 lưới</button>
+        <button class="grid-pill" onclick="renderBenchmarkTable('256x64', this)">256 × 64</button>
+        <button class="grid-pill" onclick="renderBenchmarkTable('512x128', this)">512 × 128</button>
+        <button class="grid-pill" onclick="renderBenchmarkTable('1024x256', this)">1024 × 256</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Kích thước lưới</th>
+              <th>Dung lượng bộ nhớ (f+f_new)</th>
+              <th>Tiến trình (P)</th>
+              <th>Thời gian (s)</th>
+              <th>MLUPS</th>
+              <th>Speedup</th>
+              <th>Efficiency</th>
+              <th>Checksum Sum(ρ) khớp Serial</th>
+            </tr>
+          </thead>
+          <tbody id="benchTableBody"></tbody>
+        </table>
+      </div>
+
+      <div style="margin-top:14px; padding:12px 16px; background:#0f172a; border-left:4px solid var(--accent); border-radius:0 8px 8px 0; font-size:0.84rem; color:#cbd5e1;">
+        <b>Phân tích kiến trúc HPC từ thực nghiệm 3 mức lưới:</b><br>
+        1. <b>256×64 (~2.36 MB):</b> Dữ liệu nằm gọn trong <b>CPU Cache</b> → đạt tăng tốc tốt nhất <b>3.12×</b> tại <code>P=4</code> (<code>323.26 MLUPS</code>, hiệu suất <code>78.1%</code>).<br>
+        2. <b>512×128 (~9.44 MB) & 1024×256 (~37.75 MB):</b> Vượt dung lượng Cache, chuyển sang phụ thuộc băng thông RAM dùng chung (<b>Memory-Bound</b>), nên Speedup bão hòa ở <code>2.22×</code> và <code>1.59×–1.64×</code> trên 1 máy đơn — minh họa lý do thực tế cần cụm Cluster nhiều node phân tán.<br>
+        3. <b>Hiện tượng tại P=8:</b> Trên chip 8-core không đồng nhất (Performance + Efficiency cores), đồng bộ mỗi bước <code>MPI_Waitall</code> khiến các nhân mạnh bị nghẽn chờ nhân tiết kiệm điện (<b>Straggler effect</b>).
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dữ liệu thực nghiệm đo trực tiếp trên máy (đã fix ghost cell + overflow MLUPS)
+    const BENCHMARK_DATA = [
+      {
+        grid: '256x64', label: '256 × 64', mem: '2.36 MB (Cache)', color: '#38bdf8',
+        checksum: '16383.9999999910 (< 10⁻¹²%)',
+        rows: [
+          { p: 1, time: 1.584, mlups: 103.45, speedup: 1.00, eff: 100.0 },
+          { p: 2, time: 0.906, mlups: 180.87, speedup: 1.75, eff: 87.4 },
+          { p: 4, time: 0.507, mlups: 323.26, speedup: 3.12, eff: 78.1, best: true },
+          { p: 8, time: 1.355, mlups: 120.92, speedup: 1.17, eff: 14.6 }
+        ]
+      },
+      {
+        grid: '512x128', label: '512 × 128', mem: '9.44 MB (L3/RAM)', color: '#fbbf24',
+        checksum: '65535.9999999642 (< 10⁻¹²%)',
+        rows: [
+          { p: 1, time: 7.219, mlups: 90.78,  speedup: 1.00, eff: 100.0 },
+          { p: 2, time: 4.318, mlups: 151.79, speedup: 1.67, eff: 83.6 },
+          { p: 4, time: 3.248, mlups: 201.80, speedup: 2.22, eff: 55.6, best: true },
+          { p: 8, time: 10.990, mlups: 59.63, speedup: 0.66, eff: 8.2 }
+        ]
+      },
+      {
+        grid: '1024x256', label: '1024 × 256', mem: '37.75 MB (DRAM)', color: '#a78bfa',
+        checksum: '262143.9999998595 (< 10⁻¹²%)',
+        rows: [
+          { p: 1, time: 33.598, mlups: 78.02,  speedup: 1.00, eff: 100.0 },
+          { p: 2, time: 22.071, mlups: 118.77, speedup: 1.52, eff: 76.1 },
+          { p: 4, time: 21.092, mlups: 124.28, speedup: 1.59, eff: 39.8, best: true },
+          { p: 8, time: 26.258, mlups: 99.83,  speedup: 1.28, eff: 16.0 }
+        ]
+      }
+    ];
+
+    window.LBM_DATASETS = window.LBM_DATASETS || {};
+    let activeGridKey = '256x64';
+    let DATA = null;
+    let decodedCache = {};
+    let decodedFrames = [];
+    let currentIdx = 0;
+    let isPlaying = true;
+    let lastFrameAdvance = 0;
+    let lastAnimTs = 0;
+    let globalMaxU = 0.15;
+    let animStarted = false;
+
+    const NUM_PARTICLES = 900;
+    const particles = [];
+
+    function decodeInt16Base64(b64, scale, offset = 0) {
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      const i16 = new Int16Array(bytes.buffer);
+      const out = new Float32Array(i16.length);
+      for (let i = 0; i < i16.length; i++) out[i] = i16[i] / scale + offset;
+      return out;
+    }
+
+    function turboColor(t) {
+      t = Math.max(0, Math.min(1, t));
+      let r, g, b;
+      if (t < 0.25) {
+        const k = t / 0.25;
+        r = 15 + k * 14; g = 23 + k * 110; b = 42 + k * 180;
+      } else if (t < 0.5) {
+        const k = (t - 0.25) / 0.25;
+        r = 29 - k * 23; g = 133 + k * 70; b = 222 - k * 30;
+      } else if (t < 0.75) {
+        const k = (t - 0.5) / 0.25;
+        r = 6 + k * 235; g = 203 - k * 20; b = 192 - k * 170;
+      } else {
+        const k = (t - 0.75) / 0.25;
+        r = 241 - k * 2; g = 183 - k * 125; b = 22 + k * 40;
+      }
+      return [r | 0, g | 0, b | 0];
+    }
+
+    function initParticles(nx, ny) {
+      particles.length = 0;
+      for (let i = 0; i < NUM_PARTICLES; i++) {
+        particles.push({
+          x: Math.random() * (nx - 1),
+          y: 1 + Math.random() * (ny - 3),
+          age: Math.random() * 100
+        });
+      }
+    }
+
+    function loadScript(src) {
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = () => resolve(true);
+        s.onerror = () => reject(new Error('Failed to load ' + src));
+        document.body.appendChild(s);
+      });
+    }
+
+    async function switchGrid(gridKey, btnEl) {
+      activeGridKey = gridKey;
+      document.querySelectorAll('.grid-switcher .grid-pill').forEach(p => {
+        p.classList.toggle('active', p.getAttribute('data-grid') === gridKey);
+      });
+
+      const statusEl = document.getElementById('loadStatus');
+      statusEl.textContent = `Đang nạp dữ liệu lưới ${gridKey}...`;
+
+      if (!window.LBM_DATASETS[gridKey]) {
+        const candidates = gridKey === '256x64'
+          ? ['frames_256x64.js', 'frames_data.js']
+          : [`frames_${gridKey}.js`];
+
+        for (const file of candidates) {
+          try {
+            await loadScript(file);
+            if (window.LBM_DATASETS[gridKey]) break;
+          } catch (_) {}
+        }
+      }
+
+      const dataset = window.LBM_DATASETS[gridKey];
+      if (!dataset || !dataset.frames || dataset.frames.length === 0) {
+        document.getElementById('mainApp').style.display = 'none';
+        document.getElementById('noDataBox').style.display = 'block';
+        document.getElementById('missingGridName').textContent = gridKey;
+        statusEl.textContent = `Chưa có file frames_${gridKey}.js`;
+        return;
+      }
+
+      document.getElementById('noDataBox').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'grid';
+
+      DATA = dataset;
+      if (!decodedCache[gridKey]) {
+        let localMax = 0.15;
+        const decoded = DATA.frames.map(fr => {
+          const ux = decodeInt16Base64(fr.ux, DATA.vel_scale, 0);
+          const uy = decodeInt16Base64(fr.uy, DATA.vel_scale, 0);
+          const rho = decodeInt16Base64(fr.rho, DATA.rho_scale, 1.0);
+          if (fr.max_u > localMax) localMax = fr.max_u;
+          return { step: fr.step, ux, uy, rho, max_u: fr.max_u, avg_rho: fr.avg_rho };
+        });
+        decodedCache[gridKey] = { frames: decoded, maxU: localMax };
+      }
+
+      decodedFrames = decodedCache[gridKey].frames;
+      globalMaxU = decodedCache[gridKey].maxU;
+      currentIdx = 0;
+
+      document.getElementById('badgeGrid').textContent = `Lưới: ${DATA.nx} × ${DATA.ny}`;
+      document.getElementById('badgeRanks').textContent = `MPI Ranks: ${DATA.num_ranks}`;
+      document.getElementById('badgeParams').textContent = `ω=${DATA.omega}, u₀=${DATA.u0}`;
+      document.getElementById('outletLabel').textContent = `Outlet (x = ${DATA.nx - 1})`;
+      document.getElementById('stepSlider').max = decodedFrames.length - 1;
+      document.getElementById('stepSlider').value = 0;
+      statusEl.textContent = `Đã nạp ${decodedFrames.length} frames (${DATA.nx}×${DATA.ny})`;
+
+      window._offCanvas = document.createElement('canvas');
+      window._offCanvas.width = DATA.nx;
+      window._offCanvas.height = DATA.ny;
+
+      initParticles(DATA.nx, DATA.ny);
+      render();
+
+      if (!animStarted) {
+        animStarted = true;
+        requestAnimationFrame(animationLoop);
+      }
+    }
+
+    function render() {
+      if (!DATA || !decodedFrames.length) return;
+      const fr = decodedFrames[currentIdx];
+      const nx = DATA.nx, ny = DATA.ny;
+      const mode = document.getElementById('fieldSelect').value;
+      const showParticles = document.getElementById('chkParticles').checked;
+      const showVectors = document.getElementById('chkVectors').checked;
+      const showRanks = document.getElementById('chkRanks').checked;
+
+      document.getElementById('stepSlider').value = currentIdx;
+      document.getElementById('frameInfo').textContent = `Frame ${currentIdx + 1} / ${decodedFrames.length}`;
+      document.getElementById('stepReadout').textContent = `Step: ${fr.step} / ${DATA.nsteps}`;
+      document.getElementById('mMaxU').textContent = fr.max_u.toFixed(4);
+      document.getElementById('mAvgRho').textContent = fr.avg_rho.toFixed(5);
+
+      const midX = Math.floor(nx / 2);
+      const midY = Math.floor(ny / 2);
+      const centerU = fr.ux[midX * ny + midY];
+      document.getElementById('mCenterU').textContent = centerU.toFixed(4);
+
+      const stateEl = document.getElementById('mState');
+      if (fr.step === 0) {
+        stateEl.textContent = "Khởi tạo tĩnh"; stateEl.style.color = "#94a3b8";
+      } else if (fr.step < DATA.nsteps * 0.45) {
+        stateEl.textContent = "Đang lan truyền"; stateEl.style.color = "#fbbf24";
+      } else {
+        stateEl.textContent = "Parabol ổn định"; stateEl.style.color = "#34d399";
+      }
+
+      const canvas = document.getElementById('flowCanvas');
+      const ctx = canvas.getContext('2d');
+      const cw = canvas.width, ch = canvas.height;
+      const offCtx = window._offCanvas.getContext('2d');
+      const imgData = offCtx.createImageData(nx, ny);
+      const pixels = imgData.data;
+
+      let minVal = 0, maxVal = globalMaxU;
+      if (mode === 'rho') { minVal = 0.96; maxVal = 1.04; }
+      document.getElementById('cbMin').textContent = minVal.toFixed(3);
+      document.getElementById('cbMax').textContent = maxVal.toFixed(3);
+
+      for (let x = 0; x < nx; x++) {
+        for (let y = 0; y < ny; y++) {
+          const idx = x * ny + y;
+          let val;
+          if (mode === 'umag') val = Math.hypot(fr.ux[idx], fr.uy[idx]);
+          else if (mode === 'ux') val = fr.ux[idx];
+          else val = fr.rho[idx];
+
+          const t = (val - minVal) / (maxVal - minVal || 1);
+          const [r, g, b] = turboColor(t);
+          const py = ny - 1 - y;
+          const pIdx = (py * nx + x) * 4;
+          pixels[pIdx] = r; pixels[pIdx + 1] = g; pixels[pIdx + 2] = b; pixels[pIdx + 3] = 255;
+        }
+      }
+      offCtx.putImageData(imgData, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(window._offCanvas, 0, 0, cw, ch);
+
+      const scaleX = cw / nx;
+      const scaleY = ch / ny;
+
+      if (showRanks && DATA.num_ranks > 1) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 5]);
+        let startCol = 0;
+        const base = Math.floor(nx / DATA.num_ranks);
+        const rem = nx % DATA.num_ranks;
+        for (let r = 0; r < DATA.num_ranks; r++) {
+          const cols = base + (r < rem ? 1 : 0);
+          const px = startCol * scaleX;
+          if (r > 0) {
+            ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, ch); ctx.stroke();
+          }
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+          ctx.font = 'bold 12px ui-monospace, monospace';
+          ctx.fillText(`Rank ${r}`, px + 8, 18);
+          startCol += cols;
+        }
+        ctx.restore();
+      }
+
+      if (showVectors) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.75)';
+        ctx.lineWidth = 1.2;
+        const stepX = Math.max(Math.floor(nx / 28), 1);
+        const stepY = Math.max(Math.floor(ny / 9), 1);
+        for (let x = Math.floor(stepX / 2); x < nx; x += stepX) {
+          for (let y = Math.floor(stepY / 2); y < ny; y += stepY) {
+            const idx = x * ny + y;
+            const vx = fr.ux[idx], vy = fr.uy[idx];
+            const mag = Math.hypot(vx, vy);
+            if (mag < 1e-4) continue;
+            const px = (x + 0.5) * scaleX;
+            const py = (ny - 1 - y + 0.5) * scaleY;
+            const len = (mag / globalMaxU) * 18;
+            ctx.beginPath();
+            ctx.moveTo(px, py);
+            ctx.lineTo(px + (vx / mag) * len, py - (vy / mag) * len);
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
+      }
+
+      if (showParticles) {
+        ctx.save();
+        for (const p of particles) {
+          const ix = Math.max(0, Math.min(nx - 1, Math.floor(p.x)));
+          const iy = Math.max(0, Math.min(ny - 1, Math.floor(p.y)));
+          const idx = ix * ny + iy;
+          const vx = fr.ux[idx], vy = fr.uy[idx];
+          const mag = Math.hypot(vx, vy);
+          const px = p.x * scaleX;
+          const py = (ny - 1 - p.y) * scaleY;
+          const tail = 3 + (mag / globalMaxU) * 14;
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+          ctx.lineWidth = 1.8;
+          ctx.beginPath();
+          ctx.moveTo(px, py);
+          ctx.lineTo(px - (mag > 1e-5 ? (vx / mag) * tail : 1.5), py + (mag > 1e-5 ? (vy / mag) * tail : 0));
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+
+      drawProfileChart(fr, nx, ny);
+    }
+
+    function drawProfileChart(fr, nx, ny) {
+      const canvas = document.getElementById('profileCanvas');
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const padL = 38, padR = 14, padT = 14, padB = 24;
+      const plotW = w - padL - padR;
+      const plotH = h - padT - padB;
+
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const gx = padL + (plotW * i) / 4;
+        ctx.beginPath(); ctx.moveTo(gx, padT); ctx.lineTo(gx, h - padB); ctx.stroke();
+      }
+      ctx.strokeStyle = '#475569';
+      ctx.beginPath();
+      ctx.moveTo(padL, padT); ctx.lineTo(padL, h - padB); ctx.lineTo(w - padR, h - padB);
+      ctx.stroke();
+
+      const midX = Math.floor(nx / 2);
+      const uScaleMax = Math.max(globalMaxU * 1.05, 0.15);
+      const uCenter = fr.ux[midX * ny + Math.floor(ny / 2)];
+
+      if (uCenter > 0.002) {
+        ctx.save();
+        ctx.strokeStyle = '#f43f5e';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        const halfH = (ny - 1) / 2;
+        for (let y = 0; y < ny; y++) {
+          const normY = (y - halfH) / halfH;
+          const uTheo = Math.max(0, uCenter * (1 - normY * normY));
+          const px = padL + (uTheo / uScaleMax) * plotW;
+          const py = h - padB - (y / (ny - 1)) * plotH;
+          if (y === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      ctx.save();
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      for (let y = 0; y < ny; y++) {
+        const uVal = fr.ux[midX * ny + y];
+        const px = padL + (Math.max(0, uVal) / uScaleMax) * plotW;
+        const py = h - padB - (y / (ny - 1)) * plotH;
+        if (y === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px ui-monospace, monospace';
+      ctx.fillText('0', padL - 4, h - 8);
+      ctx.fillText(uScaleMax.toFixed(2), w - padR - 24, h - 8);
+      ctx.fillText(`y=${ny - 1}`, 4, padT + 8);
+      ctx.fillText('y=0', 8, h - padB);
+    }
+
+    function updateParticles(dt) {
+      if (!DATA || !decodedFrames.length) return;
+      const fr = decodedFrames[currentIdx];
+      const nx = DATA.nx, ny = DATA.ny;
+      // Scale vận tốc hạt theo độ lớn lưới để tốc độ nhìn trên màn hình đồng đều
+      const advectScale = dt * 0.25 * (nx / 256);
+
+      for (const p of particles) {
+        const ix = Math.max(0, Math.min(nx - 1, Math.floor(p.x)));
+        const iy = Math.max(0, Math.min(ny - 1, Math.floor(p.y)));
+        const idx = ix * ny + iy;
+        p.x += fr.ux[idx] * advectScale;
+        p.y += fr.uy[idx] * advectScale;
+        p.age += 1;
+
+        if (p.x >= nx - 1) { p.x = 0.5; p.y = 1 + Math.random() * (ny - 3); }
+        if (p.x < 0) { p.x = nx - 1.5; }
+        if (p.y <= 0.5 || p.y >= ny - 1.5 || p.age > 350) {
+          p.x = Math.random() * (nx - 1);
+          p.y = 1 + Math.random() * (ny - 3);
+          p.age = 0;
+        }
+      }
+    }
+
+    function animationLoop(ts) {
+      if (!lastAnimTs) lastAnimTs = ts;
+      const dt = Math.min(ts - lastAnimTs, 50);
+      lastAnimTs = ts;
+
+      if (document.getElementById('chkParticles').checked) updateParticles(dt);
+
+      const frameDelay = parseInt(document.getElementById('speedSelect').value, 10);
+      if (isPlaying && decodedFrames.length && ts - lastFrameAdvance >= frameDelay) {
+        currentIdx = (currentIdx + 1) % decodedFrames.length;
+        lastFrameAdvance = ts;
+      }
+
+      render();
+      requestAnimationFrame(animationLoop);
+    }
+
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      document.getElementById('playBtn').textContent = isPlaying ? '⏸ Tạm dừng' : '▶ Tiếp tục';
+    }
+
+    function stepBy(delta) {
+      if (!decodedFrames.length) return;
+      isPlaying = false;
+      document.getElementById('playBtn').textContent = '▶ Tiếp tục';
+      currentIdx = (currentIdx + delta + decodedFrames.length) % decodedFrames.length;
+      render();
+    }
+
+    function resetSim() {
+      if (!DATA) return;
+      currentIdx = 0;
+      initParticles(DATA.nx, DATA.ny);
+      render();
+    }
+
+    function onSliderInput(val) {
+      isPlaying = false;
+      document.getElementById('playBtn').textContent = '▶ Tiếp tục';
+      currentIdx = parseInt(val, 10);
+      render();
+    }
+
+    // --- Vẽ biểu đồ Benchmark Comparison (Speedup, MLUPS, Efficiency) ---
+    function drawMultiLineChart(canvasId, metricKey, yMax, yTicks, showIdeal) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      const padL = 42, padR = 16, padT = 16, padB = 28;
+      const plotW = w - padL - padR;
+      const plotH = h - padT - padB;
+      const pList = [1, 2, 4, 8];
+
+      // Grid lines
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '10px ui-monospace, monospace';
+      for (const yv of yTicks) {
+        const py = h - padB - (yv / yMax) * plotH;
+        ctx.beginPath(); ctx.moveTo(padL, py); ctx.lineTo(w - padR, py); ctx.stroke();
+        ctx.fillText(yv.toString(), 4, py + 3);
+      }
+
+      // X ticks evenly spaced for P = 1,2,4,8
+      const xPos = i => padL + (i / (pList.length - 1)) * plotW;
+      pList.forEach((p, i) => {
+        const px = xPos(i);
+        ctx.beginPath(); ctx.moveTo(px, padT); ctx.lineTo(px, h - padB); ctx.stroke();
+        ctx.fillText(`P=${p}`, px - 10, h - 10);
+      });
+
+      // Axes
+      ctx.strokeStyle = '#475569';
+      ctx.beginPath();
+      ctx.moveTo(padL, padT); ctx.lineTo(padL, h - padB); ctx.lineTo(w - padR, h - padB);
+      ctx.stroke();
+
+      // Ideal dashed line
+      if (showIdeal === 'speedup') {
+        ctx.save();
+        ctx.strokeStyle = '#64748b';
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        pList.forEach((p, i) => {
+          const px = xPos(i), py = h - padB - (p / yMax) * plotH;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        });
+        ctx.stroke();
+        ctx.restore();
+      } else if (showIdeal === 'eff') {
+        ctx.save();
+        ctx.strokeStyle = '#64748b';
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1.5;
+        const py = h - padB - (100 / yMax) * plotH;
+        ctx.beginPath(); ctx.moveTo(padL, py); ctx.lineTo(w - padR, py); ctx.stroke();
+        ctx.restore();
+      }
+
+      // Plot each grid curve
+      for (const ds of BENCHMARK_DATA) {
+        ctx.save();
+        ctx.strokeStyle = ds.color;
+        ctx.fillStyle = ds.color;
+        ctx.lineWidth = 2.4;
+        ctx.beginPath();
+        ds.rows.forEach((r, i) => {
+          const px = xPos(i);
+          const py = h - padB - (r[metricKey] / yMax) * plotH;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        });
+        ctx.stroke();
+
+        ds.rows.forEach((r, i) => {
+          const px = xPos(i);
+          const py = h - padB - (r[metricKey] / yMax) * plotH;
+          ctx.beginPath(); ctx.arc(px, py, 3.8, 0, Math.PI * 2); ctx.fill();
+          if (r.best) {
+            ctx.font = 'bold 10px ui-monospace, monospace';
+            const label = metricKey === 'speedup' ? `${r[metricKey].toFixed(2)}×`
+                        : metricKey === 'eff' ? `${r[metricKey].toFixed(1)}%`
+                        : `${r[metricKey].toFixed(0)}`;
+            ctx.fillText(label, px - 14, py - 8);
+          }
+        });
+        ctx.restore();
+      }
+    }
+
+    function renderBenchmarkTable(filterGrid, btnEl) {
+      if (btnEl) {
+        btnEl.parentElement.querySelectorAll('.grid-pill').forEach(p => p.classList.remove('active'));
+        btnEl.classList.add('active');
+      }
+      const tbody = document.getElementById('benchTableBody');
+      tbody.innerHTML = '';
+
+      for (const ds of BENCHMARK_DATA) {
+        if (filterGrid !== 'all' && ds.grid !== filterGrid) continue;
+        ds.rows.forEach((r, idx) => {
+          const tr = document.createElement('tr');
+          if (r.best) tr.className = 'highlight-row';
+          tr.innerHTML = `
+            <td style="color:${ds.color}; font-weight:700;">${ds.label}</td>
+            <td style="color:var(--muted);">${ds.mem}</td>
+            <td><b>${r.p === 1 ? '1 (Serial)' : r.p}</b></td>
+            <td>${r.time.toFixed(3)}s</td>
+            <td>${r.mlups.toFixed(2)}</td>
+            <td style="color:${r.best ? 'var(--success)' : 'inherit'}; font-weight:${r.best ? '700' : '400'};">${r.speedup.toFixed(2)}×</td>
+            <td>${r.eff.toFixed(1)}%</td>
+            <td style="font-size:0.78rem; color:#94a3b8;">${idx === 0 ? 'Baseline' : ds.checksum}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    // Khởi tạo giao diện
+    drawMultiLineChart('chartSpeedup', 'speedup', 8, [0, 2, 4, 6, 8], 'speedup');
+    drawMultiLineChart('chartMlups', 'mlups', 350, [0, 100, 200, 300], null);
+    drawMultiLineChart('chartEff', 'eff', 110, [0, 25, 50, 75, 100], 'eff');
+    renderBenchmarkTable('all', null);
+    switchGrid('256x64', document.querySelector('[data-grid="256x64"]'));
+  </script>
+</body>
+</html>

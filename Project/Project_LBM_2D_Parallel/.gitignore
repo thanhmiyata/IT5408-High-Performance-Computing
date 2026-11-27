@@ -3,15 +3,23 @@ lbm_serial
 lbm_mpi
 *.o
 
-# Simulation large data files
+# Simulation & temporary data files
 lbm_result.dat
+lbm_frames.txt
+frames_data.js
+frames_*.js
+benchmark_results.txt
+lbm_flow.gif
 *.dat
+
+# Submission archives
+*.zip
 
 # OS generated files
 .DS_Store
 Thumbs.db
 
-# Virtual environments
+# Virtual environments & Python cache
 .venv/
 venv/
 __pycache__/

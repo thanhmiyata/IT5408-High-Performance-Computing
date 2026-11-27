@@ -147,9 +147,9 @@ void StreamingCucBo(double *f_new, double *f, int nx_local, int ny, double *ghos
         }
         // Xử lý lan truyền từ tiến trình lân cận (trái/phải)
         if (xs < 0) {
-          *(f + (x*ny + y)*Q + i) = *(ghost_left + y*Q + i);
+          *(f + (x*ny + y)*Q + i) = *(ghost_left + ys*Q + i);
         } else if (xs >= nx_local) {
-          *(f + (x*ny + y)*Q + i) = *(ghost_right + y*Q + i);
+          *(f + (x*ny + y)*Q + i) = *(ghost_right + ys*Q + i);
         } else {
           *(f + (x*ny + y)*Q + i) = *(f_new + (xs*ny + ys)*Q + i);
         }
@@ -175,6 +175,20 @@ void GhiKetQua(double *rho, double *ux, double *uy, int nx, int ny, const char *
     }
   }
   fclose(fp);
+}
+
+/**
+ * Ghi một frame (rho, ux, uy) vào file lbm_frames.txt để phục vụ UI animation.
+ */
+void GhiFrame(FILE *fp, int step, double *rho, double *ux, double *uy, int nx, int ny) {
+  int x, y;
+  fprintf(fp, "FRAME %d\n", step);
+  for (x = 0; x < nx; x++) {
+    for (y = 0; y < ny; y++) {
+      int idx = x * ny + y;
+      fprintf(fp, "%.5f %.5f %.5f\n", *(rho + idx), *(ux + idx), *(uy + idx));
+    }
+  }
 }
 
 /**
@@ -209,13 +223,21 @@ int main(int argc, char **argv) {
   int nx, ny, nsteps;
   double omega, u0;
   const char *config_file = "config.txt";
+  int frame_interval = 0;
 
   // Phân tích đối số dòng lệnh
-  if (argc >= 3 && strcmp(argv[1], "-c") == 0) {
-    config_file = argv[2];
-  } else if (argc > 1) {
-    if (rank == 0) fprintf(stderr, "Loi: Cu phap khong hop le. Su dung: mpirun -np <P> %s [-c <file_config>]\n", argv[0]);
-    MPI_Finalize(); return 1;
+  for (int arg = 1; arg < argc; arg++) {
+    if ((strcmp(argv[arg], "-c") == 0 || strcmp(argv[arg], "--config") == 0) && arg + 1 < argc) {
+      config_file = argv[++arg];
+    } else if ((strcmp(argv[arg], "-f") == 0 || strcmp(argv[arg], "--frames") == 0) && arg + 1 < argc) {
+      frame_interval = atoi(argv[++arg]);
+      if (frame_interval < 0) frame_interval = 0;
+    } else {
+      if (rank == 0) {
+        fprintf(stderr, "Loi: Cu phap khong hop le. Su dung: mpirun -np <P> %s [-c <file_config>] [-f <frame_interval>]\n", argv[0]);
+      }
+      MPI_Finalize(); return 1;
+    }
   }
 
   int status = 0;
@@ -263,6 +285,42 @@ int main(int argc, char **argv) {
   // Khởi tạo
   KhoiTaoCucBo(f, nx_local, ny);
 
+  // Chuẩn bị buffer thu thập dữ liệu toàn cục ở Rank 0
+  int *recvcounts = NULL;
+  int *displs = NULL;
+  double *global_rho = NULL;
+  double *global_ux = NULL;
+  double *global_uy = NULL;
+  int local_count = nx_local * ny;
+
+  if (rank == 0) {
+    recvcounts = (int *)malloc(size * sizeof(int));
+    displs = (int *)malloc(size * sizeof(int));
+    global_rho = (double *)malloc(nx * ny * sizeof(double));
+    global_ux = (double *)malloc(nx * ny * sizeof(double));
+    global_uy = (double *)malloc(nx * ny * sizeof(double));
+  }
+
+  MPI_Gather(&local_count, 1, MPI_INT, recvcounts, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+  if (rank == 0) {
+    int offset = 0;
+    for (int i = 0; i < size; i++) {
+      displs[i] = offset;
+      offset += recvcounts[i];
+    }
+  }
+
+  FILE *fp_frames = NULL;
+  if (frame_interval > 0 && rank == 0) {
+    fp_frames = fopen("lbm_frames.txt", "w");
+    if (!fp_frames) {
+      fprintf(stderr, "Canh bao: Khong the tao file lbm_frames.txt!\n");
+    } else {
+      fprintf(fp_frames, "%d %d %d %d %d %.6f %.6f\n", nx, ny, nsteps, frame_interval, size, u0, omega);
+    }
+  }
+
   double t_start = MPI_Wtime();
   int step;
 
@@ -270,6 +328,16 @@ int main(int argc, char **argv) {
   for (step = 0; step < nsteps; step++) {
     TinhMacroCucBo(f, rho, ux, uy, nx_local, ny);
     ApDungBienCucBo(ux, nx_local, ny, u0, rank, size);
+
+    if (frame_interval > 0 && step % frame_interval == 0) {
+      MPI_Gatherv(rho, local_count, MPI_DOUBLE, global_rho, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Gatherv(ux, local_count, MPI_DOUBLE, global_ux, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      MPI_Gatherv(uy, local_count, MPI_DOUBLE, global_uy, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+      if (rank == 0 && fp_frames) {
+        GhiFrame(fp_frames, step, global_rho, global_ux, global_uy, nx, ny);
+      }
+    }
+
     CollisionCucBo(f, f_new, rho, ux, uy, nx_local, ny, omega);
     
     // Bước quan trọng: Trao đổi dữ liệu biên giữa các tiến trình lân cận
@@ -284,7 +352,7 @@ int main(int argc, char **argv) {
 
   double t_end = MPI_Wtime();
   double elapsed = t_end - t_start;
-  double mlups = (double)(nx * ny * nsteps) / (elapsed * 1e6);
+  double mlups = ((double)nx * (double)ny * (double)nsteps) / (elapsed * 1e6);
 
   // Tính checksum để kiểm tra tính đúng đắn (so sánh với bản tuần tự)
   TinhMacroCucBo(f, rho, ux, uy, nx_local, ny);
@@ -321,37 +389,17 @@ int main(int argc, char **argv) {
     printf("Sum(uy):  %.10f\n", global_sum_uy);
   }
 
-  // Thu thap du lieu toan cuc ve Rank 0 de ghi file lbm_result.dat
-  int *recvcounts = NULL;
-  int *displs = NULL;
-  double *global_rho = NULL;
-  double *global_ux = NULL;
-  double *global_uy = NULL;
-  int local_count = nx_local * ny;
-
-  if (rank == 0) {
-    recvcounts = (int *)malloc(size * sizeof(int));
-    displs = (int *)malloc(size * sizeof(int));
-    global_rho = (double *)malloc(nx * ny * sizeof(double));
-    global_ux = (double *)malloc(nx * ny * sizeof(double));
-    global_uy = (double *)malloc(nx * ny * sizeof(double));
-  }
-
-  MPI_Gather(&local_count, 1, MPI_INT, recvcounts, 1, MPI_INT, 0, MPI_COMM_WORLD);
-
-  if (rank == 0) {
-    int offset = 0;
-    for (int i = 0; i < size; i++) {
-      displs[i] = offset;
-      offset += recvcounts[i];
-    }
-  }
-
+  // Thu thập dữ liệu toàn cục về Rank 0 để ghi file lbm_result.dat và frame cuối
   MPI_Gatherv(rho, local_count, MPI_DOUBLE, global_rho, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Gatherv(ux, local_count, MPI_DOUBLE, global_ux, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
   MPI_Gatherv(uy, local_count, MPI_DOUBLE, global_uy, recvcounts, displs, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
   if (rank == 0) {
+    if (frame_interval > 0 && fp_frames) {
+      GhiFrame(fp_frames, nsteps, global_rho, global_ux, global_uy, nx, ny);
+      fclose(fp_frames);
+      printf("Da ghi chuoi frame vao: lbm_frames.txt\n");
+    }
     GhiKetQua(global_rho, global_ux, global_uy, nx, ny, "lbm_result.dat");
     printf("Da ghi ket qua MPI vao: lbm_result.dat\n");
     free(recvcounts);

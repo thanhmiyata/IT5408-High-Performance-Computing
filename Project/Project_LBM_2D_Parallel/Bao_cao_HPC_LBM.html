@@ -328,34 +328,34 @@ strong {
 <tbody>
 <tr>
 <td style="text-align: center;"><strong>1 (Serial)</strong></td>
-<td style="text-align: center;"><strong>1.594</strong></td>
-<td style="text-align: center;"><strong>102.79</strong></td>
+<td style="text-align: center;"><strong>1.584</strong></td>
+<td style="text-align: center;"><strong>103.45</strong></td>
 <td style="text-align: center;"><strong>1.00×</strong></td>
 <td style="text-align: center;"><strong>100.0%</strong></td>
 <td style="text-align: left;">Baseline C99 tuần tự</td>
 </tr>
 <tr>
 <td style="text-align: center;"><strong>2</strong></td>
-<td style="text-align: center;"><strong>0.950</strong></td>
-<td style="text-align: center;"><strong>172.55</strong></td>
-<td style="text-align: center;"><strong>1.68×</strong></td>
-<td style="text-align: center;"><strong>84.0%</strong></td>
+<td style="text-align: center;"><strong>0.906</strong></td>
+<td style="text-align: center;"><strong>180.87</strong></td>
+<td style="text-align: center;"><strong>1.75×</strong></td>
+<td style="text-align: center;"><strong>87.4%</strong></td>
 <td style="text-align: left;">Khả năng mở rộng tốt</td>
 </tr>
 <tr>
 <td style="text-align: center;"><strong>4</strong></td>
-<td style="text-align: center;"><strong>0.621</strong></td>
-<td style="text-align: center;"><strong>263.63</strong></td>
-<td style="text-align: center;"><strong>2.57×</strong></td>
-<td style="text-align: center;"><strong>64.2%</strong></td>
+<td style="text-align: center;"><strong>0.507</strong></td>
+<td style="text-align: center;"><strong>323.26</strong></td>
+<td style="text-align: center;"><strong>3.12×</strong></td>
+<td style="text-align: center;"><strong>78.1%</strong></td>
 <td style="text-align: left;"><strong>Hiệu năng đạt đỉnh</strong></td>
 </tr>
 <tr>
 <td style="text-align: center;"><strong>8</strong></td>
-<td style="text-align: center;"><strong>1.111</strong></td>
-<td style="text-align: center;"><strong>147.48</strong></td>
-<td style="text-align: center;"><strong>1.43×</strong></td>
-<td style="text-align: center;"><strong>17.9%</strong></td>
+<td style="text-align: center;"><strong>1.355</strong></td>
+<td style="text-align: center;"><strong>120.92</strong></td>
+<td style="text-align: center;"><strong>1.17×</strong></td>
+<td style="text-align: center;"><strong>14.6%</strong></td>
 <td style="text-align: left;">Quá tải truyền thông (Overhead)</td>
 </tr>
 </tbody>
@@ -364,21 +364,21 @@ strong {
 <p><img alt="Biểu đồ hiệu năng: Speedup, MLUPS và Efficiency" src="performance_charts.png" /></p>
 <p>Từ biểu đồ thực nghiệm trên, ta rút ra các nhận định quan trọng:<br />
 1. <strong>Giai đoạn tăng tốc ($P = 1 \to 4$):</strong> <br />
-   * Thời gian thực thi giảm mạnh từ $1.594s$ xuống $0.621s$.<br />
-   * Tốc độ cập nhật điểm lưới tăng từ <strong>102.79 MLUPS lên 263.63 MLUPS</strong> (tăng hơn 2.5 lần).<br />
-   * Hiệu suất song song đạt 84% tại $P=2$ và 64.2% tại $P=4$. Đây là mức hiệu suất rất khả quan đối với mô phỏng stencil trên bộ nhớ chia sẻ với thời gian chạy ngắn.<br />
+   * Thời gian thực thi giảm mạnh từ $1.584s$ xuống $0.507s$.<br />
+   * Tốc độ cập nhật điểm lưới tăng từ <strong>103.45 MLUPS lên 323.26 MLUPS</strong> (tăng hơn 3.1 lần).<br />
+   * Hiệu suất song song đạt <strong>87.4%</strong> tại $P=2$ và <strong>78.1%</strong> tại $P=4$. Đây là mức hiệu suất rất cao đối với mô phỏng stencil trên bộ nhớ chia sẻ với thời gian chạy ngắn.<br />
 2. <strong>Hiện tượng suy giảm khi $P = 8$:</strong><br />
-   * Khi số tiến trình tăng lên 8, thời gian chạy tăng ngược lên $1.111s$.<br />
+   * Khi số tiến trình tăng lên 8, thời gian chạy tăng ngược lên $1.355s$.<br />
    * <strong>Nguyên nhân vật lý và kiến trúc:</strong><br />
      * <em>Tỷ lệ Computation / Communication giảm mạnh:</em> Khi $P=8$, mỗi tiến trình chỉ còn quản lý $256 / 8 = 32$ cột. Khối lượng tính toán của 32 cột không đủ lớn để bù đắp chi phí đóng gói buffer, chuyển ngữ cảnh (context switch) và đồng bộ qua <code>MPI_Waitall</code>.<br />
      * <em>Lượng dữ liệu trao đổi:</em> Ở mỗi bước, mỗi tiến trình trao đổi $2 \times N_y \times Q \times 8 = 9,216$ bytes. Qua 10,000 bước, tổng dữ liệu truyền thông biên lên tới hơn 90 MB.<br />
-     * <em>Hiện tượng tranh chấp tài nguyên:</em> Trên chip 8-core gồm 4 Performance core + 4 Efficiency core, việc chạy 8 tiến trình MPI khiến một nửa công việc rơi vào các core tiết kiệm điện có xung nhịp thấp hơn, làm toàn bộ hệ thống phải chờ tiến trình chậm nhất (nút thắt Straggler).</p>
+     * <em>Hiện tượng tranh chấp tài nguyên:</em> Trên chip 8-core gồm các nhân hiệu năng cao và nhân tiết kiệm điện, việc chạy 8 tiến trình MPI khiến một phần công việc rơi vào các core xung nhịp thấp hơn, làm toàn bộ hệ thống phải chờ tiến trình chậm nhất (nút thắt Straggler).</p>
 <h3>4.5. Kiểm chứng Tính Đúng đắn Số và So sánh Vật lý (Physics Verification)</h3>
 <h4>1. Kiểm soát Bảo toàn Khối lượng và Checksum</h4>
 <p>Đối soát giữa bản tuần tự và bản song song MPI ($P=4$):</p>
-<p>$$\text{Sai số } \sum \rho = \frac{|16383.9999 - 16381.4419|}{16383.9999} \approx 0.015\%$$</p>
-<p>$$\text{Sai số } \sum u_x = \frac{|1527.0476 - 1526.0273|}{1527.0476} \approx 0.06\%$$</p>
-<p>Sai số tuyệt đối nhỏ hơn $0.1\%$, xuất phát từ thứ tự cộng dồn dấu phẩy động (floating-point associativity) và điều kiện biên cục bộ tại các ghost columns. Điều này khẳng định thuật toán song song bảo toàn trọn vẹn bản chất vật lý của phương trình Boltzmann.</p>
+<p>$$\text{Sai số } \sum \rho = \frac{|16383.9999999909 - 16383.9999999910|}{16383.9999999909} &lt; 10^{-14}$$</p>
+<p>$$\text{Sai số } \sum u_x = \frac{|1527.0476269322 - 1527.0476269322|}{1527.0476269322} \approx 0$$</p>
+<p>Kết quả giữa bản song song MPI và bản tuần tự khớp nhau tuyệt đối đến 10 chữ số thập phân, khẳng định cơ chế trao đổi ghost columns và điều kiện biên cục bộ bảo toàn trọn vẹn tính đúng đắn số và định luật bảo toàn khối lượng của phương trình Boltzmann.</p>
 <h4>2. Trực quan hóa Trường Vận tốc và Mật độ</h4>
 <p><img alt="Trường vận tốc và vector vận tốc" src="velocity_field.png" /></p>
 <p><img alt="Profile vận tốc Parabol và nghiệm giải tích" src="velocity_profile.png" /></p>

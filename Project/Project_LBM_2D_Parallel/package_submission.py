@@ -18,7 +18,7 @@ Cau truc file zip nop bai:
 import os
 import sys
 import zipfile
-import shutil
+
 
 def package(group_number="01"):
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -50,10 +50,12 @@ def package(group_number="01"):
         ("data/config_small.txt", f"{pkg_name}/data/config_small.txt"),
         ("data/config_medium.txt", f"{pkg_name}/data/config_medium.txt"),
         ("data/config_large.txt", f"{pkg_name}/data/config_large.txt"),
+        ("data/config_xlarge.txt", f"{pkg_name}/data/config_xlarge.txt"),
 
-        # Scripts & Charts
+        # Scripts, UI & Charts
         ("plot_performance.py", f"{pkg_name}/plot_performance.py"),
         ("visualize_results.py", f"{pkg_name}/visualize_results.py"),
+        ("lbm_demo_ui.html", f"{pkg_name}/lbm_demo_ui.html"),
         ("performance_charts.png", f"{pkg_name}/performance_charts.png"),
         ("velocity_field.png", f"{pkg_name}/velocity_field.png"),
         ("velocity_profile.png", f"{pkg_name}/velocity_profile.png"),

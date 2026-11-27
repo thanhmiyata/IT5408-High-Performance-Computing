@@ -1,0 +1,6 @@
+# Cau hinh test rat lon (Extra Large / Strong scaling)
+nx=1024
+ny=256
+nsteps=10000
+omega=1.0
+u0=0.1

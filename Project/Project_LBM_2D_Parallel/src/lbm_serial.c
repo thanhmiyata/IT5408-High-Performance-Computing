@@ -185,17 +185,37 @@ void GhiKetQua(double *rho, double *ux, double *uy, int nx, int ny, const char *
   fclose(fp);
 }
 
+/**
+ * Ghi một frame (rho, ux, uy) vào file lbm_frames.txt để phục vụ UI animation.
+ */
+void GhiFrame(FILE *fp, int step, double *rho, double *ux, double *uy, int nx, int ny) {
+  int x, y;
+  fprintf(fp, "FRAME %d\n", step);
+  for (x = 0; x < nx; x++) {
+    for (y = 0; y < ny; y++) {
+      int idx = x * ny + y;
+      fprintf(fp, "%.5f %.5f %.5f\n", *(rho + idx), *(ux + idx), *(uy + idx));
+    }
+  }
+}
+
 int main(int argc, char **argv) {
   int nx = DEFAULT_NX, ny = DEFAULT_NY, nsteps = DEFAULT_NSTEPS;
   double omega = DEFAULT_OMEGA, u0 = DEFAULT_U0;
   const char *config_file = "config.txt";
+  int frame_interval = 0;
 
-  // Kiểm tra tham số dòng lệnh để dùng file config khác
-  if (argc >= 3 && strcmp(argv[1], "-c") == 0) {
-    config_file = argv[2];
-  } else if (argc > 1) {
-    fprintf(stderr, "Loi: Cu phap khong hop le. Su dung: %s [-c <file_cau_hinh>]\n", argv[0]);
-    return 1;
+  // Kiểm tra tham số dòng lệnh
+  for (int arg = 1; arg < argc; arg++) {
+    if ((strcmp(argv[arg], "-c") == 0 || strcmp(argv[arg], "--config") == 0) && arg + 1 < argc) {
+      config_file = argv[++arg];
+    } else if ((strcmp(argv[arg], "-f") == 0 || strcmp(argv[arg], "--frames") == 0) && arg + 1 < argc) {
+      frame_interval = atoi(argv[++arg]);
+      if (frame_interval < 0) frame_interval = 0;
+    } else {
+      fprintf(stderr, "Loi: Cu phap khong hop le. Su dung: %s [-c <file_cau_hinh>] [-f <frame_interval>]\n", argv[0]);
+      return 1;
+    }
   }
 
   // Đọc file cấu hình
@@ -229,6 +249,17 @@ int main(int argc, char **argv) {
   // Bước 1: Khởi tạo
   KhoiTao(f, nx, ny);
 
+  FILE *fp_frames = NULL;
+  if (frame_interval > 0) {
+    fp_frames = fopen("lbm_frames.txt", "w");
+    if (!fp_frames) {
+      fprintf(stderr, "Canh bao: Khong the tao file lbm_frames.txt!\n");
+      frame_interval = 0;
+    } else {
+      fprintf(fp_frames, "%d %d %d %d 1 %.6f %.6f\n", nx, ny, nsteps, frame_interval, u0, omega);
+    }
+  }
+
   clock_t t_start = clock();
   int step;
 
@@ -238,6 +269,11 @@ int main(int argc, char **argv) {
     TinhMacro(f, rho, ux, uy, nx, ny);
     // Bước 3: Áp dụng biên vận tốc
     ApDungBienVaoCung(ux, nx, ny, u0);
+
+    if (frame_interval > 0 && step % frame_interval == 0) {
+      GhiFrame(fp_frames, step, rho, ux, uy, nx, ny);
+    }
+
     // Bước 4: Va chạm (Collision)
     Collision(f, f_new, rho, ux, uy, nx, ny, omega);
     // Bước 5: Lan truyền (Streaming)
@@ -250,7 +286,7 @@ int main(int argc, char **argv) {
 
   clock_t t_end = clock();
   double elapsed = (double)(t_end - t_start) / CLOCKS_PER_SEC;
-  double mlups = (double)(nx * ny * nsteps) / (elapsed * 1e6);
+  double mlups = ((double)nx * (double)ny * (double)nsteps) / (elapsed * 1e6);
 
   printf("\n=== KET QUA ===\n");
   printf("Thoi gian tinh: %.3f giay\n", elapsed);
@@ -258,6 +294,11 @@ int main(int argc, char **argv) {
 
   // Tính lại các đại lượng vĩ mô lần cuối để in ra checksum
   TinhMacro(f, rho, ux, uy, nx, ny);
+  if (frame_interval > 0 && fp_frames) {
+    GhiFrame(fp_frames, nsteps, rho, ux, uy, nx, ny);
+    fclose(fp_frames);
+    printf("Da ghi chuoi frame vao: lbm_frames.txt\n");
+  }
   double sum_rho = 0.0, sum_ux = 0.0, sum_uy = 0.0, avg_ux = 0.0;
   int x, y;
   for (x = 0; x < nx; x++) {

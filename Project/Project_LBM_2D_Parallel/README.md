@@ -78,10 +78,13 @@ make run_serial
 # 3. Chạy bản song song MPI với 4 tiến trình (mặc định)
 make run_mpi NP=4
 
-# 4. Trực quan hóa kết quả mô phỏng và cập nhật biểu đồ
+# 4. Chạy demo kèm UI trực quan xem luồng nước chảy theo thời gian (lưu mỗi 200 bước)
+make demo NP=4
+
+# 5. Trực quan hóa kết quả mô phỏng và cập nhật biểu đồ
 make plot
 
-# 5. Dọn dẹp file thực thi và file dữ liệu tạm
+# 6. Dọn dẹp file thực thi và file dữ liệu tạm
 make clean
 ```
 
@@ -98,8 +101,11 @@ mpicc -O2 -Wall -o lbm_mpi src/lbm_mpi.c -lm
 # Chạy MPI với P tiến trình (ví dụ 4 tiến trình)
 mpirun -np 4 ./lbm_mpi -c config.txt
 
-# Trực quan hóa dữ liệu
-python3 visualize_results.py
+# Chạy kèm tham số -f / --frames để xuất chuỗi frame cho UI xem dòng chảy
+mpirun -np 4 ./lbm_mpi -c config.txt -f 200
+
+# Trực quan hóa dữ liệu (ảnh tĩnh + dữ liệu UI web + GIF nếu thêm --gif)
+python3 visualize_results.py --demo
 python3 plot_performance.py
 ```
 
@@ -117,25 +123,25 @@ chmod +x benchmark.sh
 
 | Số tiến trình ($P$) | Thời gian thực thi ($s$) | MLUPS | Speedup ($S_p$) | Efficiency ($E_p$) |
 |:---:|:---:|:---:|:---:|:---:|
-| **1 (Serial)** | **1.594** | **102.79** | **1.00×** | **100.0%** |
-| **2** | **0.950** | **172.55** | **1.68×** | **84.0%** |
-| **4** | **0.621** | **263.63** | **2.57×** | **64.2%** |
-| **8** | **1.111** | **147.48** | **1.43×** | **17.9%** |
+| **1 (Serial)** | **1.584** | **103.45** | **1.00×** | **100.0%** |
+| **2** | **0.906** | **180.87** | **1.75×** | **87.4%** |
+| **4** | **0.507** | **323.26** | **3.12×** | **78.1%** |
+| **8** | **1.355** | **120.92** | **1.17×** | **14.6%** |
 
 * **MLUPS (Million Lattice Updates Per Second):** Số triệu điểm lưới được cập nhật mỗi giây, đại lượng đo hiệu năng tiêu chuẩn của mô phỏng LBM:
   $$\text{MLUPS} = \frac{N_x \times N_y \times N_{steps}}{T \times 10^6}$$
 * **Nhận xét hiệu năng:**
-  * Hiệu năng đạt đỉnh tại $P = 4$ cores thực tế, tăng tốc độ mô phỏng gấp **2.57 lần** so với bản tuần tự, đưa MLUPS từ 102 lên **263.63**.
-  * Khi tăng lên $P = 8$, hiệu năng giảm do overhead truyền thông biên giữa các rank bắt đầu vượt qua khối lượng tính toán cục bộ (mỗi tiến trình chỉ còn $256/8 = 32$ cột) kết hợp hiện tượng tranh chấp tài nguyên CPU logical core.
+  * Hiệu năng đạt đỉnh tại $P = 4$ cores thực tế, tăng tốc độ mô phỏng gấp **3.12 lần** so với bản tuần tự, đưa MLUPS từ 103.45 lên **323.26** (hiệu suất 78.1%).
+  * Khi tăng lên $P = 8$, hiệu năng giảm do overhead truyền thông biên giữa các rank bắt đầu vượt qua khối lượng tính toán cục bộ (mỗi tiến trình chỉ còn $256/8 = 32$ cột) kết hợp hiện tượng tranh chấp tài nguyên trên chip hybrid.
 
 ---
 
 ## 🔍 Kiểm chứng Tính đúng đắn (Checksum & Vật lý)
 
 ### 1. Đối chiếu Checksum giữa Serial và MPI ($P=4$):
-* $\sum \rho$ (Serial): `16383.99999` $\longleftrightarrow$ $\sum \rho$ (MPI): `16381.44192` (Độ lệch $< 0.015\%$)
-* $\sum u_x$ (Serial): `1527.04762` $\longleftrightarrow$ $\sum u_x$ (MPI): `1526.02732` (Độ lệch $< 0.06\%$)
-* Khối lượng chất lưu được bảo toàn hoàn hảo qua 10,000 bước lặp.
+* $\sum \rho$ (Serial): `16383.9999999909` $\longleftrightarrow$ $\sum \rho$ (MPI): `16383.9999999910` (Khớp tuyệt đối, sai lệch $< 10^{-12}\%$)
+* $\sum u_x$ (Serial): `1527.0476269322` $\longleftrightarrow$ $\sum u_x$ (MPI): `1527.0476269322` (Khớp tuyệt đối 10 chữ số thập phân)
+* Khối lượng chất lưu được bảo toàn hoàn hảo qua 10,000 bước lặp và xuyên suốt các biên chia miền MPI.
 
 ### 2. Kết quả vật lý:
 * Profile vận tốc dọc theo trục $Y$ khớp chính xác với đường cong Parabol giải tích của dòng Poiseuille:
