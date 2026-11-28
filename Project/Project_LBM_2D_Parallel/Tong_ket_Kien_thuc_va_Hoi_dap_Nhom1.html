@@ -382,15 +382,16 @@
     <header>
       <div class="tag-pill">Tài liệu ôn tập nội bộ — Nhóm 1 (IT5408)</div>
       <h1>Tổng kết Kiến thức, Bài tập lớn LBM 2D (MPI) & Hỏi đáp Bảo vệ</h1>
-      <p class="subtitle">Tóm tắt ngắn gọn các khái niệm cốt lõi, luồng chạy thực tế của code Nhóm 1, bảng kết quả thực nghiệm và 12 câu hỏi vấn đáp thầy thường hỏi kèm đáp án chuẩn.</p>
+      <p class="subtitle">Tóm tắt ngắn gọn các khái niệm cốt lõi, luồng chạy thực tế của code Nhóm 1, bảng kết quả thực nghiệm, 12 câu hỏi vấn đáp và 10 câu phản biện chuyên sâu kèm đáp án chuẩn.</p>
     </header>
 
     <div class="toolbar">
       <div class="nav-links">
-        <a href="#sec1">1. Khái niệm cốt lõi</a>
-        <a href="#sec2">2. Nội dung Bài tập lớn</a>
-        <a href="#sec3">3. Kết quả thực nghiệm</a>
-        <a href="#sec4">4. Câu hỏi thầy hay hỏi (12 câu)</a>
+        <a href="#sec1">1. Khái niệm</a>
+        <a href="#sec2">2. Bài tập lớn</a>
+        <a href="#sec3">3. Thực nghiệm</a>
+        <a href="#sec4">4. Vấn đáp (12 câu)</a>
+        <a href="#sec5" style="background:#fef2f2; color:#be123c;">5. Phản biện (10 câu)</a>
       </div>
       <div class="btn-group">
         <button class="btn btn-primary" id="toggleAllBtn" onclick="toggleAllQA()">👁️ Ẩn tất cả đáp án</button>
@@ -779,6 +780,123 @@
             <li><b>Đổi bố cục dữ liệu sang SoA (Structure of Arrays):</b> Tách riêng mảng <code>f[0], f[1], ..., f[8]</code> thay vì AoS <code>(x*ny+y)*9 + i</code> giúp truy xuất bộ nhớ liên kết (coalesced / vectorization AVX/NEON) hiệu quả hơn.</li>
             <li><b>Hybrid MPI + OpenMP hoặc Chia miền 2D:</b> Khi chạy trên cụm nhiều máy chủ đa nhân, dùng MPI giữa các node và OpenMP trong mỗi node để giảm số lượng giao tiếp qua mạng và tránh straggler.</li>
           </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 5: CÂU HỎI PHẢN BIỆN CHUYÊN SÂU -->
+    <section id="sec5">
+      <div class="section-header">
+        <h2>Phần 5: 10 Câu Hỏi Phản Biện Chuyên Sâu (Hội đồng Bắt bẻ)</h2>
+        <span class="section-badge" style="background:#ffe4e6; color:#be123c;">Bảo vệ điểm cao</span>
+      </div>
+
+      <!-- PB1 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num" style="color:var(--rose);">Phản biện 1.</span> Code của các em vừa gán cứng vận tốc <code>ux = u0</code> ở 2 cột đầu/cuối (<code>ApDungBienCucBo</code>), lại vừa nối vòng tuần hoàn trục X (<code>Periodic</code>). Đây đâu phải Poiseuille chuẩn do chênh lệch áp suất ΔP? Gán vậy có làm sai bản chất vật lý không?</div>
+          <span class="qa-tag" style="background:#ffe4e6; color:#be123c;">Vật lý &amp; Biên</span>
+        </div>
+        <div class="qa-a" style="border-left-color:var(--rose);">
+          <b>Đáp án:</b> Về mặt vật lý chặt chẽ, bài toán Poiseuille chuẩn được dẫn động bởi gradient áp suất ΔP (dùng biên Zou-He hoặc lực khối Guo forcing). Tuy nhiên, để đảm bảo mô phỏng ổn định tuyệt đối ở bước khởi tạo và bảo toàn chính xác tổng khối lượng <code>Σρ = Nx × Ny</code> không đổi, nhóm chọn cách bơm động lượng cưỡng bức <code>u0</code> ở 2 cột đầu/cuối kết hợp tuần hoàn trục X. Ở vùng giữa kênh dẫn (tại <code>x = Nx/2</code>), ma sát từ 2 thành tường bounce-back vẫn tạo ra phân bố vận tốc dạng <b>Parabol chuẩn</b> khớp với nghiệm giải tích Poiseuille. Hướng nâng cấp của nhóm là thay thế bằng điều kiện biên áp suất Zou-He.
+        </div>
+      </div>
+
+      <!-- PB2 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num" style="color:var(--rose);">Phản biện 2.</span> Slide 13 ghi dùng <code>MPI_Irecv</code>/<code>MPI_Isend</code> để “cho phép tính toán và giao tiếp đồng thời”, nhưng trong <code>TraoDoiGhost</code> các em gọi luôn <code>MPI_Waitall</code> rồi mới chạy <code>Streaming</code>. Vậy thực tế có overlap được tí nào đâu?</div>
+          <span class="qa-tag" style="background:#ffe4e6; color:#be123c;">MPI Overlap</span>
+        </div>
+        <div class="qa-a" style="border-left-color:var(--rose);">
+          <b>Đáp án:</b> Nhận xét của Thầy hoàn toàn chính xác ạ. Trong cài đặt hiện tại, việc đặt <code>MPI_Waitall</code> ngay trong <code>TraoDoiGhost</code> chủ yếu giúp <b>tránh Deadlock</b> (đăng ký nhận trước khi gửi) và cho phép gửi–nhận song song 2 chiều trái–phải đồng thời, chứ chưa chồng lấn với tính toán. Để overlap thực sự, ta tách bước <code>Streaming</code>: sau khi gọi <code>MPI_Irecv</code>/<code>MPI_Isend</code>, cho CPU tính ngay <code>Streaming</code> các cột bên trong (<code>x = 1 .. nx_local - 2</code>) trong lúc mạng đang truyền, rồi mới gọi <code>MPI_Waitall</code> để xử lý nốt 2 cột biên (<code>x = 0</code> và <code>nx_local - 1</code>).
+        </div>
+      </div>
+
+      <!-- PB3 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num" style="color:var(--rose);">Phản biện 3.</span> Trong <code>lbm_serial.c</code> các em đo thời gian bằng <code>clock()</code>, còn <code>lbm_mpi.c</code> lại đo bằng <code>MPI_Wtime()</code>. Một cái đo CPU time, một cái đo Wall-clock time — so sánh như vậy có công bằng không?</div>
+          <span class="qa-tag" style="background:#ffe4e6; color:#be123c;">Benchmark</span>
+        </div>
+        <div class="qa-a" style="border-left-color:var(--rose);">
+          <b>Đáp án:</b> Về nguyên tắc chuẩn mực benchmark, hai hàm khác nhau về định nghĩa. Tuy nhiên trong trường hợp bài này, <code>lbm_serial</code> chỉ chạy <b>đơn luồng trên 1 nhân CPU</b> và trong vòng lặp đo hoàn toàn không có chờ I/O hay sleep, nên CPU time đo bằng <code>clock()</code> gần như trùng khít với Wall-clock time. Dù vậy, để chuẩn xác hoàn toàn trên mọi hệ thống đa nhân, nhóm ghi nhận nên đổi <code>lbm_serial.c</code> sang dùng hàm đo Wall-clock time như <code>clock_gettime(CLOCK_MONOTONIC, ...)</code> để đồng nhất hoàn toàn với <code>MPI_Wtime()</code>.
+        </div>
+      </div>
+
+      <!-- PB4 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num" style="color:var(--rose);">Phản biện 4.</span> LBM vốn đã tốn bộ nhớ (9 hướng/nút), sao code còn cấp phát 2 mảng <code>f</code> và <code>f_new</code> tốn gấp đôi RAM (~37.75 MB ở lưới 1024×256) và dùng bố cục AoS <code>(x*ny+y)*Q + i</code> — có tối ưu cho SIMD không?</div>
+          <span class="qa-tag" style="background:#ffe4e6; color:#be123c;">Bộ nhớ &amp; SIMD</span>
+        </div>
+        <div class="qa-a" style="border-left-color:var(--rose);">
+          <b>Đáp án:</b> Nhóm dùng 2 mảng <code>f</code> và <code>f_new</code> (Ping-pong buffering) để bước <code>Streaming</code> không ghi đè mất dữ liệu ô láng giềng chưa kịp đọc (có thể giảm 50% RAM bằng kỹ thuật AA-pattern 1 mảng nhưng phức tạp hơn rất nhiều khi kiểm chứng). Còn bố cục <b>AoS</b> giúp 9 hướng của một điểm lưới nằm cạnh nhau (tốt cho <code>Collision</code>) và đặc biệt giúp <b>toàn bộ 1 cột biên <code>x</code> nằm liên tiếp trên RAM</b>, nên <code>MPI_Isend</code> gửi thẳng 1 khối nhớ mà không cần pack. Nếu tối ưu cho SIMD CPU hoặc GPU CUDA thì chuyển sang <b>SoA</b> sẽ cho băng thông bộ nhớ tốt hơn.
+        </div>
+      </div>
+
+      <!-- PB5 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num" style="color:var(--rose);">Phản biện 5.</span> Trong <code>StreamingCucBo</code>, bên trong 3 vòng lặp lồng nhau <code>x, y, i</code> có tới 3 lệnh rẽ nhánh <code>if/else</code>. Lưới 1024×256 chạy 10,000 bước là hơn 23 tỷ lần kiểm tra <code>if</code> — có cản trở tối ưu của CPU không?</div>
+          <span class="qa-tag" style="background:#ffe4e6; color:#be123c;">Tối ưu Code</span>
+        </div>
+        <div class="qa-a" style="border-left-color:var(--rose);">
+          <b>Đáp án:</b> Đúng ạ, việc đặt <code>if/else</code> bên trong vòng lặp trong cùng làm tăng rẽ nhánh và cản trở trình biên dịch tự động vector hóa (auto-vectorization). Để tối ưu sâu hơn, ta nên áp dụng <b>loop splitting (tách vòng lặp)</b>: tách phần nội miền (<code>1 ≤ x ≤ nx_local - 2</code>, <code>1 ≤ y ≤ ny - 2</code>) thành một vòng lặp thuần túy <b>không có bất kỳ lệnh <code>if</code> nào</b>, sau đó mới xử lý riêng 4 đường biên.</div>
+      </div>
+
+      <!-- PB6 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num" style="color:var(--rose);">Phản biện 6.</span> Trên Slide 15 ghi <code>P = 8</code> đạt Speedup <code>4.00×</code> (<code>0.450s</code>), sao khi chạy demo trực tiếp và trên UI lại thấy <code>P = 8</code> tụt xuống chỉ còn <code>1.17×</code> (<code>1.355s</code>)?</div>
+          <span class="qa-tag" style="background:#ffe4e6; color:#be123c;">Đối chiếu Số liệu</span>
+        </div>
+        <div class="qa-a" style="border-left-color:var(--rose);">
+          <b>Đáp án:</b> Bảng trên Slide 15 là số liệu tham khảo từ kịch bản đo thử ban đầu trước khi nhóm rà soát lại phần cứng và sửa lỗi chỉ số biên chéo <code>ys</code> trong <code>StreamingCucBo</code>. Kết quả chạy live (<code>P = 4</code> đạt đỉnh <b><code>3.12×</code></b>, còn <code>P = 8</code> tụt xuống <b><code>1.17×</code></b>) là <b>số đo thực tế mới nhất trên chip Apple Silicon 8 nhân lai</b> (4 nhân Performance + 4 nhân Efficiency): khi chạy 8 tiến trình đồng bộ ở mỗi step, các nhân mạnh phải chờ nhân yếu chậm nhất (<b>Straggler effect</b>), đồng thời mỗi rank chỉ còn <code>32</code> cột nên overhead vượt quá tính toán. Nhóm đã cập nhật toàn bộ số thực tế này vào báo cáo PDF, <code>README.md</code> và biểu đồ UI.
+        </div>
+      </div>
+
+      <!-- PB7 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num" style="color:var(--rose);">Phản biện 7.</span> Các em chạy MPI trên 1 máy laptop thực chất truyền qua Shared Memory rất nhanh. Nếu đưa lên 4 máy trong phòng Lab nối mạng LAN 1 Gbps thật thì lưới <code>256×64</code> còn đạt <code>3.12×</code> không?</div>
+          <span class="qa-tag" style="background:#ffe4e6; color:#be123c;">Cluster &amp; Mạng</span>
+        </div>
+        <div class="qa-a" style="border-left-color:var(--rose);">
+          <b>Đáp án:</b> Chắc chắn là <b>KHÔNG</b> đạt <code>3.12×</code> với lưới nhỏ <code>256×64</code> trên mạng LAN 1 Gbps ạ. Vì trên lưới <code>256×64</code>, mỗi step chỉ tính mất khoảng ~<code>50 µs</code>, trong khi độ trễ mạng LAN khoảng <code>50–100 µs</code> (qua 10,000 bước gửi/nhận 20,000 lần), chi phí mạng sẽ áp đảo làm Speedup giảm mạnh (thậm chí &lt; 1). Để scale tốt trên Cluster thật, phải tăng kích thước lưới mỗi node lên đủ lớn (<b>Weak Scaling</b>, vd mỗi node <code>512×512</code> trở lên) để thời gian tính toán lớn hơn hẳn độ trễ mạng.
+        </div>
+      </div>
+
+      <!-- PB8 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num" style="color:var(--rose);">Phản biện 8.</span> Nếu thầy chạy code này trên cụm 512 core cho lưới <code>256×64</code> hoặc <code>1024×256</code>, giải thuật chia miền 1D theo cột sẽ gặp lỗi hay giới hạn gì?</div>
+          <span class="qa-tag" style="background:#ffe4e6; color:#be123c;">Scalability</span>
+        </div>
+        <div class="qa-a" style="border-left-color:var(--rose);">
+          <b>Đáp án:</b> Có 2 vấn đề lớn: (1) Nếu <code>P &gt; nx</code> (vd <code>P=512</code> trên <code>nx=256</code>), một nửa tiến trình có <code>nx_local = 0</code>, gây lỗi cấp phát kích thước 0 hoặc truy cập sai con trỏ <code>f_new + (nx_local - 1)*...</code> trong <code>TraoDoiGhost</code>; (2) Kể cả khi <code>P=128</code> trên <code>nx=1024</code>, mỗi rank chỉ còn 8 cột nhưng gói tin truyền đi mỗi bước vẫn giữ nguyên kích thước <code>2 × ny × 9 × 8 bytes</code>, khiến tỉ lệ Communication/Computation tăng vọt. Giải pháp cho <code>P</code> lớn là chuyển sang <b>2D Domain Decomposition</b>.
+        </div>
+      </div>
+
+      <!-- PB9 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num" style="color:var(--rose);">Phản biện 9.</span> Cuối chương trình các em dùng <code>MPI_Gatherv</code> gom toàn bộ lưới về Rank 0 để ghi file. Nếu lưới là <code>8192 × 8192</code> (~67 triệu nút) thì Rank 0 có vấn đề gì?</div>
+          <span class="qa-tag" style="background:#ffe4e6; color:#be123c;">I/O &amp; Bộ nhớ</span>
+        </div>
+        <div class="qa-a" style="border-left-color:var(--rose);">
+          <b>Đáp án:</b> Với lưới <code>8192 × 8192</code>, mảng <code>global_rho</code>, <code>global_ux</code>, <code>global_uy</code> cộng lại tốn hơn 1.6 GB, nên việc gom hết về 1 nút rất dễ làm <b>Rank 0 tràn RAM (Out-Of-Memory)</b> và việc ghi file tuần tự tại Rank 0 trở thành nút thắt cổ chai I/O (Amdahl's Law). Giải pháp chuẩn cho dữ liệu siêu lớn là dùng <b>MPI-IO (<code>MPI_File_write_at_all</code>)</b> để các rank ghi song song trực tiếp phần dữ liệu cục bộ của mình vào đúng vị trí offset trên đĩa mà không cần gom về Rank 0.
+        </div>
+      </div>
+
+      <!-- PB10 -->
+      <div class="qa-card">
+        <div class="qa-q" onclick="toggleSingle(this)">
+          <div class="qa-title"><span class="qa-num" style="color:var(--rose);">Phản biện 10.</span> Ống thẳng trơn không có vật cản vốn giải giải tích được cần gì đến LBM! Nếu thầy yêu cầu thêm vật cản hình trụ để mô phỏng xoáy Kármán ngay trên code này, các em sửa mất bao lâu?</div>
+          <span class="qa-tag" style="background:#ffe4e6; color:#be123c;">Mở rộng Mô hình</span>
+        </div>
+        <div class="qa-a" style="border-left-color:var(--rose);">
+          <b>Đáp án:</b> Sửa rất nhanh và đây chính là ưu điểm lớn nhất của LBM so với FDM/FEM ạ! Toàn bộ khung chia miền 1D, <code>TraoDoiGhost</code> và vòng lặp MPI giữ nguyên 100%. Nhóm chỉ cần thêm một mảng mặt nạ <code>solid[nx_local][ny]</code> đánh dấu các nút nằm trong hình trụ; tại các nút <code>solid == 1</code>, ta bỏ qua bước tính cân bằng <code>Collision</code> và chỉ thực hiện phản xạ <b>bounce-back</b> (<code>f_new[i] = f[opposite[i]]</code>). Chỉ cần bổ sung khoảng ~15 dòng code là mô phỏng được ngay dòng xoáy Kármán qua vật cản phức tạp.
         </div>
       </div>
     </section>
